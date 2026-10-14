@@ -1,7 +1,6 @@
 node_modules
 .next
 package-lock.json
-coverage
 output
 .playwright-cli
 next-env.d.ts

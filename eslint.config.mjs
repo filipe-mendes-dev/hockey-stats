@@ -15,7 +15,6 @@ export default defineConfig([
     "**/.next/**",
     "**/next-env.d.ts",
     "**/messages/*.d.json.ts",
-    "coverage/**",
     "output/**",
     ".playwright-cli/**",
   ]),

@@ -37,7 +37,7 @@
 - Put web styles in adjacent `styles.module.css`, imported as `st`; avoid static inline JSX styles.
 - Keep React Client Components under `src/client`; App Router files compose them from `src/app`.
 - Keep translation catalogs under `src/messages`.
-- Put tests in the root `tests` directory. Mirror paths relative to `src`, such as `src/i18n/messages.ts` with `tests/i18n/messages.test.ts`. Keep compile-time assertions there too.
+- When explicitly requested, put tests in the root `tests` directory and mirror paths relative to `src`, such as `src/i18n/messages.ts` with `tests/i18n/messages.test.ts`. Keep compile-time assertions there too. Do not create test folders in advance.
 - Handle long text, narrow screens, text scaling and touch/keyboard access.
 - Add user-facing text to both catalogs; keep canonical domain values untranslated.
 - Do not use emoji in code comments.
