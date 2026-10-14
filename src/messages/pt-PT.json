@@ -1,0 +1,13 @@
+{
+  "shell": {
+    "title": "Benchline Stats",
+    "description": "Registo de jogos de hóquei em patins",
+    "status": "Fase {phase, number}: configuração e bases do projeto",
+    "placeholder": "O registo de jogos estará disponível numa fase posterior."
+  },
+  "language": {
+    "label": "Idioma",
+    "english": "Inglês",
+    "portuguese": "Português (Portugal)"
+  }
+}
