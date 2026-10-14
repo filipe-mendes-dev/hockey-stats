@@ -47,7 +47,7 @@
 - Ignore tests by default. Do not read, add, modify or run tests unless the user explicitly asks. Preserve existing tests and their setup unless changes are requested.
 - Add tests only after a functioning version exists and only for specific important behavior requested by the user. Avoid speculative tests and broad coverage work during prototyping.
 - Historical testing requirements in phase plans do not authorize test work. Follow the user's current testing instructions.
-- Run relevant non-test checks. Do not run aggregate commands that include tests, such as `npm run check`, unless explicitly requested. Report failed, skipped or unavailable checks accurately.
+- Run relevant non-test checks. Inspect aggregate scripts before running them; do not run any that include tests unless explicitly requested. Report failed, skipped or unavailable checks accurately.
 - Verify offline/service-worker behavior against a production build.
 - Mark phases complete only after acceptance criteria pass.
 - Prefix branches with `feat/` for features or `fix/` for bug fixes. Never use `codex/`.
