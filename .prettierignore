@@ -1,0 +1,9 @@
+node_modules
+.next
+package-lock.json
+output
+.playwright-cli
+next-env.d.ts
+src/messages/*.d.json.ts
+AGENTS.md
+docs

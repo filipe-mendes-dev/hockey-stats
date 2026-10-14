@@ -6,11 +6,16 @@ Use next-intl from Phase 0. Support English (`en`) and European Portuguese (`pt-
 
 Keep URLs independent of language, including `/offline`. No `[locale]` route segment or locale redirect is required.
 
-## Planned files
+## Phase 0 files
 
-- `apps/web/messages/en.json`: English messages.
-- `apps/web/messages/pt-PT.json`: Portuguese messages with the same keys and interpolation arguments.
-- `apps/web/src/i18n`: supported locales, request configuration and browser/provider integration.
+- `src/messages/en.json`: English messages.
+- `src/messages/pt-PT.json`: Portuguese messages with the same keys and interpolation arguments.
+- `src/i18n`: supported locales, shared catalogs, preference logic and request configuration.
+- `src/client/i18n/provider.tsx`: client provider and saved-language integration.
+
+Phase 0 renders English on the server and during initial hydration. Its client provider restores `benchline.locale` from localStorage after hydration through `useSyncExternalStore`. The selected locale updates the messages, control and document language without navigation or a server refresh. Both catalogs are bundled. No locale cookie, locale routes or `/offline` implementation exists yet.
+
+The next-intl plugin generates exact message declarations for both catalogs during type generation, development and builds. AppConfig supplies locale/key/argument types. The setup has no automated catalog tests or compile-time test assertions; add targeted tests only when the user explicitly requests them after a functioning version exists. Earlier browser verification is retained in the [Phase 0 handoff](phase-0-handoff.md).
 
 Use feature namespaces as features arrive, such as `common`, `accounts`, `game`, `recorder`, `offline` and `errors`. Phase 0 needs only the placeholder shell and language-control messages.
 
@@ -19,7 +24,7 @@ Use feature namespaces as features arrive, such as `common`, `accounts`, `game`,
 - Translate every user-facing label, validation message, error, toast, empty state and accessibility label in both catalogs.
 - Use stable semantic keys rather than English sentences as identifiers.
 - Use complete messages with ICU interpolation/plurals. Do not build translated sentences by concatenating fragments.
-- Type-check message keys and validate catalog key/argument parity.
+- Type-check message keys and keep catalog keys/interpolation arguments aligned when editing them. Automated parity tests require explicit user instruction.
 - Keep domain enums, identifiers and API error codes language-neutral. Map them to messages in the UI.
 - Do not translate player/team names or other user-entered data.
 - Format dates and numbers for the selected locale. Locale does not change stored time, event order or coordinates.
@@ -39,7 +44,7 @@ Bundle both offline catalogs into the required asset graph. Do not fetch remote 
 ## Phase 0 verification
 
 - Render the placeholder shell and language selector in both languages.
-- Verify locale validation, catalog key/argument parity and fallback behavior.
+- Keep locale validation, matching catalog keys/arguments and English fallback in the shell implementation.
 - Confirm selection persists after reload without hydration errors.
 - Do not implement recorder features or a service worker in this phase.
 

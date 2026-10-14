@@ -1,0 +1,13 @@
+{
+  "shell": {
+    "title": "Benchline Stats",
+    "description": "Roller-hockey match recording",
+    "status": "Phase {phase, number}: workspace and foundations",
+    "placeholder": "Match recording will arrive in a later phase."
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "portuguese": "Portuguese (Portugal)"
+  }
+}

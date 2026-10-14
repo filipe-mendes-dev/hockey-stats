@@ -42,7 +42,7 @@ These gates do not block Phase 0. Exact library versions are chosen from current
 - Next.js App Router and an early PostgreSQL-backed Next.js API.
 - next-intl from Phase 0, English and `pt-PT`, with locale-independent URLs and locally available offline messages.
 - Limited `/offline` recording for prepared games; management and game/roster preparation remain online.
-- Separate server code and shared domain/contracts in a small workspace.
+- One root Next.js project. Phase 0 is setup-only; add server, domain and transport code when needed by an authorized feature. Discuss separate packages only when a concrete need arises.
 - Zustand for temporary recorder UI state.
 - Creation draft exists only while add-event UI is visible.
 - Every event requires a player; recovery requires subtype; loss requires reason; shot requires outcome; card requires colour.

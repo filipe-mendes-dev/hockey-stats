@@ -157,7 +157,7 @@ Player-in/out require a known captured game time or manual period/time entry bef
 - PostgreSQL for accepted shared records; IndexedDB/Dexie for local working data, outbox and undo.
 - Zustand for temporary UI state, scoped to the mounted recorder/account lifecycle.
 - next-intl from Phase 0 with English/pt-PT catalogs, typed message keys and persisted language selection. Keep URLs independent of locale and `/offline` unprefixed; see `localization.md`.
-- Small workspace with `apps/web`, `packages/domain` and `packages/contracts`.
+- One root Next.js project. Phase 0 contains setup and the translated shell only; add domain and transport code when an authorized feature needs it. Keep the prototype in one package and discuss added packaging complexity before introducing it.
 - Server services own authorization/business workflows and transactions; repositories own account-scoped storage access.
 - Local and server workflows share deterministic domain functions, not a transaction spanning both databases.
 - SVG rink with stable normalized coordinates and tested pointer conversion.

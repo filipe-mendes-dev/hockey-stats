@@ -1,6 +1,6 @@
 # Architecture
 
-Status: working development baseline, 2026-10-14. Application implementation has not started.
+Status: Phase 0 contains setup and a translated placeholder shell only. Domain implementation, transport contracts and tests have been removed by user request. The stack below describes the target architecture; API, persistence, authentication, offline boot and recorder workflows remain unimplemented.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Status: working development baseline, 2026-10-14. Application implementation has
 | Local database | IndexedDB through Dexie. | Durable offline working data and queued operations. It complements PostgreSQL. |
 | Temporary UI state | Zustand. | Explicit recorder state shared across player, action, rink and detail controls. |
 | Translation | next-intl with English and European Portuguese (`pt-PT`). | App Router/server/client localization from Phase 0, including cached offline messages. |
-| Repository | Small workspace with `apps/web`, `packages/domain` and `packages/contracts`. | Share real domain and transport contracts between browser and server from the first API slice. |
+| Repository | One Next.js project at the repository root. | Keep setup focused on the translated shell; introduce feature folders only when needed. |
 | Styling | Adjacent CSS modules imported as `st`; Grid and Flexbox. | Responsive layouts without requiring a styling framework. |
 | Rink | SVG. | Simple geometry, scaling and pointer coordinate conversion. |
 | PWA | Service worker with explicit offline-shell caching and prompted updates. | Installation alone does not provide offline routing or persistence. |
@@ -20,64 +20,30 @@ Status: working development baseline, 2026-10-14. Application implementation has
 
 Authentication, database-access and worker integration libraries are selected at the gates in [Backlog](backlog.md).
 
-## Target structure
+## Current structure
 
 Create folders only when the current phase uses them.
 
 ```text
-apps/
-  web/
-    messages/
-      en.json
-      pt-PT.json
-    src/
-      i18n/
-      app/
-        (auth)/
-        (account)/
-          accounts/[accountId]/
-        (recorder)/
-          accounts/[accountId]/games/[gameId]/record/
-        offline/
-        api/v1/
-      client/
-        features/
-          accounts/
-          teams/
-          game-setup/
-          recorder/
-        application/
-        persistence/
-        api/
-        sync/
-        pwa/
-      server/
-        auth/
-        services/
-        repositories/
-        db/
-    tests/
-      integration/
-      e2e/
-packages/
-  domain/
-    src/
-      entities.ts
-      events.ts
-      validation.ts
-      lineup.ts
-      clock.ts
-  contracts/
-    src/
-      commands/
-      responses/
-      errors.ts
+src/
+  app/
+  client/
+    shell/
+    i18n/
+  i18n/
+  messages/
+    en.json
+    pt-PT.json
 docs/
 ```
 
 Route groups organize layouts without becoming URL segments. Keep a single root layout so moving between account and recorder groups does not introduce avoidable full reloads. API handlers live outside UI route groups.
 
-`packages/domain` and `packages/contracts` have both browser and server consumers in the early phases. No generic shared/UI package or task-runner framework is needed initially.
+React Client Components live under `src/client`; route files in `src/app` compose them. Keep each component's CSS module beside it. Translation catalogs live in `src/messages`, and shared localization configuration lives in `src/i18n`.
+
+No test suite or runner is included in the setup. Add tests only on explicit user request after a functioning version exists, targeting specific important behavior. Any authorized future tests belong in a root `tests` directory that mirrors `src`.
+
+Use npm, one package manifest, one lockfile and one TypeScript configuration. Domain implementation, transport contracts, server folders and feature routes are deferred until an authorized feature needs them. The responsibilities below describe planned boundaries, not existing implementation. Separate packages require a concrete need and discussion with the user.
 
 ## Layer responsibilities
 
