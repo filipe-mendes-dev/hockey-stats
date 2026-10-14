@@ -2,14 +2,14 @@
 
 ## Status and scope
 
-Planning baseline revised on 2026-10-14. Phase 0 was authorized and completed on 2026-10-14. Later phases remain unimplemented and require separate authorization.
+Planning baseline revised on 2026-10-14. Phase 0 was authorized and completed on 2026-10-14. Phase 1 PostgreSQL infrastructure was authorized on 2026-10-14. Account/schema/authentication integration follows as a separate increment. Later phases remain unimplemented and require separate authorization.
 
 Use Next.js, an early account-scoped PostgreSQL API and local synchronization. Add English/Portuguese support from Phase 0. Prepared games remain recordable at the limited `/offline` entry without a live API.
 
 | Phase | Status |
 | --- | --- |
 | 0. Project foundations | Complete. Setup-only scope; see [verification](phase-0-handoff.md#setup-only-cleanup). |
-| 1. Account-scoped API foundation | Not started. |
+| 1. Account-scoped API foundation | In progress. PostgreSQL, username/password auth, admin creation commands and protected shell implemented; workspace/receipt acceptance remains pending. |
 | 2. Offline boot and recorder state feasibility | Not started. |
 | 3. Thin synchronized recording slice | Not started. |
 | 4. Teams and roster setup | Not started. |
@@ -33,12 +33,16 @@ Phase 0 is setup-only by user request. Domain implementation, command contracts 
 - Deliverables: a root Next.js App Router project and placeholder shell; strict TypeScript, linting, formatting, typecheck and production-build scripts. Keep next-intl, English/pt-PT catalogs, typed keys and a persisted language selector without locale URL prefixes. Use one npm package and TypeScript configuration. No domain implementation, transport contracts, tests or test runner belong in this setup phase. This supersedes the original workspace, recovery-validation and test-tooling requirements by user request.
 - Acceptance: clean install, formatting, typecheck, lint and production build pass. The shell renders in both languages and remembers selection. No domain implementation, transport contracts, test suite, API feature, database, auth integration, worker, event UI or sync engine is implemented. Existing Git metadata and planning documents remain intact.
 
-Earlier test and browser verification is preserved as history in the handoff. See [Setup-only cleanup](phase-0-handoff.md#setup-only-cleanup) for the current non-test checks and removed files. Work stops at Phase 0.
+Earlier test and browser verification is preserved as history in the handoff. See [Setup-only cleanup](phase-0-handoff.md#setup-only-cleanup) for the Phase 0 non-test checks and removed files. That implementation stopped after Phase 0; the subsequent PostgreSQL increment is described below.
 
 ## Phase 1. Account-scoped API foundation
 
+The first authorized increment adds PostgreSQL 18 local infrastructure, a persistent Compose volume, readiness check, environment example and database commands. The revised [account schema and flow](account-auth.md) defines the next increment as Better Auth username/password login, admin-created users, basic `user`/`admin` permissions, Drizzle schema/migrations and a minimal header/main shell. Use public `/sign-in` and protected `/`, with sign-out in the authenticated header. Public signup, email infrastructure, account settings and the admin tab/screen are excluded. Personal workspace provisioning and command receipts follow afterward. Phase 1 remains incomplete until the acceptance criteria below pass. See the [infrastructure handoff](phase-1-handoff.md) for completed checks.
+
+The authentication increment was implemented on 2026-10-14. Its migration, production browser flow and role permission checks passed. See [authentication verification](phase-1-handoff.md#authentication-increment). Settings, admin navigation/UI, personal workspace ownership and receipts remain deferred.
+
 - Objective: establish real server persistence and authorization before broad recorder development.
-- Dependencies: Phase 0; select an authentication integration and PostgreSQL access/migration library.
+- Dependencies: Phase 0; Better Auth with username/admin plugins and Drizzle selected. Verify compatible package versions. No email infrastructure is required.
 - Deliverables: sign-in/out and personal account provisioning; account route/layout shell; PostgreSQL migrations; thin versioned Route Handlers; separate auth/services/repositories. Implement the minimum account/resource endpoint needed to prove scoped persistence. Establish a transactionally persisted command receipt before recorder uploads depend on it.
 - Tests: authorized persistence across server restart; unauthenticated request; two users with separate accounts; cross-account resource IDs; duplicate command ID with same payload and with changed payload; transaction rollback.
 - Acceptance: the authenticated account can persist/read a resource through its API. Another account cannot access it by guessing a URL or ID. A committed command receipt survives restart and duplicate delivery causes one mutation. No full team-management or recorder UI is bundled into this phase.

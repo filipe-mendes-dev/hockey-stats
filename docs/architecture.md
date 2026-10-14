@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 0 contains setup and a translated placeholder shell only. Domain implementation, transport contracts and tests have been removed by user request. The stack below describes the target architecture; API, persistence, authentication, offline boot and recorder workflows remain unimplemented.
+Status: PostgreSQL infrastructure, Better Auth username/password authentication, Drizzle migrations, admin user-creation helpers and a minimal protected shell are implemented. Workspace-scoped product persistence, command receipts, account settings and admin UI remain deferred. Offline boot and recorder workflows belong to later phases.
 
 ## Stack
 
@@ -8,7 +8,9 @@ Status: Phase 0 contains setup and a translated placeholder shell only. Domain i
 | --- | --- | --- |
 | Web framework | Next.js App Router with TypeScript and React. | Account-scoped layouts and an early API are planned. Avoid a later framework migration. |
 | API | Next.js Route Handlers with separate server services and repositories. | One application deployment with explicit HTTP, workflow and storage boundaries. |
-| Shared database | PostgreSQL. | Authoritative accepted data, relationships and account isolation. |
+| Authentication | Better Auth with username/password, `username`/`admin` plugins and database-backed sessions. | Admin-created users, normal/admin permissions and cookie-based browser login without email infrastructure. |
+| SQL access and migrations | Drizzle ORM, `pg` and Drizzle Kit. | TypeScript schema, server connection pool and one versioned SQL migration history. |
+| Shared database | PostgreSQL 18; official `postgres:18-trixie` image for local development. | Five-year major support; named-volume persistence. Application access and account isolation follow in Phase 1. |
 | Local database | IndexedDB through Dexie. | Durable offline working data and queued operations. It complements PostgreSQL. |
 | Temporary UI state | Zustand. | Explicit recorder state shared across player, action, rink and detail controls. |
 | Translation | next-intl with English and European Portuguese (`pt-PT`). | App Router/server/client localization from Phase 0, including cached offline messages. |
@@ -18,7 +20,9 @@ Status: Phase 0 contains setup and a translated placeholder shell only. Domain i
 | PWA | Service worker with explicit offline-shell caching and prompted updates. | Installation alone does not provide offline routing or persistence. |
 | Clock | Countdown display, configurable periods and persisted anchors. | Match time calculated independently of timer callbacks. |
 
-Authentication, database-access and worker integration libraries are selected at the gates in [Backlog](backlog.md).
+Authentication and SQL libraries are implemented as described in [Account schema and flow](account-auth.md). Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1 are pinned. No email delivery, verification or email reset workflow is included. Worker tooling remains a gate in [Backlog](backlog.md).
+
+The root `compose.yaml` runs PostgreSQL only. It binds the configured host port to loopback and stores data in a named volume at `/var/lib/postgresql`. The root `.env` supplies server-only database and auth settings; `.env.example` documents local defaults. No database or auth secret uses a `NEXT_PUBLIC_` prefix. See [local setup](../README.md#local-postgresql).
 
 ## Current structure
 
@@ -28,12 +32,18 @@ Create folders only when the current phase uses them.
 src/
   app/
   client/
+    auth/
     shell/
     i18n/
   i18n/
   messages/
     en.json
     pt-PT.json
+  server/
+    auth/
+    db/
+scripts/
+drizzle/
 docs/
 ```
 
@@ -64,9 +74,11 @@ Use focused repository interfaces where they enable workflow testing or composit
 
 ## Account routing and ownership
 
-Working default: a user owns one personal account. Team and player data belongs to that account. Multiple members, invitations, organizations, billing and roles beyond ownership remain deferred unless requested.
+Working default for future product data: a user owns one personal workspace/account. Team and player data belongs to it. Authentication has `user` and `admin` roles for user management; these do not bypass future product-data ownership. Multiple members, invitations, organizations, billing and additional roles remain deferred.
 
-Use `/accounts/[accountId]/...` routes so scope stays explicit. Scope every server query and local dataset to the account, including operation receipts and pending mutations. Resolve authorized scope from the session; never trust route IDs alone.
+The current authentication increment uses only Better Auth's generated schema and a minimal login/protected shell. Defer `app_account`, its provisioning flow and account-specific UI until product data needs ownership. See [account schema and flow](account-auth.md). The workspace model remains separate from Better Auth's credential `auth_account`.
+
+The current routes are public `/sign-in` and protected `/`, with a shared header/main shell and authenticated sign-out. Account settings and the permission-gated admin button/screen are backlog items. Later product routes use `/accounts/[accountId]/...` so scope stays explicit. Scope every product-data query and local dataset to the account, including operation receipts and pending mutations. Resolve authorized scope from the session; never trust route IDs alone.
 
 Online account pages require a valid server session. Sign-in, account provisioning, team/player management and game/roster preparation require connectivity. A previously prepared game remains recordable at `/offline` without refreshing the session.
 
