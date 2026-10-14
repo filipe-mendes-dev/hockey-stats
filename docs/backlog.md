@@ -16,7 +16,7 @@ These gates do not block Phase 0. Exact library versions are chosen from current
 - Account settings and signed-in password changes through Better Auth, using the current password. No email dependency.
 - Permission-gated Admin navigation button and user-management screen. Admin user creation uses a terminal helper until that screen exists.
 - Administrator-assisted password recovery and any forced initial-password-change policy.
-- Personal workspace table/provisioning and account-scoped product persistence after the minimal authentication shell.
+- Personal workspace table/provisioning, account-scoped product persistence and durable command receipts in Phase 3's synchronized recording slice.
 
 - Manual JSON export/import, backup and recovery workflows.
 - Automated local/server backups and restore exercises.

@@ -1,6 +1,6 @@
 # Phase 1 infrastructure handoff
 
-Date: 2026-10-14. The PostgreSQL infrastructure increment is complete. The account-scoped API phase remains in progress.
+Date: 2026-10-14. Phase 1 is complete for the agreed authentication/database foundation. The original workspace-owned product API and command-receipt requirements move to Phase 3's synchronized recording slice; their acceptance is still pending there.
 
 ## Implemented
 
@@ -21,9 +21,9 @@ Date: 2026-10-14. The PostgreSQL infrastructure increment is complete. The accou
 
 No tests were read, added or run. Docker Desktop and the healthy PostgreSQL container were left running; `npm run db:down` stops the project's container while keeping its volume.
 
-## Remaining Phase 1 work
+## Deferred work
 
-Authentication, auth persistence/migrations and the protected shell are now implemented as recorded below. Account-scoped product routes/API, durable command receipts, account settings, admin navigation/UI and personal workspace provisioning remain deferred. The Phase 1 account-isolation and command-receipt acceptance criteria have not passed yet.
+Authentication, auth persistence/migrations and the protected shell are implemented as recorded below. Workspace provisioning, scoped product APIs and durable command receipts belong to Phase 3. Account settings and admin navigation/UI remain in the backlog. Workspace isolation and command-receipt acceptance have not passed yet and are not claimed as completed authentication work.
 
 ## Authentication increment
 
@@ -49,7 +49,7 @@ Implemented on 2026-10-14. Better Auth/adapter/CLI 1.7.8 manages username/passwo
 - Sign-out and helper cleanup left no active verification sessions. Temporary users were removed after verification, leaving the database ready for the user's real admin bootstrap.
 - `npm audit` reports 9 dependency findings, with 5 high findings in the pre-existing Next.js lint chain and 4 moderate findings in Drizzle Kit's esbuild loader chain. Better Auth declares the migration toolkit as a peer, so `npm audit --omit=dev` still reports those 4 moderate findings. No forced downgrade or unrelated dependency rewrite was applied.
 
-No test files were read, added or run. Phase 1 remains in progress because its workspace isolation and command-receipt acceptance work is outside this increment.
+No test files were read, added or run. Phase 1's agreed authentication/database acceptance is complete. The later modularity change moves generated auth definitions to `auth_schema.ts` and makes `schema.ts` re-export them. Formatting, lint, typecheck and build passed; auth generation preserved the central export and Drizzle reported no database changes.
 
 ### File report
 
@@ -90,5 +90,5 @@ No test files were read, added or run. Phase 1 remains in progress because its w
 | `docs/account-auth.md`                   | Record the implemented auth scope and pinned versions.                                   |
 | `docs/architecture.md`                   | Update implemented status and structure.                                                 |
 | `docs/backlog.md`                        | Retain deferred settings/admin/workspace work and record resolved versions.              |
-| `docs/development-plan.md`               | Record authentication completion while keeping Phase 1 in progress.                      |
+| `docs/development-plan.md`               | Close the agreed Phase 1 scope and assign workspace/receipt requirements to Phase 3.     |
 | `docs/phase-1-handoff.md`                | Record this verification and file report.                                                |

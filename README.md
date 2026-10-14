@@ -127,4 +127,4 @@ Read [AGENTS.md](AGENTS.md) before changing the repository.
 | [Development plan](docs/development-plan.md)         | Incremental phases, tests, acceptance criteria and first implementation prompt.     |
 | [Backlog](docs/backlog.md)                           | Deferred work and decisions required before dependent phases.                       |
 
-The current increment implements authentication and the minimal protected shell. Phase 1 remains in progress because workspace-scoped product persistence and command receipts are deferred.
+Phase 1 is complete for the agreed authentication/database foundation. Workspace-scoped product persistence and command receipts belong to Phase 3's synchronized recording slice. Account settings and admin UI remain in the backlog.

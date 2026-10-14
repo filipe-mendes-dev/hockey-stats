@@ -52,9 +52,9 @@ Validate sessions in protected server pages and independently in protected handl
 - Account settings, including changing password while signed in with the current password and revoking other sessions through Better Auth. No email is needed for this operation. [Password change](https://better-auth.com/docs/authentication/email-password#update-password).
 - Admin navigation button and user-management screen, visible only to users with the relevant admin permission. Keep server permission enforcement even when the button is hidden.
 - Administrator-assisted password recovery and any initial-password-change requirement. Do not claim forced rotation or password recovery in this increment.
-- Personal workspace provisioning, account-scoped product persistence and command receipts remain later Phase 1 work.
+- Personal workspace provisioning, account-scoped product persistence and command receipts belong to Phase 3's first synchronized recording slice.
 
-The existing offline/session-expiry requirements remain unchanged for later recorder work. This increment introduces no local recorder storage or service worker. Phase 1 remains incomplete until its account isolation and receipt criteria pass.
+The existing offline/session-expiry requirements remain unchanged for later recorder work. This increment introduces no local recorder storage or service worker. Phase 1 is complete for the agreed authentication/database scope. Workspace isolation and receipt acceptance belong to Phase 3.
 
 ## Implementation order and checks
 
