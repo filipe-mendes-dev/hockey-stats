@@ -1,9 +1,22 @@
 {
   "shell": {
-    "title": "Benchline Stats",
-    "description": "Registo de jogos de hóquei em patins",
-    "status": "Fase {phase, number}: configuração e bases do projeto",
-    "placeholder": "O registo de jogos estará disponível numa fase posterior."
+    "title": "Benchline Stats"
+  },
+  "auth": {
+    "signIn": "Iniciar sessão",
+    "signingIn": "A iniciar sessão…",
+    "username": "Nome de utilizador",
+    "password": "Palavra-passe",
+    "invalidCredentials": "Verifique o nome de utilizador e a palavra-passe e tente novamente.",
+    "unavailable": "Não foi possível iniciar sessão. Tente novamente.",
+    "rateLimited": "Demasiadas tentativas. Aguarde antes de tentar novamente.",
+    "signOut": "Terminar sessão",
+    "signingOut": "A terminar sessão…",
+    "signOutFailed": "Não foi possível terminar sessão. Tente novamente."
+  },
+  "home": {
+    "welcome": "Bem-vindo, {name}",
+    "signedIn": "A sessão está iniciada."
   },
   "language": {
     "label": "Idioma",
