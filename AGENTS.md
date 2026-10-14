@@ -4,9 +4,11 @@
 
 - Respond in English unless Portuguese is explicitly requested.
 - Keep responses concise and report changes file by file.
+- Split authorized work into small, reviewable increments. Before each increment, explain its scope; afterward, explain what changed, why it was needed and how it was checked. Do not combine unrelated steps into a large handoff.
+- Choose the simplest approach that satisfies the current requirement. Add complexity only when strictly necessary for a concrete need; discuss the need, trade-offs and simpler alternatives with the user before adding it.
 - If no edits are needed, reply exactly `no changes to <file_name>`.
 - Change only requested logic. Explain and justify necessary changes outside that scope.
-- Implement only the authorized phase and run its acceptance checks.
+- Implement only the authorized phase. Run non-test acceptance checks; test work requires explicit user instruction under the testing policy below.
 - Update affected docs when agreed requirements change; resolve conflicts before implementing dependent behavior.
 - Do not install packages or implement application features for a documentation-only request.
 
@@ -33,13 +35,19 @@
 - Validate incoming transport and stored values at runtime.
 - Inject time and ID generation where deterministic workflow tests require them.
 - Put web styles in adjacent `styles.module.css`, imported as `st`; avoid static inline JSX styles.
+- Keep React Client Components under `src/client`; App Router files compose them from `src/app`.
+- Keep translation catalogs under `src/messages`.
+- Put tests in the root `tests` directory. Mirror paths relative to `src`, such as `src/i18n/messages.ts` with `tests/i18n/messages.test.ts`. Keep compile-time assertions there too.
 - Handle long text, narrow screens, text scaling and touch/keyboard access.
 - Add user-facing text to both catalogs; keep canonical domain values untranslated.
 - Do not use emoji in code comments.
 
 ## Verification and handoff
 
-- Run checks relevant to the change/phase. Report failed or unavailable checks.
+- Ignore tests by default. Do not read, add, modify or run tests unless the user explicitly asks. Preserve existing tests and their setup unless changes are requested.
+- Add tests only after a functioning version exists and only for specific important behavior requested by the user. Avoid speculative tests and broad coverage work during prototyping.
+- Historical testing requirements in phase plans do not authorize test work. Follow the user's current testing instructions.
+- Run relevant non-test checks. Do not run aggregate commands that include tests, such as `npm run check`, unless explicitly requested. Report failed, skipped or unavailable checks accurately.
 - Verify offline/service-worker behavior against a production build.
 - Mark phases complete only after acceptance criteria pass.
 - Prefix branches with `feat/` for features or `fix/` for bug fixes. Never use `codex/`.
