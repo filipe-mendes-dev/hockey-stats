@@ -1,0 +1,45 @@
+.shell {
+  max-width: 64rem;
+  min-height: 100svh;
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+  overflow-wrap: anywhere;
+}
+
+.language {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.language select {
+  min-height: 2.75rem;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid #71858a;
+  border-radius: 0.375rem;
+  background: #fff;
+  color: inherit;
+}
+
+.content {
+  margin-top: clamp(3rem, 12vh, 7rem);
+  max-width: 44rem;
+  line-height: 1.6;
+}
+
+.content h1 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.15;
+  margin-block: 1rem;
+}
+
+.status {
+  color: #345e57;
+}
+.description {
+  font-size: 1.25rem;
+}
