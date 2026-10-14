@@ -2,13 +2,13 @@
 
 ## Status and scope
 
-Planning baseline revised on 2026-10-14. No application phase is implemented or authorized by these documentation changes. Next implementation approval is for Phase 0 only.
+Planning baseline revised on 2026-10-14. Phase 0 was authorized and completed on 2026-10-14. Later phases remain unimplemented and require separate authorization.
 
 Use Next.js, an early account-scoped PostgreSQL API and local synchronization. Add English/Portuguese support from Phase 0. Prepared games remain recordable at the limited `/offline` entry without a live API.
 
 | Phase | Status |
 | --- | --- |
-| 0. Workspace and foundations | Not started. |
+| 0. Project foundations | Complete. Setup-only scope; see [verification](phase-0-handoff.md#setup-only-cleanup). |
 | 1. Account-scoped API foundation | Not started. |
 | 2. Offline boot and recorder state feasibility | Not started. |
 | 3. Thin synchronized recording slice | Not started. |
@@ -24,13 +24,16 @@ Use Next.js, an early account-scoped PostgreSQL API and local synchronization. A
 
 Update a phase status only after its acceptance criteria pass. Record the actual checks and remaining limitations in the implementation handoff. No phase includes backup/export unless separately requested.
 
-## Phase 0. Workspace and foundations
+Phase 0 is setup-only by user request. Domain implementation, command contracts and test tooling are deferred. Testing scenarios in later phases are candidates for important behavior after a functioning version exists; they do not authorize adding or running tests without an explicit user request.
 
-- Objective: establish a small Next.js/TypeScript workspace with explicit browser/server/shared boundaries.
+## Phase 0. Project foundations
+
+- Objective: establish one minimal Next.js/TypeScript project and translated placeholder shell.
 - Dependencies: human approval for Phase 0.
-- Deliverables: `apps/web` with App Router and a placeholder shell; `packages/domain` and `packages/contracts`; strict TypeScript, linting, formatting, Vitest and production-build scripts. Add next-intl, English/pt-PT catalogs, typed keys and a persisted language selector without locale URL prefixes. Use a simple workspace setup without a task-runner framework. Define only minimal entity/command contracts and recovery validation needed by the first slice.
-- Tests: valid recovery with required player/subtype and absent time/position; missing player/subtype; invalid supplied numeric context; locale validation, catalog key/argument parity and fallback. Verify shell translation, saved language after reload and hydration consistency.
-- Acceptance: clean install, typecheck, lint, tests and production build pass. The shell renders in both languages and remembers selection. No API feature, database, auth integration, worker, event UI or sync engine is implemented. Existing Git metadata and documents remain intact.
+- Deliverables: a root Next.js App Router project and placeholder shell; strict TypeScript, linting, formatting, typecheck and production-build scripts. Keep next-intl, English/pt-PT catalogs, typed keys and a persisted language selector without locale URL prefixes. Use one npm package and TypeScript configuration. No domain implementation, transport contracts, tests or test runner belong in this setup phase. This supersedes the original workspace, recovery-validation and test-tooling requirements by user request.
+- Acceptance: clean install, formatting, typecheck, lint and production build pass. The shell renders in both languages and remembers selection. No domain implementation, transport contracts, test suite, API feature, database, auth integration, worker, event UI or sync engine is implemented. Existing Git metadata and planning documents remain intact.
+
+Earlier test and browser verification is preserved as history in the handoff. See [Setup-only cleanup](phase-0-handoff.md#setup-only-cleanup) for the current non-test checks and removed files. Work stops at Phase 0.
 
 ## Phase 1. Account-scoped API foundation
 
@@ -128,9 +131,11 @@ Update a phase status only after its acceptance criteria pass. Record the actual
 - Tests: all PRD scenarios in both languages; Chromium/Firefox/WebKit production-build flows; 360 CSS-pixel phone; tablet portrait/landscape; desktop; increased text size; long Portuguese labels; keyboard/touch; physical iPadOS checks if tablets are supported release devices.
 - Acceptance: all core flows work without a mouse/keyboard and without horizontal scrolling at the minimum viewport. Observers complete the documented tap paths with no extra mandatory screens. Report completion times, attribution mistakes and missed events from a scripted match exercise.
 
-## Test strategy
+## Deferred test scenarios
 
-| Layer | Required evidence |
+These are planning references, not required setup work or permission to run tests. Apply them only after a functioning version exists and the user explicitly requests tests for a specific important behavior.
+
+| Layer | Candidate evidence when authorized |
 | --- | --- |
 | Unit | Event validation, lineup replay/diagnostics, clock calculations and draft transitions. |
 | Localization | Typed keys, catalog/argument parity, locale preference, hydration and both-language UI. |
@@ -148,10 +153,10 @@ Execute only after approval:
 
 > Implement Phase 0 only for Benchline Stats in `hockey-stats`. Read AGENTS.md and the linked product, architecture and development-plan documents. Preserve existing files and Git metadata.
 >
-> Set up a minimal strict-TypeScript workspace with a Next.js App Router application in apps/web and shared packages/domain and packages/contracts. Add linting, formatting, Vitest, typecheck and production-build scripts. Add next-intl with English/pt-PT catalogs, typed keys and a persisted language selector. Keep URLs unprefixed. Render only the translated placeholder shell and language control.
+> Set up one minimal strict-TypeScript Next.js App Router application at the repository root. Add linting, formatting, typecheck and production-build scripts. Add next-intl with English/pt-PT catalogs, typed keys and a persisted language selector. Keep URLs unprefixed. Render only the translated placeholder shell and language control.
 >
-> Define the minimal entity/command contracts and pure runtime recovery validation needed by the first slice. Recovery requires a player and subtype. Time and coordinates are optional; reject invalid supplied values. Prefer interfaces, use named functions and never use any.
+> Do not implement domain entities, recovery validation or transport contracts in this setup phase. Add them only when an authorized feature needs them.
 >
-> Check translation key/argument parity, locale validation, language persistence and hydration alongside the Phase 0 domain checks.
+> Do not add tests or test tooling. Follow AGENTS.md and require explicit user instruction for tests after a functioning version exists.
 >
 > Do not implement API features, PostgreSQL, authentication, IndexedDB, service workers, recorder UI, sync, additional event variants or backup/export. Run the Phase 0 checks, report changes file by file and stop after Phase 0.

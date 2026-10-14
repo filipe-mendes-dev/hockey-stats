@@ -4,7 +4,7 @@ Responsive roller-hockey event recorder. Account-scoped data, a PostgreSQL-backe
 
 ## Current state
 
-Phase 0 provides one strict TypeScript Next.js application, a translated placeholder shell, saved English/European Portuguese selection and shared recovery validation. No API, authentication, database, service worker, recorder or synchronization is implemented.
+Phase 0 provides one strict TypeScript Next.js application, a translated placeholder shell and saved English/European Portuguese selection. Domain code, command contracts and tests are deferred until needed. No API, authentication, database, service worker, recorder or synchronization is implemented.
 
 ## Setup
 
@@ -22,11 +22,11 @@ npm run check
 npm run start
 ```
 
-`check` runs formatting verification, lint, typecheck, all Vitest tests and a production build. `start` serves that build. Individual commands are `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:watch` and `npm run build`. CLI arguments pass through, for example `npm run dev -- --port 3001`.
+`check` runs formatting verification, lint, typecheck and a production build. It does not run tests. `start` serves that build. Individual commands are `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm run build`. CLI arguments pass through, for example `npm run dev -- --port 3001`.
 
 ## Project structure
 
-The repository root is the application root. Run npm commands here. One `package.json`, lockfile and TypeScript configuration cover the application and tests. Domain rules and command contracts are ordinary source modules that browser and server code can share.
+The repository root is the application root. Run npm commands here. One `package.json`, lockfile and TypeScript configuration cover the application. The setup contains only the translated shell and its supporting code.
 
 ```text
 src/
@@ -34,21 +34,15 @@ src/
   client/
     shell/            # Interactive placeholder and adjacent CSS
     i18n/             # Client language provider
-  domain/             # Recovery records and runtime validation
-  contracts/          # Recovery command shape and validation
   i18n/               # Locale configuration and preference logic
   messages/           # English and pt-PT catalogs
-tests/                # Mirrors src/
-  domain/
-  contracts/
-  i18n/
 ```
 
-For example, `src/domain/validation.ts` maps to `tests/domain/validation.test.ts`. Compile-time assertions use the same test-folder convention. Separate packages and workspace scripts are unnecessary for the current prototype; discuss additional structure only when a concrete requirement needs it.
+Add domain and transport code only when an authorized feature needs it. Tests require explicit user instruction after a functioning version exists and should target specific important behavior. Separate packages and workspace scripts are unnecessary for the current prototype; discuss additional structure only when a concrete requirement needs it.
 
-`next typegen` runs before web typecheck and generates route and exact translation declarations. These generated files do not need to be committed. Tests check key/ICU argument parity; compile-time assertions check invalid translation keys and arguments.
+`next typegen` runs before typecheck and generates route and exact translation declarations. These generated files do not need to be committed. Typed translation keys and arguments remain available without a test suite.
 
-See [Phase 0 verification and file report](docs/phase-0-handoff.md#single-project-simplification) for the current file layout and simplification checks. The same document retains the earlier acceptance evidence, browser reproduction steps and remaining limitations.
+See [Phase 0 verification and file report](docs/phase-0-handoff.md#setup-only-cleanup) for the current cleanup and non-test checks. The same document retains earlier verification as historical evidence.
 
 ## Development context
 
