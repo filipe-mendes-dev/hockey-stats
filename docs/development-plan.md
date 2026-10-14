@@ -1,0 +1,157 @@
+# Development plan
+
+## Status and scope
+
+Planning baseline revised on 2026-10-14. No application phase is implemented or authorized by these documentation changes. Next implementation approval is for Phase 0 only.
+
+Use Next.js, an early account-scoped PostgreSQL API and local synchronization. Add English/Portuguese support from Phase 0. Prepared games remain recordable at the limited `/offline` entry without a live API.
+
+| Phase | Status |
+| --- | --- |
+| 0. Workspace and foundations | Not started. |
+| 1. Account-scoped API foundation | Not started. |
+| 2. Offline boot and recorder state feasibility | Not started. |
+| 3. Thin synchronized recording slice | Not started. |
+| 4. Teams and roster setup | Not started. |
+| 5. Simple countdown clock | Not started. |
+| 6. Independent lineup movements | Not started. |
+| 7. Event variants and mandatory details | Not started. |
+| 8. Optional field coordinates | Not started. |
+| 9. Alternate entry paths | Not started. |
+| 10. Historical corrections | Not started. |
+| 11. Offline and synchronization hardening | Not started. |
+| 12. Responsive and observer validation | Not started. |
+
+Update a phase status only after its acceptance criteria pass. Record the actual checks and remaining limitations in the implementation handoff. No phase includes backup/export unless separately requested.
+
+## Phase 0. Workspace and foundations
+
+- Objective: establish a small Next.js/TypeScript workspace with explicit browser/server/shared boundaries.
+- Dependencies: human approval for Phase 0.
+- Deliverables: `apps/web` with App Router and a placeholder shell; `packages/domain` and `packages/contracts`; strict TypeScript, linting, formatting, Vitest and production-build scripts. Add next-intl, English/pt-PT catalogs, typed keys and a persisted language selector without locale URL prefixes. Use a simple workspace setup without a task-runner framework. Define only minimal entity/command contracts and recovery validation needed by the first slice.
+- Tests: valid recovery with required player/subtype and absent time/position; missing player/subtype; invalid supplied numeric context; locale validation, catalog key/argument parity and fallback. Verify shell translation, saved language after reload and hydration consistency.
+- Acceptance: clean install, typecheck, lint, tests and production build pass. The shell renders in both languages and remembers selection. No API feature, database, auth integration, worker, event UI or sync engine is implemented. Existing Git metadata and documents remain intact.
+
+## Phase 1. Account-scoped API foundation
+
+- Objective: establish real server persistence and authorization before broad recorder development.
+- Dependencies: Phase 0; select an authentication integration and PostgreSQL access/migration library.
+- Deliverables: sign-in/out and personal account provisioning; account route/layout shell; PostgreSQL migrations; thin versioned Route Handlers; separate auth/services/repositories. Implement the minimum account/resource endpoint needed to prove scoped persistence. Establish a transactionally persisted command receipt before recorder uploads depend on it.
+- Tests: authorized persistence across server restart; unauthenticated request; two users with separate accounts; cross-account resource IDs; duplicate command ID with same payload and with changed payload; transaction rollback.
+- Acceptance: the authenticated account can persist/read a resource through its API. Another account cannot access it by guessing a URL or ID. A committed command receipt survives restart and duplicate delivery causes one mutation. No full team-management or recorder UI is bundled into this phase.
+
+## Phase 2. Offline boot and recorder state feasibility
+
+- Objective: prove Next.js can meet the offline requirement before building the recording workflows around it.
+- Dependencies: Phase 1; select stable worker tooling and local access policy.
+- Deliverables: explicit precached `/offline` entry limited to prepared games; account/game recorder fallback; IndexedDB prepared-game fixtures; scoped Zustand provider and visible add-event state shell; both language catalogs available locally. Fixtures are test data, not a hidden production data source. Exclude management/setup creation from offline UI.
+- Tests: production-build direct `/offline` reload; recorder URL fallback; expired server session; rejection of unprepared IDs; hydration; account switching; creation-state clearing; waiting worker update; offline language switch without server requests.
+- Acceptance: prepared-game views open at `/offline` without server rendering/auth refresh. No game/team/player creation or remote browsing is exposed. Draft exists only while its UI is visible. Account fixtures remain isolated and both languages work offline. No private HTML/RSC caching workaround is required.
+
+## Phase 3. Thin synchronized recording slice
+
+- Objective: prove local durability and remote acknowledgement in one narrow workflow.
+- Dependencies: Phase 2.
+- Deliverables: minimal online setup/preparation for one team/player/game/roster; player-first recovery with mandatory subtype; recent timeline; durable undo; local event+outbox transaction; PostgreSQL command handling; serial upload, receipts and download/reconciliation. Record the same prepared game online or at `/offline`.
+- Tests: online save; offline save/reload; reconnect; lost acknowledgement after SQL commit; duplicate tap/delivery; local write failure; undo before and after acknowledgement; a later local edit surviving an earlier acknowledgement.
+- Acceptance: record a recovery offline, reload, reconnect and obtain exactly one server event. Reload retains undo. Saved locally and synced are distinct. A rejected or failed upload preserves local work. This is a recovery-only slice, not all V1 events.
+
+## Phase 4. Teams and roster setup
+
+- Objective: expand minimal setup into practical multi-team management.
+- Dependencies: Phase 3.
+- Deliverables: reusable player identity, team memberships, team-specific numbers, game metadata, roster selection, starter selection and game snapshots through local/API command paths.
+- Tests: player on two teams; different numbers per roster; membership archive; later player rename; invalid cross-account/game references; online preparation followed by offline selection/reload; unavailable management controls at `/offline`.
+- Acceptance: either squad can select the same player. Historical names/numbers remain stable. Setup is online; prepared data supports offline recording/reload. Unprepared games and uncached remote data are not falsely shown as available.
+
+## Phase 5. Simple countdown clock
+
+- Objective: add optional match time without a clock-reconciliation subsystem.
+- Dependencies: Phase 4.
+- Deliverables: configurable periods/duration; countdown by default; start/pause/resume; manual correction; persisted elapsed anchor; explicit period change; event time capture. Persist and synchronize user clock mutations, not UI ticks.
+- Tests: paused/running reload; throttled UI callbacks; correction leaving old event times unchanged; missing duration/time; period change; zero boundary; undo of a control using a fresh anchor.
+- Acceptance: countdown is calculated from an anchor, so missed callbacks do not accumulate drift. It pauses at zero without automatic period/lineup changes. Non-movement events remain recordable without time. Movement time can be captured or entered manually without requiring a running clock. No time-source field or advanced drift diagnostics is added.
+
+## Phase 6. Independent lineup movements
+
+- Objective: derive the actual variable lineup from canonical history.
+- Dependencies: Phase 5.
+- Deliverables: starter replay, active/bench display, independent player-in/out with required period/game time, automatic known-clock capture or manual entry, and durable undo through the API-backed command path.
+- Tests: missing movement time rejected locally/by API; manual time without running clock; duplicate live movement; out without replacement; reload; period transition; replay equivalence; stale-writer conflict.
+- Acceptance: taking one player off decreases the count without requiring another player. Untimed movement cannot commit or sync, and edits cannot clear its time. Browser/server replay agrees. No regulation player count is hard-coded.
+
+## Phase 7. Event variants and mandatory details
+
+- Objective: add the remaining recorder vocabulary.
+- Dependencies: Phase 6; confirm shot edge cases.
+- Deliverables: shots/outcomes, losses/reasons, cards/colours and player-attributed fouls. Recovery subtype stays mandatory. Expand shared discriminated unions and transport validators incrementally.
+- Tests: required fields, incompatible fields, bench cards, foul without player rejection, missing optional context and card/movement independence.
+- Acceptance: all event types persist and synchronize. A blue card leaves lineup unchanged. A shot without time/coordinates is valid. Recovery subtype and foul player cannot be skipped.
+
+## Phase 8. Optional field coordinates
+
+- Objective: capture accurate position without making it mandatory.
+- Dependencies: Phase 7.
+- Deliverables: SVG rink, transformed normalized coordinates, optional position editing/removal and explicit period attack direction.
+- Tests: known points across scaling, rotation and letterboxing; outside-rink taps; absent coordinates; movement restrictions.
+- Acceptance: synthetic point conversion is within one CSS pixel across tested layouts. Every existing event path still works without field interaction. No zones or heatmaps are added.
+
+## Phase 9. Alternate entry paths
+
+- Objective: add action-first and field-first to the established player-first workflow.
+- Dependencies: Phase 8.
+- Deliverables: shared Zustand transitions, all required-detail paths, back/cancel behavior and one canonical submission path.
+- Tests: transition matrix, canonical equivalence, changed action clearing incompatible fields, double taps, visible failed-save retry and draft cleanup.
+- Acceptance: equivalent selections have equivalent persisted meaning through every path. Cancel writes nothing. Closing the UI retains no hidden draft. Intentional fresh repeated events remain possible.
+
+## Phase 10. Historical corrections
+
+- Objective: repair mistakes without hidden lineup changes or client/server divergence.
+- Dependencies: Phase 9.
+- Deliverables: edit player/details/position/time/period, soft delete, explicit historical placement, starter correction, lineup preview, contradiction diagnostics and revision-checked inverse operations.
+- Tests: deleted movement; starter change; changed player; reorder; unchanged order after time edit; movement time clearing rejected; conflict after remote change; accepted contradictory correction; durable undo before/after sync.
+- Acceptance: PRD scenario 8 passes locally and after synchronization. Both sides preserve flagged redundant movements as no-ops. No correction silently rewrites another event or discards pending local work.
+
+## Phase 11. Offline and synchronization hardening
+
+- Objective: validate failure recovery across realistic match sessions.
+- Dependencies: Phase 10.
+- Deliverables: actionable storage/auth/conflict UI; retry controls; migration fixtures; tab safeguards; safe update activation; prepared-match readiness; tested download cursors and pending-projection reconciliation.
+- Tests: full prepared match at `/offline`; restart/reconnect; acknowledgement loss; quota failure; interrupted transaction; SQL/IndexedDB migration failure; blocked upgrade; worker update; expired/revoked session; account switch; second writer; paginated download; offline language switch preserving draft/clock/pending records.
+- Acceptance: failures cause no partial local/server mutation, duplicate command effect or false synced status. Pending data survives reload and failed upload. Another account cannot see or upload it. The recorder never needs a live API to continue a prepared match.
+
+## Phase 12. Responsive and observer validation
+
+- Objective: verify recording speed and correctness on supported devices.
+- Dependencies: Phase 11.
+- Deliverables: phone/tablet/desktop layout refinements, long-text handling, accessibility and observer-tested interactions.
+- Tests: all PRD scenarios in both languages; Chromium/Firefox/WebKit production-build flows; 360 CSS-pixel phone; tablet portrait/landscape; desktop; increased text size; long Portuguese labels; keyboard/touch; physical iPadOS checks if tablets are supported release devices.
+- Acceptance: all core flows work without a mouse/keyboard and without horizontal scrolling at the minimum viewport. Observers complete the documented tap paths with no extra mandatory screens. Report completion times, attribution mistakes and missed events from a scripted match exercise.
+
+## Test strategy
+
+| Layer | Required evidence |
+| --- | --- |
+| Unit | Event validation, lineup replay/diagnostics, clock calculations and draft transitions. |
+| Localization | Typed keys, catalog/argument parity, locale preference, hydration and both-language UI. |
+| IndexedDB integration | Atomic event/outbox/journal writes, failed transaction, retry, acknowledgement reconciliation, migrations and undo. |
+| PostgreSQL/service integration | Account scoping, relationships, transaction rollback, optimistic revisions, idempotency receipts and tombstones. |
+| Browser E2E | Real production worker, offline boot/navigation, sync/reload, account switching, touch workflows and viewport behavior. |
+
+Use real browser IndexedDB and a real isolated PostgreSQL test database for acceptance evidence. In-memory substitutes may speed unit checks but cannot establish worker behavior, database constraints or storage durability.
+
+Use deterministic injected clock/network scenarios for failure cases. Do not rely solely on disconnecting a browser or sleeping in a test. Include API failure while browser connectivity still reports online.
+
+## First implementation prompt
+
+Execute only after approval:
+
+> Implement Phase 0 only for Benchline Stats in `hockey-stats`. Read AGENTS.md and the linked product, architecture and development-plan documents. Preserve existing files and Git metadata.
+>
+> Set up a minimal strict-TypeScript workspace with a Next.js App Router application in apps/web and shared packages/domain and packages/contracts. Add linting, formatting, Vitest, typecheck and production-build scripts. Add next-intl with English/pt-PT catalogs, typed keys and a persisted language selector. Keep URLs unprefixed. Render only the translated placeholder shell and language control.
+>
+> Define the minimal entity/command contracts and pure runtime recovery validation needed by the first slice. Recovery requires a player and subtype. Time and coordinates are optional; reject invalid supplied values. Prefer interfaces, use named functions and never use any.
+>
+> Check translation key/argument parity, locale validation, language persistence and hydration alongside the Phase 0 domain checks.
+>
+> Do not implement API features, PostgreSQL, authentication, IndexedDB, service workers, recorder UI, sync, additional event variants or backup/export. Run the Phase 0 checks, report changes file by file and stop after Phase 0.

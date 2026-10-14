@@ -1,12 +1,13 @@
 # Benchline Stats | Product Requirements Document
 
-**Status:** Draft for architecture planning  
+**Status:** Working development baseline, revised 2026-10-14
+
 **Repository working name:** `hockey-stats`  
 **Product working name:** Benchline Stats  
 **Target:** V1 live roller-hockey match recorder
 
 ## 1. Product overview
-Benchline Stats is an offline-capable, responsive web application for coaches and match observers to record player-specific events during roller-hockey games. Its primary product is a fast, reliable live recorder; analysis and dashboards are later phases.
+Benchline Stats is an offline-capable, responsive web application for coaches and match observers to record player-specific events during roller-hockey games. Its primary product is a fast, reliable live recorder; analysis and dashboards are later phases. Accounts and a PostgreSQL-backed Next.js API are included in the early architecture. IndexedDB retains the local working data and pending mutations needed to record without connectivity.
 
 ## 2. Problem and users
 A single observer needs to record match events in real time on a phone, tablet, or laptop, often with unreliable connectivity. Recording must require minimal taps, tolerate mistakes and clock drift, and never require optional contextual data.
@@ -19,24 +20,30 @@ A single observer needs to record match events in real time on a phone, tablet, 
 - Record player-level events quickly through player-first, action-first, and field-first interactions.
 - Record independent player-in and player-out events and correctly display variable on-field player counts.
 - Record cards, shots, possession losses, recoveries, and team fouls.
-- Allow optional normalized field coordinates and optional match-clock timestamps.
+- Allow optional normalized field coordinates and optional match-clock timestamps for non-movement events. Player-in/out require period and game time.
 - Show a live event timeline with immediate undo and historical edit/delete.
 - Preserve recording locally without network connectivity, including after ordinary page reloads.
 - Support phone, tablet, and desktop layouts; prioritize tablet ergonomics.
+- Provide account-scoped routing, authenticated API access and server persistence in the early phases.
+- Synchronize local mutations with explicit saved-locally, pending, synced and action-required states.
+- Support English and European Portuguese (`pt-PT`) from Phase 0, including the offline recorder.
 
 ## 4. Explicit non-goals for initial V1
 - Advanced analytics, heatmaps, season dashboards, or automated statistics projections.
 - Assist tracking, opponent player tracking, video synchronization, AI, or automated event detection.
 - Quick-substitution mode; use independent player-in/out actions.
 - Native mobile apps or app-store publication.
-- Mandatory accounts, cloud sync, or multi-device collaboration for the first usable local recorder. Assess these as later phases.
+- Multi-device simultaneous recording, shared-account collaboration, invitations, billing and advanced account roles. Initial sign-in/provisioning requires connectivity; continuing a prepared match does not.
 
 ## 5. Domain concepts
+### Account
+Owns teams, players and games. Working default: one personal account per user. Authorization applies to every API operation; account IDs in URLs are not authorization. Shared accounts and invitations are deferred.
+
 ### Team
-Represents a squad or age category (e.g., senior, U19). Name, optional category and season metadata. Do not assume a player belongs to only one team.
+Represents an account's squad or age category (e.g., senior, U19). Name, optional category and season metadata. Do not assume a player belongs to only one team.
 
 ### Player
-Independent identity, not owned by a team. Contains name and optional metadata.
+Independent identity within an account, not owned by a team. Contains name and optional metadata.
 
 ### TeamPlayer
 Many-to-many association between team and player. Optional team-specific jersey number and membership status. Consider temporal membership/season if useful without overengineering.
@@ -48,18 +55,18 @@ Participating team, opponent name, optional title, date, competition, home/away,
 Snapshot of the selected game roster with player identity, jersey number at match time, and starting status. Historical games must not change when team membership or jersey numbers change.
 
 ### GameEvent
-Canonical persisted record of a match occurrence. Suggested common attributes: stable ID, game ID, optional game-player ID, event type, period, optional game-time value, optional normalized x/y coordinates, event-specific attributes, creation time, and revision/deletion metadata as needed. Event-specific fields should be validated by type rather than allowing arbitrary invalid combinations. Final SQL/TypeScript representation is an architecture decision.
+Canonical persisted record of a match occurrence. Common attributes: stable ID, account ID, game ID, required game-player ID, explicit event order, event type, period, game time required for player-in/out and optional otherwise, optional normalized x/y coordinates, event-specific attributes, creation time and revision/deletion metadata. Event-specific fields are validated by variant rather than allowing arbitrary combinations. See `domain-model.md` for proposed TypeScript contracts. Game time has no source provenance field.
 
 ## 6. Event vocabulary and attributes
 | Event | Player | Details | Coordinates |
 | --- | --- | --- | --- |
-| Shot | Required | goal, saved/on target, off target, blocked (confirm exact taxonomy) | Optional |
-| Ball loss | Required | intercepted pass, failed individual action, other | Optional |
-| Ball recovery | Required | interception, duel, loose ball, other; subtype may be skipped if too slow | Optional |
-| Team foul | Optional | team-foul occurrence; clarify player attribution and running foul count | Optional |
-| Card | Required | yellow, blue, red | Optional |
-| Player in | Required | none | Not applicable |
-| Player out | Required | none | Not applicable |
+| Shot | Required | Required outcome: goal, non-goal on target, off target or blocked. Confirm edge cases before implementation. | Optional |
+| Ball loss | Required | Required reason: intercepted pass, failed individual action or other | Optional |
+| Ball recovery | Required | Required subtype: interception, duel, loose ball or other | Optional |
+| Team foul | Required | Player-attributed team-foul occurrence; regulation counters/resets deferred | Optional |
+| Card | Required | Required colour: yellow, blue or red | Optional |
+| Player in | Required | Required period and game time | Not applicable |
+| Player out | Required | Required period and game time | Not applicable |
 
 A card must **not** silently generate a player-out event. The UI can suggest a separate action. Player-in and player-out are independent; no replacement player is required. An optional convenience substitution workflow is deferred.
 
@@ -78,6 +85,8 @@ A card must **not** silently generate a player-out event. The UI can suggest a s
 4. Select starting lineup, without assuming every game always has a fixed number on the field.
 5. Enter live recorder; start or set the clock when ready.
 
+Prepare games and rosters online. Save the selected game, roster snapshots, starters, period configuration and history locally before offline use. `/offline` selects and records those prepared games; it does not create games, teams or players or expand rosters.
+
 ## 9. Live recorder layout
 - Header: teams, score if maintained, current period, clock controls, undo.
 - Main field: tappable rink with optional coordinate selection.
@@ -93,11 +102,11 @@ All paths produce the **same canonical event shape**, regardless of UI entry poi
 
 **Player-first:** select player → select action → choose mandatory event-specific details → commit.
 
-**Action-first:** select quick action → select player (if required) → choose mandatory details → commit.
+**Action-first:** select quick action → select player → choose mandatory details → commit.
 
-**Field-first:** tap rink position → select action → select player (if required) → choose mandatory details → commit.
+**Field-first:** tap rink position → select spatial action → select player → choose mandatory details → commit.
 
-A temporary draft may hold player, action, coordinates, period/time snapshot and details. The user must be able to cancel/back out without persisting incomplete events. Commit immediately once all required data is supplied; avoid unnecessary confirmation screens. Optional fields must not create extra mandatory steps.
+A temporary Zustand draft may hold player, action, coordinates, period/time snapshot and details only while the add-event UI is visible. Closing/cancelling, switching game/account or completing local save clears it. No hidden or reload-persisted creation draft is permitted. Persisted events waiting for upload are completed local operations, not drafts. The user can back out without persisting incomplete events. Commit locally once all required data is supplied; avoid unnecessary confirmation screens. Optional fields must not create mandatory steps.
 
 **Cards:** player → card → colour → commit.  
 **Player out:** active player → take off → commit.  
@@ -105,29 +114,35 @@ A temporary draft may hold player, action, coordinates, period/time snapshot and
 
 For game events, prevent accidental double taps and invalid transitions while still allowing explicit historical corrections.
 
+Player-in/out require a known captured game time or manual period/time entry before commit. Keep add-event UI visible until that requirement is met. Do not substitute zero or real-world creation time when match time is unknown.
+
 ## 11. Game clock and periods
-- Every event has a real-world `createdAt` for auditing/order; game time is optional.
+- Every event has a real-world `createdAt` for auditing and explicit event order for replay. Game time is mandatory for player-in/out and optional for other events.
 - Support period selection, start, pause, resume, and manual clock correction during play.
 - Clock time can be captured automatically at commit or entered/edited manually; recording works without an active clock.
 - Correcting the current clock affects **future** events, not timestamps already stored.
-- Define whether displayed clock counts up/down and how match-period boundaries behave before implementation. Avoid coupling timing logic to UI rerenders.
-- Support editing historical event period/time independently.
+- Default display is countdown with configurable periods. A positive period duration is required only to run the clock. Use a persisted anchor rather than decrementing per UI timer callback. Pause at zero; require an explicit period change. Do not guess competition presets or add advanced drift diagnostics initially.
+- Support editing historical event period/time independently. A movement timestamp cannot be cleared.
 
 ## 12. Timeline, undo, edit and delete
-- Display events in a predictable order even when match time is missing or manually corrected.
+- Display events in explicit event order even when match time is missing or manually corrected. Period/time can support later statistics views but cannot be the sole ordering key.
 - Immediate undo reverses the last user operation, including player-in/out and other compound changes if any.
 - Historical edit changes player, event-specific details, coordinates and period/time where applicable.
 - Historical deletion must recompute derived on-field lineup from the corrected sequence.
 - Ensure undo/edit/delete are persisted locally and remain consistent across reloads.
-- Decide whether to use immutable corrections/tombstones or mutable local records; document tradeoffs. An append-only event log is a design direction, **not** a prohibition on corrections.
+- Use current records, increasing revisions, soft-delete tombstones and a durable operation journal. Undo uses a durable inverse operation, including after synchronization.
+- Historical corrections preview downstream movement contradictions. Explicitly accepted redundant transitions remain visible and replay as flagged no-ops; never silently rewrite other events.
 
 ## 13. Offline-first behavior
-- Core recording, game setup, lineup, clock, timeline, edits and undo work without a network connection after the app is installed/cached.
-- Local data writes must be durable before the UI claims an event was saved; handle quota/storage failures visibly.
+- `/offline` supports selecting a prepared game, recording, lineup movements, clock, timeline, edits and undo using saved data. Account/team/player management, game creation, roster expansion and uncached browsing remain online-only.
+- Cache the offline entry and required assets, including both language catalogs, and save prepared match data before reporting offline readiness. Unprepared game IDs show an unavailable state rather than an incomplete recorder.
+- Local changes and their upload commands commit atomically before the UI claims saved locally. Synced requires a persisted server acknowledgement; handle quota/storage failures visibly.
 - Avoid depending on a live server for any match-critical interaction.
 - Protect active recording sessions from unexpected service-worker updates/reloads.
-- Consider export/backup and data-loss recovery before production use; browser storage is not guaranteed permanent.
-- Cloud synchronization, account management and conflict resolution are deferred unless architectural analysis shows a minimal earlier requirement.
+- PostgreSQL is authoritative for accepted shared data. IndexedDB keeps local working data, pending changes and undo history even while online. An API timeout must not discard an event or create duplicate effects on retry.
+- Include account-scoped API/authentication and the minimum synchronization protocol in early phases. Recheck authorization on upload and detect stale revisions. Simultaneous multi-device recording remains out of scope.
+- First sign-in and uncached data download require connectivity. Session expiry does not prevent prepared local recording. Signing out locks local account views; another account must not see or upload pending work from the previous account.
+- Backup/export and recovery tooling are backlog items, not current implementation gates. Browser storage is not guaranteed permanent; unsynced work has no remote copy yet.
 
 ## 14. Derived state and invariants
 - Active lineup is derived from starters/player-in/player-out history (or equivalent canonical initial events).
@@ -135,15 +150,19 @@ For game events, prevent accidental double taps and invalid transitions while st
 - Do not assume a card automatically changes on-field state.
 - A player cannot normally be put on twice consecutively or taken off while absent; define how historical corrections resolve inconsistent sequences.
 - A single player's team membership must not determine historical match participation.
-- Events without position or game time remain valid.
+- Spatial events without position remain valid. Non-movement events may omit game time; player-in/out cannot.
 
-## 15. Technical decisions to investigate, not prescribe
-- React + Vite PWA versus Next.js PWA; compare offline complexity, SSR benefit, routing, hosting and developer experience.
-- Integrated Next.js server/API versus independently deployed Fastify or NestJS backend, including whether backend is necessary for first local-only milestone.
-- IndexedDB persistence (possibly Dexie), UI state management, validation and test strategy.
-- Monorepo versus single frontend repository with later extraction.
-- Future PostgreSQL schema/Drizzle and sync strategy without prematurely implementing them.
-- Canvas versus SVG for a responsive tappable rink, accessible touch targets and coordinate conversion.
+## 15. Technical baseline
+- Next.js App Router with separated server code and thin API Route Handlers.
+- PostgreSQL for accepted shared records; IndexedDB/Dexie for local working data, outbox and undo.
+- Zustand for temporary UI state, scoped to the mounted recorder/account lifecycle.
+- next-intl from Phase 0 with English/pt-PT catalogs, typed message keys and persisted language selection. Keep URLs independent of locale and `/offline` unprefixed; see `localization.md`.
+- Small workspace with `apps/web`, `packages/domain` and `packages/contracts`.
+- Server services own authorization/business workflows and transactions; repositories own account-scoped storage access.
+- Local and server workflows share deterministic domain functions, not a transaction spanning both databases.
+- SVG rink with stable normalized coordinates and tested pointer conversion.
+- Prove App Router offline boot/navigation and authentication boundaries before broad feature implementation.
+- Authentication provider, database-access library and stable PWA tooling are selected before their dependent phases. See `architecture.md` and `backlog.md`.
 
 ## 16. Acceptance scenarios
 1. One player belongs to senior and U19 teams, and can appear on either team's game roster with a match-specific number.
@@ -156,14 +175,25 @@ For game events, prevent accidental double taps and invalid transitions while st
 8. Operator undoes the latest event, edits an older event, and deletes a mistaken player-in/out event without silently corrupting lineup state.
 9. The same event can be recorded via player-first, action-first or field-first and has equivalent persisted meaning.
 10. Tablet, phone and desktop layouts allow all core workflows without a mouse or keyboard.
+11. Operator records offline, reloads and reconnects; retries create exactly one server effect and retain local undo history.
+12. Expired online authentication pauses synchronization without discarding local recording. A different signed-in account cannot view or upload those pending commands.
+13. Recovery without a subtype and foul without a player cannot commit. Closing add-event UI leaves no hidden draft.
+14. An earlier server acknowledgement cannot overwrite a later pending local correction.
+15. Player-in/out without game time cannot commit locally or through the API. Manual time permits movement entry without a running clock; edits cannot clear it.
+16. `/offline` opens saved games with no network/session refresh. Unprepared IDs and management/creation workflows remain unavailable there.
+17. English/Portuguese selection persists after reload and works offline without losing a draft, clock or pending records. All recorder labels, errors and accessibility messages are translated.
 
-## 17. Open questions for planning
-- Confirm regulation-aware default periods, clock direction, and roster/on-field limits; make rules configurable where justified.
-- Is a foul always team-level, or optionally attributed to a player? Should foul counters reset per period?
-- Should shot outcomes distinguish saved vs other on-target attempts, and how are blocked shots classified?
-- How should orientation change between periods? Is field position always relative to the tracked team's attack?
-- What is the minimum safe offline backup/export path for an MVP?
-- Should score be entered manually or derived from recorded goals, and how are opponent goals captured if score is displayed?
+## 17. Defaults and remaining decisions
+- Configurable periods, countdown initially and no inferred roster/on-field limits. Competition presets remain unconfirmed.
+- Movement time is required; use a known clock value or manual entry. Other events may be untimed.
+- `/offline` is limited to prepared-game recording. Online routes handle preparation and management.
+- English and `pt-PT` use next-intl from Phase 0 with locale-independent URLs.
+- Every foul requires a player. Official foul counts, reset rules and thresholds are deferred.
+- Working shot vocabulary uses exclusive goal, non-goal on-target, off-target and blocked outcomes. Confirm edge cases before that phase.
+- Fixed labelled rink frame, explicit attack direction per period and no automatic end swap.
+- Historical contradiction behavior is specified in `domain-model.md`.
+- Score display is deferred until opponent-score entry/corrections are specified.
+- Backup/export remains in `backlog.md`.
 
 ## 18. Delivery priority
-First achieve a usable, reliable **local-only live recorder**. Add server/API, authentication, synchronization and analytics only as independently justified later phases. Prioritize user-tested recording speed and correctness over abstractions or visual polish.
+Establish Next.js, account-scoped API persistence and offline boot in early phases, then prove a thin local recording/synchronization slice. Expand incrementally to roster management, simple countdown, lineup, event variants, field interaction, alternate paths and corrections. Match recording must never require a live API. Analytics and backup/export remain deferred. See `development-plan.md` for phase dependencies, tests and acceptance criteria.
