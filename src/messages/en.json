@@ -1,9 +1,22 @@
 {
   "shell": {
-    "title": "Benchline Stats",
-    "description": "Roller-hockey match recording",
-    "status": "Phase {phase, number}: workspace and foundations",
-    "placeholder": "Match recording will arrive in a later phase."
+    "title": "Benchline Stats"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "username": "Username",
+    "password": "Password",
+    "invalidCredentials": "Check your username and password and try again.",
+    "unavailable": "Unable to sign in. Please try again.",
+    "rateLimited": "Too many attempts. Please wait before trying again.",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…",
+    "signOutFailed": "Unable to sign out. Please try again."
+  },
+  "home": {
+    "welcome": "Welcome, {name}",
+    "signedIn": "You are signed in."
   },
   "language": {
     "label": "Language",

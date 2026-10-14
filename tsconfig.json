@@ -17,6 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "allowArbitraryExtensions": true,
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "incremental": true,
     "plugins": [
@@ -31,6 +32,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "*.ts",
+    "scripts/**/*.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],

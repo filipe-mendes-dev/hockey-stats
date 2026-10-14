@@ -2,14 +2,14 @@
 
 ## Status and scope
 
-Planning baseline revised on 2026-10-14. Phase 0 was authorized and completed on 2026-10-14. Later phases remain unimplemented and require separate authorization.
+Planning baseline revised on 2026-10-14. Phases 0 and 1 are complete. Phase 1 reflects the agreed database/authentication scope; workspace-owned product APIs and command receipts move to Phase 3. Later phases remain unimplemented and require separate authorization.
 
 Use Next.js, an early account-scoped PostgreSQL API and local synchronization. Add English/Portuguese support from Phase 0. Prepared games remain recordable at the limited `/offline` entry without a live API.
 
 | Phase | Status |
 | --- | --- |
 | 0. Project foundations | Complete. Setup-only scope; see [verification](phase-0-handoff.md#setup-only-cleanup). |
-| 1. Account-scoped API foundation | Not started. |
+| 1. Authentication and database foundation | Complete. PostgreSQL, modular auth schema/migrations, username/password login, admin creation commands and protected shell verified. |
 | 2. Offline boot and recorder state feasibility | Not started. |
 | 3. Thin synchronized recording slice | Not started. |
 | 4. Teams and roster setup | Not started. |
@@ -33,15 +33,19 @@ Phase 0 is setup-only by user request. Domain implementation, command contracts 
 - Deliverables: a root Next.js App Router project and placeholder shell; strict TypeScript, linting, formatting, typecheck and production-build scripts. Keep next-intl, English/pt-PT catalogs, typed keys and a persisted language selector without locale URL prefixes. Use one npm package and TypeScript configuration. No domain implementation, transport contracts, tests or test runner belong in this setup phase. This supersedes the original workspace, recovery-validation and test-tooling requirements by user request.
 - Acceptance: clean install, formatting, typecheck, lint and production build pass. The shell renders in both languages and remembers selection. No domain implementation, transport contracts, test suite, API feature, database, auth integration, worker, event UI or sync engine is implemented. Existing Git metadata and planning documents remain intact.
 
-Earlier test and browser verification is preserved as history in the handoff. See [Setup-only cleanup](phase-0-handoff.md#setup-only-cleanup) for the current non-test checks and removed files. Work stops at Phase 0.
+Earlier test and browser verification is preserved as history in the handoff. See [Setup-only cleanup](phase-0-handoff.md#setup-only-cleanup) for the Phase 0 non-test checks and removed files. That implementation stopped after Phase 0; the subsequent PostgreSQL increment is described below.
 
-## Phase 1. Account-scoped API foundation
+## Phase 1. Authentication and database foundation
 
-- Objective: establish real server persistence and authorization before broad recorder development.
-- Dependencies: Phase 0; select an authentication integration and PostgreSQL access/migration library.
-- Deliverables: sign-in/out and personal account provisioning; account route/layout shell; PostgreSQL migrations; thin versioned Route Handlers; separate auth/services/repositories. Implement the minimum account/resource endpoint needed to prove scoped persistence. Establish a transactionally persisted command receipt before recorder uploads depend on it.
-- Tests: authorized persistence across server restart; unauthenticated request; two users with separate accounts; cross-account resource IDs; duplicate command ID with same payload and with changed payload; transaction rollback.
-- Acceptance: the authenticated account can persist/read a resource through its API. Another account cannot access it by guessing a URL or ID. A committed command receipt survives restart and duplicate delivery causes one mutation. No full team-management or recorder UI is bundled into this phase.
+The agreed phase adds PostgreSQL 18 local infrastructure, a persistent Compose volume, readiness check, environment configuration, modular Drizzle schema/migrations, Better Auth username/password login, admin-created users and a minimal header/main shell. Use public `/sign-in` and protected `/`, with sign-out in the authenticated header. Public signup, email infrastructure, account settings and the admin tab/screen are excluded. The earlier workspace provisioning, scoped product API and command-receipt requirements move to Phase 3, where actual product data and synchronization need them. See the [handoff](phase-1-handoff.md) for completed checks.
+
+Phase 1 completed on 2026-10-14. Its migrations, production browser flow, role permission checks and schema modularity checks passed. See [authentication verification](phase-1-handoff.md#authentication-increment). Settings and admin navigation/UI remain in the backlog; workspace ownership and receipts belong to Phase 3.
+
+- Objective: establish the database and authenticated application entry before product workflows.
+- Dependencies: Phase 0; Better Auth with username/admin plugins, Drizzle ORM, Drizzle Kit and PostgreSQL. No email infrastructure is required.
+- Deliverables: persistent PostgreSQL Compose setup; modular generated auth schema and versioned SQL migrations; server-only database/auth configuration; normal/admin permissions; first-admin bootstrap and authenticated user creation commands; login/protected pages and shared header with sign-out; both language catalogs.
+- Verification: manual migration, login/reload/sign-out and permission checks; formatting, lint, typecheck and production build. No automated tests are required or authorized by this phase.
+- Acceptance: the database retains data across container recreation; auth migrations apply and generation preserves the central schema exports; username/password login establishes a database session and survives page reload; anonymous visitors cannot access the protected home; sign-out invalidates the session; only an admin can create normal users; public signup and role escalation are denied; both locales fit the supported narrow-screen layout; all non-test project checks pass.
 
 ## Phase 2. Offline boot and recorder state feasibility
 
@@ -55,9 +59,9 @@ Earlier test and browser verification is preserved as history in the handoff. Se
 
 - Objective: prove local durability and remote acknowledgement in one narrow workflow.
 - Dependencies: Phase 2.
-- Deliverables: minimal online setup/preparation for one team/player/game/roster; player-first recovery with mandatory subtype; recent timeline; durable undo; local event+outbox transaction; PostgreSQL command handling; serial upload, receipts and download/reconciliation. Record the same prepared game online or at `/offline`.
+- Deliverables: personal workspace table/provisioning and a minimum account-scoped product API; minimal online setup/preparation for one team/player/game/roster; player-first recovery with mandatory subtype; recent timeline; durable undo; local event+outbox transaction; PostgreSQL command handling; serial upload, transactionally persisted receipts and download/reconciliation. Record the same prepared game online or at `/offline`.
 - Tests: online save; offline save/reload; reconnect; lost acknowledgement after SQL commit; duplicate tap/delivery; local write failure; undo before and after acknowledgement; a later local edit surviving an earlier acknowledgement.
-- Acceptance: record a recovery offline, reload, reconnect and obtain exactly one server event. Reload retains undo. Saved locally and synced are distinct. A rejected or failed upload preserves local work. This is a recovery-only slice, not all V1 events.
+- Acceptance: each workspace can persist/read its resource through the API; another user cannot access it by guessing an ID. Record a recovery offline, reload, reconnect and obtain exactly one server event. A committed receipt survives server restart and duplicate delivery applies one mutation. Reload retains undo. Saved locally and synced are distinct. A rejected or failed upload preserves local work. This is a recovery-only slice, not all V1 events.
 
 ## Phase 4. Teams and roster setup
 

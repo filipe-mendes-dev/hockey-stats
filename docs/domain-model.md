@@ -12,6 +12,8 @@ Status: proposed TypeScript contracts for incremental implementation. These exam
 - Current membership cannot rewrite a historical game roster.
 - Working account default: one personal account per user. Shared accounts and invitations are deferred.
 
+The future domain `Account` maps to a personal `app_account` workspace, with a unique owner reference to Better Auth's `auth_user`. Its table and provisioning are deferred beyond the minimal authentication increment. Better Auth's `auth_account` stores authentication methods and is not a domain account. Authentication `user`/`admin` roles do not replace workspace ownership. See [account schema and flow](account-auth.md).
+
 ## Entity contracts
 
 ```ts
@@ -152,7 +154,7 @@ The type alias expresses a discriminated union, which an interface cannot replac
 
 `revision` describes the confirmed entity version. Local pending projections and their sequence metadata live in persistence envelopes, not in a fake server acknowledgement. Game mutation commands also use an aggregate revision for ordered synchronization. Define those envelopes and command contracts in the synchronization slice.
 
-Use client-generated stable IDs. `createdAt` preserves local entry time; it is not a globally trustworthy ordering clock. Server operation receipts separately record acceptance time. No `source` field is required for game time.
+Use client-generated stable IDs for recording entities and commands. Authentication IDs belong to Better Auth; the online-only personal account receives a server-generated UUID during provisioning. `createdAt` preserves local entry time; it is not a globally trustworthy ordering clock. Server operation receipts separately record acceptance time. No `source` field is required for game time.
 
 ## Shot vocabulary
 

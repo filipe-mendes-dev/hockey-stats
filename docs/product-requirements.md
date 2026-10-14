@@ -25,6 +25,7 @@ A single observer needs to record match events in real time on a phone, tablet, 
 - Preserve recording locally without network connectivity, including after ordinary page reloads.
 - Support phone, tablet, and desktop layouts; prioritize tablet ergonomics.
 - Provide account-scoped routing, authenticated API access and server persistence in the early phases.
+- Start authentication with admin-created username/password users and basic `user`/`admin` permissions through Better Auth. The first auth UI is public login and a protected header/main shell with sign-out. Email infrastructure, account settings and the admin screen follow separately or remain deferred.
 - Synchronize local mutations with explicit saved-locally, pending, synced and action-required states.
 - Support English and European Portuguese (`pt-PT`) from Phase 0, including the offline recorder.
 
@@ -33,11 +34,13 @@ A single observer needs to record match events in real time on a phone, tablet, 
 - Assist tracking, opponent player tracking, video synchronization, AI, or automated event detection.
 - Quick-substitution mode; use independent player-in/out actions.
 - Native mobile apps or app-store publication.
-- Multi-device simultaneous recording, shared-account collaboration, invitations, billing and advanced account roles. Initial sign-in/provisioning requires connectivity; continuing a prepared match does not.
+- Multi-device simultaneous recording, shared-account collaboration, invitations, billing and advanced account roles. Basic authentication admin/user permissions are included. Initial sign-in/provisioning requires connectivity; continuing a prepared match does not.
 
 ## 5. Domain concepts
 ### Account
 Owns teams, players and games. Working default: one personal account per user. Authorization applies to every API operation; account IDs in URLs are not authorization. Shared accounts and invitations are deferred.
+
+This domain account is a workspace for hockey data, separate from the Better Auth user identity and credential account. Its table/provisioning is deferred beyond the initial login shell. Authentication admin privileges manage users; they do not automatically grant access to other workspaces' hockey data.
 
 ### Team
 Represents an account's squad or age category (e.g., senior, U19). Name, optional category and season metadata. Do not assume a player belongs to only one team.
