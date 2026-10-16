@@ -34,7 +34,8 @@
 - Prefer named functions and arrow callbacks.
 - Validate incoming transport and stored values at runtime.
 - Inject time and ID generation where deterministic workflow tests require them.
-- Put web styles in adjacent `styles.module.css`, imported as `st`; avoid static inline JSX styles.
+- Put web components in PascalCase files with adjacent `ComponentName.module.css`, imported as `st`; avoid static inline JSX styles. Put component interfaces in adjacent `ComponentName.interfaces.ts` files when needed.
+- Put reusable controls/layout in `src/client/components`, complete page views in `src/client/pages` and feature-owned shared state in `src/client/features`. App Router entries compose the corresponding pages directly; do not re-export other route entries or switch page views through a central pathname conditional.
 - Keep React Client Components under `src/client`; App Router files compose them from `src/app`.
 - Keep translation catalogs under `src/messages`.
 - When explicitly requested, put tests in the root `tests` directory and mirror paths relative to `src`, such as `src/i18n/messages.ts` with `tests/i18n/messages.test.ts`. Keep compile-time assertions there too. Do not create test folders in advance.
