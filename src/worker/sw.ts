@@ -2,6 +2,12 @@
 
 import { Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import {
+  getRoutePayloadCacheUrl,
+  isOfflinePagePath,
+  routePayloadParameter,
+} from "../offline-pages";
+import { offlineRoutePrecachePlugin } from "./offline-route-payloads";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -17,7 +23,11 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: false,
   runtimeCaching: [],
-  precacheOptions: { cleanURLs: false, ignoreURLParametersMatching: [] },
+  precacheOptions: {
+    cleanURLs: false,
+    ignoreURLParametersMatching: [],
+    plugins: [offlineRoutePrecachePlugin],
+  },
 });
 
 self.addEventListener("install", serwist.handleInstall);
@@ -28,9 +38,43 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin ||
-    request.headers.has("rsc") ||
+    url.searchParams.has(routePayloadParameter)
+  ) {
+    return;
+  }
+  const isRoutePayload =
+    request.headers.get("rsc") === "1" ||
+    request.headers.get("accept")?.includes("text/x-component");
+
+  if (isOfflinePagePath(url.pathname)) {
+    if (
+      isRoutePayload &&
+      !request.headers.has("next-router-prefetch") &&
+      !request.headers.has("next-router-segment-prefetch")
+    ) {
+      event.respondWith(
+        serwist
+          .matchPrecache(getRoutePayloadCacheUrl(url.pathname))
+          .then((cached) => cached ?? fetch(request)),
+      );
+    } else if (
+      request.mode === "navigate" &&
+      !isRoutePayload &&
+      !url.searchParams.has("_rsc")
+    ) {
+      event.respondWith(
+        serwist
+          .matchPrecache(url.pathname)
+          .then((cached) => cached ?? fetch(request)),
+      );
+    }
+    return;
+  }
+
+  if (
+    isRoutePayload ||
     request.headers.has("next-router-prefetch") ||
-    (url.pathname === "/app" && request.mode !== "navigate")
+    url.searchParams.has("_rsc")
   ) {
     return;
   }
