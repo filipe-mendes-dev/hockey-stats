@@ -104,6 +104,6 @@ Store event elapsed time without source provenance. The countdown UI converts it
 
 ## Offline and language
 
-`/offline` exposes prepared-game selection and the same recorder, lineup, clock, timeline and correction controls. It excludes account/team/player management, game creation and roster expansion. Only saved game data is selectable.
+The normal application supports team/player management, new-game setup, roster selection, recording, timeline, corrections and locally retained game history without connectivity. No match must be prepared online in advance. Account management and server synchronization require connectivity. Selecting an existing game requires its saved data; an unknown ID does not create one implicitly.
 
-Use both message catalogs for controls, details, validation and accessibility labels. English/Portuguese switching in `/offline` must preserve the current draft and recording state. See [Localization](localization.md).
+Use both message catalogs for controls, details, validation and accessibility labels. English/Portuguese switching in the local application must preserve the current draft and recording state. See [Localization](localization.md).

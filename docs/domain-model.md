@@ -4,8 +4,8 @@ Status: proposed TypeScript contracts for incremental implementation. These exam
 
 ## Ownership and relationships
 
-- An account owns teams, players, memberships and games.
-- A player is independent of teams within that account and may belong to several squads or age categories.
+- A local workspace owns teams, players, memberships and games before any server account exists. Synchronization explicitly associates it with an authorized server account.
+- A player is independent of teams within that workspace and may belong to several squads or age categories.
 - A game tracks one team's perspective and an opponent name.
 - A game player snapshots participation, name, jersey number and starting status.
 - Every event references a game player, including a team foul.
@@ -25,7 +25,11 @@ interface StoredEntity {
 }
 
 interface OwnedEntity extends StoredEntity {
-  accountId: string;
+  workspaceId: string;
+}
+
+interface LocalWorkspace extends StoredEntity {
+  name: string;
 }
 
 interface Account extends StoredEntity {
@@ -152,9 +156,9 @@ type GameEvent =
 
 The type alias expresses a discriminated union, which an interface cannot replace. Runtime validation must reject incompatible fields as well as missing required fields.
 
-`revision` describes the confirmed entity version. Local pending projections and their sequence metadata live in persistence envelopes, not in a fake server acknowledgement. Game mutation commands also use an aggregate revision for ordered synchronization. Define those envelopes and command contracts in the synchronization slice.
+In these local entity examples, `revision` describes the local stored version. Confirmed server revisions and account binding belong in separate synchronization envelopes and are absent for never-uploaded records. Local versions must not masquerade as server acknowledgements. Game mutation commands also use a confirmed aggregate revision after server creation. Define those envelopes and command contracts in the synchronization slice, not Phase 2.
 
-Use client-generated stable IDs for recording entities and commands. Authentication IDs belong to Better Auth; the online-only personal account receives a server-generated UUID during provisioning. `createdAt` preserves local entry time; it is not a globally trustworthy ordering clock. Server operation receipts separately record acceptance time. No `source` field is required for game time.
+Use client-generated stable IDs for the local workspace, teams, players, games, roster entries, events and commands. Local creation does not wait for a server-issued ID or account. Authentication IDs belong to Better Auth; the online-only personal server account receives a server-generated UUID during provisioning. Server storage maps the explicitly bound workspace to an authorized account and preserves stable entity IDs for retries. `createdAt` preserves local entry time; it is not a globally trustworthy ordering clock. Server operation receipts separately record acceptance time. No `source` field is required for game time.
 
 ## Shot vocabulary
 
@@ -173,7 +177,7 @@ Confirm edge cases before the shot phase. Do not claim this is an official feder
 
 ## Invariants
 
-1. References stay within one account. An event's roster entry belongs to its game.
+1. Local references stay within one workspace; synchronized references stay within its bound authorized account. An event's roster entry belongs to its game.
 2. Team membership is unique per team/player pair in V1. A game roster contains a player at most once.
 3. Referenced historical identities are archived, not hard-deleted.
 4. Names and jersey numbers are copied into game snapshots intentionally. Events reference snapshots rather than duplicating their display fields.

@@ -54,7 +54,7 @@ Validate sessions in protected server pages and independently in protected handl
 - Administrator-assisted password recovery and any initial-password-change requirement. Do not claim forced rotation or password recovery in this increment.
 - Personal workspace provisioning, account-scoped product persistence and command receipts belong to Phase 3's first synchronized recording slice.
 
-The existing offline/session-expiry requirements remain unchanged for later recorder work. This increment introduces no local recorder storage or service worker. Phase 1 is complete for the agreed authentication/database scope. Workspace isolation and receipt acceptance belong to Phase 3.
+Phase 1 is complete for its implemented authentication/database scope. The later offline-first requirements supersede its protected-home pattern for the local product entry: local hockey workflows require no login, and accounts provide synchronization and account management. The existing auth routes are not changed by this planning update. Explicit sign-out is planned to remove private local data with unsynced-work safeguards, while retaining generic installed app files. See [offline policy](offline-sync.md#authentication-and-account-isolation). Workspace binding and receipt acceptance belong to Phase 3.
 
 ## Implementation order and checks
 

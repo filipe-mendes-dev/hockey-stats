@@ -1,10 +1,18 @@
 # Benchline Stats
 
-Responsive roller-hockey event recorder. Account-scoped data, a PostgreSQL-backed API and offline match recording are planned.
+Offline-first roller-hockey application. Local team/player management, new-match setup, recording and retained match history are planned. Accounts and a PostgreSQL-backed API provide optional synchronization.
 
 ## Current state
 
-The application now provides Better Auth username/password login, PostgreSQL-backed sessions, admin-created users, Drizzle migrations and a minimal authenticated header/main shell. English and European Portuguese selection remains available. There is no public registration or email service. Account settings, admin UI and workspace provisioning remain in the backlog. Offline boot, recording and synchronization belong to later increments.
+The application provides Better Auth username/password login, PostgreSQL-backed sessions, admin-created users, Drizzle migrations and a minimal authenticated shell. Phase 2 adds a public `/app` placeholder, installation metadata/icons and a Serwist worker that caches its application files. English and European Portuguese work offline. There is no public registration or email service. IndexedDB initialization, hockey features, synchronization, account settings and admin UI remain unimplemented.
+
+## PWA increment
+
+Build with `npm run build`, then run `npm run start -- --port 3001` and open [the local app](http://localhost:3001/app). `/` retains the authenticated Phase 1 shell. The worker registers only in production mode; `npm run dev` displays that offline installation is disabled. Use a separate production-check port so a previously installed worker does not interfere with your development origin.
+
+Wait for the application-files status before disconnecting. This status verifies the worker's cached files; full application readiness also needs the upcoming local database increment. Installation itself does not create teams or games. Chromium installation and Safari's Add to Home Screen depend on the device/browser; native installation has not yet been verified on physical devices.
+
+Serve deployed environments over HTTPS. Localhost/loopback works for local worker verification, but a plain HTTP LAN address is not an equivalent phone/tablet setup. An update stays waiting until all Benchline Stats tabs and app windows close. Reopening activates it without an unexpected reload during use. See [Phase 2 checks and limitations](docs/phase-2-handoff.md).
 
 ## Setup
 

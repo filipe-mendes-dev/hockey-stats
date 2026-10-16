@@ -22,5 +22,16 @@
     "label": "Idioma",
     "english": "Inglês",
     "portuguese": "Português (Portugal)"
+  },
+  "pwa": {
+    "title": "Benchline Stats",
+    "description": "As ferramentas de equipas e jogos serão adicionadas numa atualização futura.",
+    "preparing": "A preparar os ficheiros da aplicação para utilização sem ligação…",
+    "cached": "Os ficheiros da aplicação estão disponíveis sem ligação.",
+    "failed": "Não foi possível guardar os ficheiros da aplicação para utilização sem ligação. Volte a ligar-se à Internet e tente novamente.",
+    "unsupported": "A instalação sem ligação não está disponível neste navegador. Utilize um navegador compatível através de uma ligação segura.",
+    "development": "A instalação sem ligação está desativada durante o desenvolvimento.",
+    "retry": "Tentar novamente",
+    "updateAvailable": "Está disponível uma atualização. Feche todos os separadores e janelas da aplicação Benchline Stats e volte a abrir quando quiser atualizar."
   }
 }

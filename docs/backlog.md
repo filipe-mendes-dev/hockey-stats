@@ -4,8 +4,8 @@
 
 | Decision | Recommended default | Required before |
 | --- | --- | --- |
-| Next.js offline tooling and route fallback. | Stable worker integration with an explicit precached `/offline` entry for prepared games; evaluate Serwist. | Phase 2. |
-| Offline local access and shared-device retention. | Prepared account data remains usable through session expiry; explicit sign-out locks views; no account mixing. | Phase 2 and account-switching release. |
+| Explicit sign-out with unsynced data. | Remove private local data, retain generic app files; recommend sync before cleanup or a separate explicit discard choice. Never delete silently. | Implementing account/data cleanup. |
+| Additional shared-device offline unlock and retention. | Defer beyond the agreed personal-device policy unless shared-device use becomes required. | Shared-device release. |
 | Shot edge cases. | `goal`, non-goal `on-target`, `off-target`, `blocked`. Keep outcomes exclusive. | Phase 7. |
 | Competition presets. | Configurable periods, countdown, no guessed period duration or regulation player limits. | Adding presets, not basic clock implementation. |
 
@@ -47,7 +47,10 @@ These gates do not block Phase 0. Exact library versions are chosen from current
 - Better Auth with username/password, admin-created users and `user`/`admin` permissions. No public registration or email infrastructure. Drizzle ORM and Drizzle Kit manage one SQL migration history. Personal workspace provisioning is deferred beyond the minimal login shell. See [account schema and flow](account-auth.md).
 - Authentication increment implemented with Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1. Admin permission currently permits normal-user creation only.
 - next-intl from Phase 0, English and `pt-PT`, with locale-independent URLs and locally available offline messages.
-- Limited `/offline` recording for prepared games; management and game/roster preparation remain online.
+- One offline-first application for local team/player management, new-match setup, recording and retained history. No per-match online preparation or login is required. Only account management and synchronization need connectivity.
+- Phase 2 targets personal devices across phone, tablet and computer browsers and implements infrastructure only. Recorder state, fixtures, CRUD and sync belong to later phases.
+- First Phase 2 increment implemented on 2026-10-15: Serwist/Turbopack 9.5.13 with esbuild 0.28.2; public `/app` PWA launch entry; explicit public asset caching and waiting updates. Local database initialization remains pending. See [verification](phase-2-handoff.md).
+- Connection loss and session expiry preserve all local work. Explicit sign-out must remove private local data while retaining generic installed app assets; agree unsynced-work safeguards before implementation. This supersedes the earlier lock-and-retain policy. Additional local PIN/encrypted unlock remains deferred. See [offline access policy](offline-sync.md#authentication-and-account-isolation).
 - One root Next.js project. Phase 0 is setup-only; add server, domain and transport code when needed by an authorized feature. Discuss separate packages only when a concrete need arises.
 - Zustand for temporary recorder UI state.
 - Creation draft exists only while add-event UI is visible.
