@@ -22,5 +22,16 @@
     "label": "Language",
     "english": "English",
     "portuguese": "Portuguese (Portugal)"
+  },
+  "pwa": {
+    "title": "Benchline Stats",
+    "description": "Team and match tools will be added in a later update.",
+    "preparing": "Preparing application files for offline use…",
+    "cached": "Application files are available offline.",
+    "failed": "Application files could not be saved for offline use. Reconnect and try again.",
+    "unsupported": "Offline installation is unavailable in this browser. Use a supported browser over a secure connection.",
+    "development": "Offline installation is disabled during development.",
+    "retry": "Try again",
+    "updateAvailable": "An update is ready. Close all Benchline Stats tabs and app windows, then reopen when you are ready to update."
   }
 }
