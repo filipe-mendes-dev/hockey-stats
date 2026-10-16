@@ -34,6 +34,8 @@ This avoids an unreliable split between direct online writes and a separate offl
 
 Keep local-workspace-scoped entities, confirmed versions, pending projections, operation history, sync intent, cursors and persisted clock state. Server account binding is separate from the local workspace identity. Never-uploaded records have no confirmed server version. Select feature tables and wire contracts during the first product/synchronization slice; Phase 2 only establishes database initialization, versioning and failure handling.
 
+The implemented foundation uses Dexie 4.4.6 and database `benchline-stats`, version 1. Its only store is `metadata`, containing the `workspace` key with a non-secret UUID and creation time. Initialization validates an existing row or creates it in a read/write transaction, and verifies write access before reporting local storage ready. It does not attach the workspace to a signed-in user or create domain/sync tables. See [storage verification](phase-2-storage-handoff.md).
+
 Maintain a confirmed server base separately from pending local intent. The visible projection applies pending commands over that base. Receiving an older acknowledgement must not replace a newer local edit. Test that behavior before adding broad UI features.
 
 Zustand may display pending/error summaries but does not own the only copy of any mutation. An event pending upload is a committed local event, not an invisible creation draft.
@@ -128,7 +130,7 @@ Without connectivity, the application can remove private local data but cannot c
 
 ## Service worker and routing
 
-Cache generic application assets separately from user records. The implemented public entry and manifest launch target is `/app`. Precache its complete required asset graph, including code for unvisited local views, styles, fonts/icons and both catalogs. User data will remain in workspace-scoped IndexedDB when that increment is implemented. Local language switching requires no translation download or server refresh. See [current verification and limits](phase-2-handoff.md).
+Cache generic application assets separately from user records. The implemented public entry and manifest launch target is `/app`. Precache its complete required asset graph, including code for unvisited local views, styles, fonts/icons and both catalogs. Workspace metadata now initializes in IndexedDB; private domain data follows in feature phases. Local language switching requires no translation download or server refresh. See [PWA verification](phase-2-handoff.md) and [storage verification](phase-2-storage-handoff.md).
 
 Prove all of these against a production build:
 
@@ -153,6 +155,8 @@ Version IndexedDB schemas, SQL migrations and wire contracts independently. Test
 Handle blocked IndexedDB upgrades with an explanation about other tabs. Use transactional revision checks as the correctness boundary; tab notifications or locks are supplementary. A second recorder tab is read-only by default.
 
 Wait for complete IndexedDB transaction success before reporting local save. Evaluate strict durability support in the chosen wrapper/browser combination; document actual guarantees rather than promising survival of every power/device failure.
+
+The current Dexie configuration requests `chromeTransactionDurability: "strict"`, which applies where the wrapper/browser supports that option. Readiness waits for transaction completion. This does not establish power-loss durability across browsers or make local data a backup. Blocked initialization waits for the other connection to close; external version changes close the old connection and withdraw readiness without forcing a reload. Full feature migration and recorder-tab safeguards remain later work.
 
 ## Limits and deferred backup
 

@@ -4,13 +4,19 @@ Offline-first roller-hockey application. Local team/player management, new-match
 
 ## Current state
 
-The application provides Better Auth username/password login, PostgreSQL-backed sessions, admin-created users, Drizzle migrations and a minimal authenticated shell. Phase 2 adds a public `/app` placeholder, installation metadata/icons and a Serwist worker that caches its application files. English and European Portuguese work offline. There is no public registration or email service. IndexedDB initialization, hockey features, synchronization, account settings and admin UI remain unimplemented.
+The application provides Better Auth username/password login, PostgreSQL-backed sessions, admin-created users, Drizzle migrations and a minimal authenticated shell. Phase 2 adds a public `/app` placeholder, installation metadata/icons, Serwist asset caching and Dexie local-storage initialization. English and European Portuguese work offline. There is no public registration or email service. Local placeholder navigation, hockey features, synchronization, account settings and admin UI remain unimplemented.
 
 ## PWA increment
 
-Build with `npm run build`, then run `npm run start -- --port 3001` and open [the local app](http://localhost:3001/app). `/` retains the authenticated Phase 1 shell. The worker registers only in production mode; `npm run dev` displays that offline installation is disabled. Use a separate production-check port so a previously installed worker does not interfere with your development origin.
+Build with `npm run build`, then run `BETTER_AUTH_URL=http://localhost:3001 npm run start -- --port 3001` and open [the local app](http://localhost:3001/app). The command overrides the default auth origin for this preview process. `/` retains the authenticated Phase 1 shell. The worker registers only in production mode; `npm run dev` displays that offline installation is disabled. Use a separate production-check port so a previously installed worker does not interfere with your development origin.
 
-Wait for the application-files status before disconnecting. This status verifies the worker's cached files; full application readiness also needs the upcoming local database increment. Installation itself does not create teams or games. Chromium installation and Safari's Add to Home Screen depend on the device/browser; native installation has not yet been verified on physical devices.
+The browser URL and `BETTER_AUTH_URL` must match, including hostname and port. Running on port 3001 with the default `http://localhost:3000` auth origin causes authenticated mutations such as sign-out to fail with `403 INVALID_ORIGIN`. When changing preview ports or using `127.0.0.1`, set the matching origin and restart the server.
+
+Wait for the offline-ready status on `/app` before disconnecting. It requires verified cached files and a committed local-storage initialization transaction. Installation itself does not create teams or games. Chromium installation and Safari's Add to Home Screen depend on the device/browser; native installation has not yet been verified on physical devices.
+
+Dexie 4.4.6 opens the `benchline-stats` IndexedDB database with schema version 1 and one `metadata` store. A non-secret workspace UUID and creation time survive ordinary reloads without login or an API call. Initialization validates the stored identity and verifies write access. Invalid data and failed transactions do not reset the database. Blocked upgrades explain which tabs to close; external upgrades close the old connection without forcing a reload.
+
+The storage status reports the browser's persistent-storage decision. Refusal or an unsupported API allows local use with a browser-managed retention notice. Even persistent storage can be lost through clearing site data or device loss. Account binding, private-data cleanup and hockey tables remain deferred. See [storage verification and limits](docs/phase-2-storage-handoff.md).
 
 Serve deployed environments over HTTPS. Localhost/loopback works for local worker verification, but a plain HTTP LAN address is not an equivalent phone/tablet setup. An update stays waiting until all Benchline Stats tabs and app windows close. Reopening activates it without an unexpected reload during use. See [Phase 2 checks and limitations](docs/phase-2-handoff.md).
 
@@ -107,6 +113,8 @@ src/
     auth/             # Login form and browser auth client
     shell/            # Shared header, home content and adjacent CSS
     i18n/             # Client language provider
+    pwa/              # Cached-file and local-storage readiness feedback
+    storage/          # Dexie initialization and local workspace identity
   i18n/               # Locale configuration and preference logic
   messages/           # English and pt-PT catalogs
   server/             # Environment, Better Auth and PostgreSQL code

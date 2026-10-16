@@ -1,6 +1,6 @@
 # Architecture
 
-Status: PostgreSQL, Better Auth username/password authentication, Drizzle migrations and the minimal protected shell are implemented. Phase 2 now adds the manifest/icons, public `/app` shell and Serwist asset caching. Local database initialization, product workflows and synchronization remain unimplemented.
+Status: PostgreSQL, Better Auth username/password authentication, Drizzle migrations and the minimal protected shell are implemented. Phase 2 adds the manifest/icons, public `/app` shell, Serwist asset caching and Dexie/workspace initialization. Local placeholder navigation, product workflows and synchronization remain unimplemented.
 
 ## Stack
 
@@ -11,7 +11,7 @@ Status: PostgreSQL, Better Auth username/password authentication, Drizzle migrat
 | Authentication | Better Auth with username/password, `username`/`admin` plugins and database-backed sessions. | Admin-created users, normal/admin permissions and cookie-based browser login without email infrastructure. |
 | SQL access and migrations | Drizzle ORM, `pg` and Drizzle Kit. | TypeScript schema, server connection pool and one versioned SQL migration history. |
 | Shared database | PostgreSQL 18; official `postgres:18-trixie` image for local development. | Five-year major support; named-volume persistence. Application access and account isolation follow in Phase 1. |
-| Local database | IndexedDB through Dexie. | Primary working store for teams, players, new matches, recording and retained history, independent of login or connectivity. |
+| Local database | IndexedDB through Dexie 4.4.6. | Initialize local workspace metadata now; add teams, players, games, recording and retained history in their feature phases. |
 | Temporary UI state | Zustand. | Explicit recorder state shared across player, action, rink and detail controls. |
 | Translation | next-intl with English and European Portuguese (`pt-PT`). | App Router/server/client localization from Phase 0, including cached offline messages. |
 | Repository | One Next.js project at the repository root. | Keep setup focused on the translated shell; introduce feature folders only when needed. |
@@ -35,6 +35,8 @@ src/
     auth/
     shell/
     i18n/
+    pwa/
+    storage/
   i18n/
   messages/
     en.json
@@ -96,7 +98,11 @@ Start with a single cached document and browser-side navigation within it; do no
 
 Precache the entry and the complete required feature asset graph, including lazy chunks for unvisited local views, CSS, fonts/icons and both catalogs. Do not cache account pages, personalized HTML, auth redirects or API responses. Keep boot independent of server authentication and locale reads. Defer updates during recording or saving. [Offline and sync](offline-sync.md) defines installation readiness, local persistence and failure handling.
 
-The first increment caches generated JavaScript/CSS/font assets, public install icons and only the explicit public documents `/app`, `/manifest.webmanifest`, `/icon.svg` and `/favicon.ico`. The worker bypasses RSC/prefetch requests and does not provide generic HTML fallbacks. Document revisions include asset fingerprints and the entry/metadata source so uncommitted builds also invalidate changed documents. The client verifies the active worker's actual precache before reporting that application files are available offline; full readiness still requires the next local database increment. Registration is disabled during development. New workers wait for all controlled windows/tabs to close; the UI never forces activation or reload.
+The first increment caches generated JavaScript/CSS/font assets, public install icons and only the explicit public documents `/app`, `/manifest.webmanifest`, `/icon.svg` and `/favicon.ico`. The worker bypasses RSC/prefetch requests and does not provide generic HTML fallbacks. Document revisions include asset fingerprints and the entry/metadata source so uncommitted builds also invalidate changed documents. The client verifies the active worker's actual precache before reporting that application files are available offline. Registration is disabled during development. New workers wait for all controlled windows/tabs to close; the UI never forces activation or reload.
+
+The storage increment initializes Dexie only while `/app` is mounted. `src/client/storage/database.ts` defines version 1 of `benchline-stats`, with a `metadata` store keyed by `key`. One `workspace` row contains a non-secret client-generated UUID and creation time, separate from server accounts. A read/write transaction creates it once or validates and rewrites the existing identity to verify write access. Concurrent tabs serialize initialization through that transaction. Runtime validation rejects malformed stored metadata without replacing it.
+
+`use-local-storage.ts` owns the mounted connection and exposes initialization, blocked, failed, unsupported and closed states. It closes on unmount or an external version change, with no automatic reload or database reset. `/app` reports offline-ready only after both cached-file verification and the workspace transaction succeed. The persistent-storage request runs outside the transaction; denial or unavailable APIs produce a retention notice rather than disabling working IndexedDB. No domain repositories, generic storage framework, account binding or hockey tables are introduced. See [storage verification](phase-2-storage-handoff.md).
 
 ## Zustand rules
 

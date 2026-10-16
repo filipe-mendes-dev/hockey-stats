@@ -10,7 +10,7 @@ Use Next.js, IndexedDB as the primary local working store and an authenticated P
 | --- | --- |
 | 0. Project foundations | Complete. Setup-only scope; see [verification](phase-0-handoff.md#setup-only-cleanup). |
 | 1. Authentication and database foundation | Complete. PostgreSQL, modular auth schema/migrations, username/password login, admin creation commands and protected shell verified. |
-| 2. Offline application foundation | In progress. PWA/Serwist asset-caching increment implemented; local database/navigation feasibility remains. |
+| 2. Offline application foundation | In progress. PWA/Serwist and Dexie/workspace initialization implemented; local navigation feasibility and device checks remain. |
 | 3. Thin synchronized recording slice | Not started. |
 | 4. Teams and roster setup | Not started. |
 | 5. Simple countdown clock | Not started. |
@@ -58,7 +58,9 @@ The user clarified that the normal application must support every hockey workflo
 - Non-test verification: production cold launch/reload with network disabled and no session; navigation to an unvisited local placeholder view; local language switching; manual local persistence check and storage-failure handling; interrupted cache installation; waiting worker and safe activation. Run relevant non-test project checks. No automated tests are authorized.
 - Acceptance: the installed app launches without auth/API/RSC requests needed for local use; all required assets are cached before readiness is shown; local initialization and reload work without a server; both languages work offline; failed installation/storage does not claim success; updates do not force reload while the app is busy. No product features are implemented. Physical-device checks are recorded for the supported mixed-device target, including limitations when devices are unavailable.
 
-The first authorized increment adds manifest/icons, a public `/app` placeholder, production worker registration, explicit precaching, file-cache status/retry and waiting-update feedback. Production browser checks cover offline boot/reload, local language switching, failed installation/retry, cache boundaries and native waiting activation. See the [increment handoff](phase-2-handoff.md). Dexie/workspace initialization, local navigation feasibility and full application readiness remain pending; no recorder or sync features are included.
+The first authorized increment adds manifest/icons, a public `/app` placeholder, production worker registration, explicit precaching, file-cache status/retry and waiting-update feedback. Production browser checks cover offline boot/reload, local language switching, failed installation/retry, cache boundaries and native waiting activation. See the [PWA increment handoff](phase-2-handoff.md).
+
+The storage increment adds Dexie 4.4.6, versioned metadata, a transactional local workspace identity, runtime validation, storage failure/retry and blocked/closed connection feedback. The `/app` offline-ready status requires cached files and successful storage initialization, with persistent-storage retention reported separately. See [storage verification](phase-2-storage-handoff.md). Local navigation feasibility and physical-device checks remain pending; Phase 2 stays in progress. No recorder or sync features are included.
 
 ## Phase 3. Thin synchronized recording slice
 
