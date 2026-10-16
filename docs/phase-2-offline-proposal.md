@@ -1,6 +1,6 @@
 # Phase 2 offline application foundation
 
-Revised: 2026-10-15. Status: Phase 2 in progress. The PWA/Serwist increment is implemented; local database and navigation feasibility remain pending. This replaces the earlier prepared-games-only proposal following the user's clarification.
+Revised: 2026-10-16. Status: Phase 2 in progress. The PWA/Serwist and Dexie/workspace increments are implemented; local navigation feasibility and physical-device checks remain pending. This replaces the earlier prepared-games-only proposal following the user's clarification. See [storage verification](phase-2-storage-handoff.md).
 
 ## Agreed product scope
 

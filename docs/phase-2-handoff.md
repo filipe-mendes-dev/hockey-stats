@@ -2,6 +2,8 @@
 
 Date: 2026-10-15. This increment is complete; Phase 2 remains in progress. IndexedDB/workspace initialization and local navigation feasibility are next. No hockey features, data synchronization or sign-out cleanup are implemented.
 
+Follow-up on 2026-10-16: IndexedDB/workspace initialization and combined cached-file/storage readiness are now implemented. The details below retain the original PWA increment's evidence and limits. See the [storage increment handoff](phase-2-storage-handoff.md) for current storage behavior; local navigation feasibility and physical-device checks remain pending.
+
 ## Implemented behavior
 
 - `/app` is a public static placeholder and the PWA launch target. It boots without login, a session lookup or an API call. `/`, `/sign-in` and existing sign-out logic retain their Phase 1 behavior.

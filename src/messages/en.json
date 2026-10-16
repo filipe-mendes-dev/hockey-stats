@@ -23,6 +23,22 @@
     "english": "English",
     "portuguese": "Portuguese (Portugal)"
   },
+  "storage": {
+    "preparing": "Preparing local storage…",
+    "ready": "Local storage is ready on this browser.",
+    "offlineReady": "The application is ready for offline use on this browser.",
+    "blocked": "Local storage is waiting for another tab. Close other Benchline Stats tabs and app windows to allow initialization to continue.",
+    "closed": "Local storage was closed, possibly by an update in another tab. Reload when you are ready, or try opening storage again. Existing data has not been reset.",
+    "unsupported": "Local storage is unavailable in this browser. Use a browser that supports IndexedDB and allows site storage.",
+    "failed": "Local storage could not be initialized. Check available space and this browser's site-storage settings, then try again. Existing data has not been reset.",
+    "retry": "Try local storage again",
+    "persistence": {
+      "persistent": "Persistent storage is enabled. Clearing site data or losing this device can still remove local records.",
+      "bestEffort": "Persistent storage was not granted. Local storage works, but this browser may remove it when space is low.",
+      "unsupported": "This browser cannot request persistent storage. Local storage works, but the browser manages how long it is retained.",
+      "failed": "Persistent storage could not be checked or requested. Local storage works, but protection against browser eviction is unconfirmed."
+    }
+  },
   "pwa": {
     "title": "Benchline Stats",
     "description": "Team and match tools will be added in a later update.",
