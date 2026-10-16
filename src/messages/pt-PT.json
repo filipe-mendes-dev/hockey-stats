@@ -23,6 +23,22 @@
     "english": "Inglês",
     "portuguese": "Português (Portugal)"
   },
+  "storage": {
+    "preparing": "A preparar o armazenamento local…",
+    "ready": "O armazenamento local está pronto neste navegador.",
+    "offlineReady": "A aplicação está pronta para utilização sem ligação neste navegador.",
+    "blocked": "O armazenamento local está à espera de outro separador. Feche os outros separadores e janelas da aplicação Benchline Stats para permitir que a inicialização continue.",
+    "closed": "O armazenamento local foi fechado, possivelmente devido a uma atualização noutro separador. Recarregue a página quando quiser ou tente abrir o armazenamento novamente. Os dados existentes não foram repostos.",
+    "unsupported": "O armazenamento local não está disponível neste navegador. Utilize um navegador compatível com IndexedDB que permita o armazenamento de dados de sites.",
+    "failed": "Não foi possível inicializar o armazenamento local. Verifique o espaço disponível e as definições de armazenamento de dados de sites deste navegador e tente novamente. Os dados existentes não foram repostos.",
+    "retry": "Tentar o armazenamento local novamente",
+    "persistence": {
+      "persistent": "O armazenamento persistente está ativado. A limpeza dos dados do site ou a perda deste dispositivo pode eliminar os registos locais.",
+      "bestEffort": "O armazenamento persistente não foi autorizado. O armazenamento local funciona, mas o navegador pode eliminá-lo se houver pouco espaço.",
+      "unsupported": "Este navegador não permite pedir armazenamento persistente. O armazenamento local funciona, mas o navegador gere o tempo de conservação dos dados.",
+      "failed": "Não foi possível verificar ou pedir armazenamento persistente. O armazenamento local funciona, mas a proteção contra a eliminação automática pelo navegador não está confirmada."
+    }
+  },
   "pwa": {
     "title": "Benchline Stats",
     "description": "As ferramentas de equipas e jogos serão adicionadas numa atualização futura.",
