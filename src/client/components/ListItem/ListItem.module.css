@@ -1,0 +1,30 @@
+.listItem {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+a.listItem:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-control);
+}
+
+a.listItem:active {
+  background: var(--color-background);
+}
+
+.itemTitle {
+  font-weight: 600;
+  line-height: 1.5;
+}
+.itemDescription {
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
