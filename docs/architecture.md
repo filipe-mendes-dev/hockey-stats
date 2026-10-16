@@ -1,26 +1,26 @@
 # Architecture
 
-Status: PostgreSQL infrastructure, Better Auth username/password authentication, Drizzle migrations, admin user-creation helpers and a minimal protected shell are implemented. Workspace-scoped product persistence, command receipts, account settings and admin UI remain deferred. Offline boot and recorder workflows belong to later phases.
+Status: PostgreSQL, Better Auth username/password authentication, Drizzle migrations and the minimal protected shell are implemented. Phase 2 now adds the manifest/icons, public `/app` shell and Serwist asset caching. Local database initialization, product workflows and synchronization remain unimplemented.
 
 ## Stack
 
 | Area | Decision | Reason |
 | --- | --- | --- |
-| Web framework | Next.js App Router with TypeScript and React. | Account-scoped layouts and an early API are planned. Avoid a later framework migration. |
+| Web framework | Next.js App Router with TypeScript and React. | Serve a generic client application for local workflows and retain Route Handlers for authenticated account/sync operations. |
 | API | Next.js Route Handlers with separate server services and repositories. | One application deployment with explicit HTTP, workflow and storage boundaries. |
 | Authentication | Better Auth with username/password, `username`/`admin` plugins and database-backed sessions. | Admin-created users, normal/admin permissions and cookie-based browser login without email infrastructure. |
 | SQL access and migrations | Drizzle ORM, `pg` and Drizzle Kit. | TypeScript schema, server connection pool and one versioned SQL migration history. |
 | Shared database | PostgreSQL 18; official `postgres:18-trixie` image for local development. | Five-year major support; named-volume persistence. Application access and account isolation follow in Phase 1. |
-| Local database | IndexedDB through Dexie. | Durable offline working data and queued operations. It complements PostgreSQL. |
+| Local database | IndexedDB through Dexie. | Primary working store for teams, players, new matches, recording and retained history, independent of login or connectivity. |
 | Temporary UI state | Zustand. | Explicit recorder state shared across player, action, rink and detail controls. |
 | Translation | next-intl with English and European Portuguese (`pt-PT`). | App Router/server/client localization from Phase 0, including cached offline messages. |
 | Repository | One Next.js project at the repository root. | Keep setup focused on the translated shell; introduce feature folders only when needed. |
 | Styling | Adjacent CSS modules imported as `st`; Grid and Flexbox. | Responsive layouts without requiring a styling framework. |
 | Rink | SVG. | Simple geometry, scaling and pointer coordinate conversion. |
-| PWA | Service worker with explicit offline-shell caching and prompted updates. | Installation alone does not provide offline routing or persistence. |
+| PWA | Serwist/Turbopack 9.5.13, native esbuild 0.28.2, explicit asset precaching and waiting updates. | Cache the public `/app` shell independently of account pages. Keep updates waiting until app tabs/windows close. |
 | Clock | Countdown display, configurable periods and persisted anchors. | Match time calculated independently of timer callbacks. |
 
-Authentication and SQL libraries are implemented as described in [Account schema and flow](account-auth.md). Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1 are pinned. No email delivery, verification or email reset workflow is included. Worker tooling remains a gate in [Backlog](backlog.md).
+Authentication and SQL libraries are implemented as described in [Account schema and flow](account-auth.md). Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1 are pinned. No email delivery, verification or email reset workflow is included. Serwist's Turbopack integration is verified against Next.js 16.4.0; see the [Phase 2 handoff](phase-2-handoff.md).
 
 The root `compose.yaml` runs PostgreSQL only. It binds the configured host port to loopback and stores data in a named volume at `/var/lib/postgresql`. The root `.env` supplies server-only database and auth settings; `.env.example` documents local defaults. No database or auth secret uses a `NEXT_PUBLIC_` prefix. See [local setup](../README.md#local-postgresql).
 
@@ -74,27 +74,29 @@ Use focused repository interfaces where they enable workflow testing or composit
 
 ## Account routing and ownership
 
-Working default for future product data: a user owns one personal workspace/account. Team and player data belongs to it. Authentication has `user` and `admin` roles for user management; these do not bypass future product-data ownership. Multiple members, invitations, organizations, billing and additional roles remain deferred.
+Local hockey data belongs to a device-local workspace with a client-generated identity. It exists before sign-in. Server synchronization explicitly binds it to an authorized personal account; do not infer ownership from whichever user happens to sign in. Working server default is one personal account per user. Authentication `user` and `admin` roles do not bypass product-data ownership. Multiple members, invitations, organizations, billing and additional roles remain deferred.
 
 The current authentication increment uses only Better Auth's generated schema and a minimal login/protected shell. Defer `app_account`, its provisioning flow and account-specific UI until product data needs ownership. See [account schema and flow](account-auth.md). The workspace model remains separate from Better Auth's credential `auth_account`.
 
-The current routes are public `/sign-in` and protected `/`, with a shared header/main shell and authenticated sign-out. Account settings and the permission-gated admin button/screen are backlog items. Later product routes use `/accounts/[accountId]/...` so scope stays explicit. Scope every product-data query and local dataset to the account, including operation receipts and pending mutations. Resolve authorized scope from the session; never trust route IDs alone.
+The implemented Phase 1 routes are public `/sign-in` and protected `/`, with a shared header/main shell and authenticated sign-out. Phase 2 adds public `/app`, which is also the PWA launch target and does not call the session API to boot. The shared layout registers the production worker on all pages so initial visits can download the public app files. Existing login, protected-home and sign-out logic remains unchanged. Account settings and admin UI remain backlog items.
 
-Online account pages require a valid server session. Sign-in, account provisioning, team/player management and game/roster preparation require connectivity. A previously prepared game remains recordable at `/offline` without refreshing the session.
+Scope local reads/writes to the local workspace. Scope server operations, receipts and queues to an explicitly bound authorized account. Online account pages and synchronization require a valid server session. Team/player management, game creation, roster selection and recording use IndexedDB without a server request. Local IDs do not wait for server provisioning.
 
-Offline access means continuing with already available local account data. It is not a fresh server authorization decision. Server revocation cannot instantly remove data from a disconnected device. All later uploads must recheck current authorization.
+Server session expiry or revocation pauses uploads without preventing local use. All later uploads recheck authorization. A game can exist locally before any server record or confirmed server revision exists; synchronization must support creating its prerequisites before accepting recording commands.
 
-Signing out locks local account views and clears transient state. Pending work stays in its account namespace. Signing in as another user must not show or upload that work under the new account. Detailed retention controls remain a later account-management task.
+Explicit sign-out removes the associated private local dataset, with unsynced-work handling resolved before implementing cleanup. Retain the generic cached app so signed-out local use can start again. Connecting a different account must never automatically reassign or upload another account's records. See [offline access and sign-out](offline-sync.md#authentication-and-account-isolation).
 
-## /offline
+## Offline application entry
 
 Do not assume that prefetching an App Router page makes it reloadable offline. Navigation can require server component responses, and a server-authenticated layout can block initial access.
 
-Provide an explicit, generic precached `/offline` entry. It supports selecting a prepared game, recording, lineup movements, clock controls, timeline, undo and historical corrections from saved roster/configuration/history. Account management, team/player creation, game creation, roster expansion and uncached remote browsing are unavailable there.
+Provide one generic precached client application entry for all local hockey workflows. Online and offline operation use the same components and local save path. Team/player management and new-match setup belong here as later features, alongside recording and retained history. There is no prepared-games-only offline mode.
 
-Online recorder URLs fall back to `/offline` with validated selected account/game identity when the network is unavailable. Reuse the same recorder components and local command path. Do not cache personalized account pages or API responses indiscriminately.
+Start with a single cached document and browser-side navigation within it; do not introduce a second router package or a deep-link fallback framework without a concrete feature need. Product view changes must not depend on React Server Component responses. If deep links are added later, validate selection and map only local application document routes to the generic shell. Never return HTML fallbacks for APIs or RSC requests.
 
-Cache the `/offline` entry, required assets and both language catalogs. Keep its boot independent of server authentication and locale reads. Defer service-worker updates during recording or saving. [Offline and sync](offline-sync.md) defines preparation and failure handling.
+Precache the entry and the complete required feature asset graph, including lazy chunks for unvisited local views, CSS, fonts/icons and both catalogs. Do not cache account pages, personalized HTML, auth redirects or API responses. Keep boot independent of server authentication and locale reads. Defer updates during recording or saving. [Offline and sync](offline-sync.md) defines installation readiness, local persistence and failure handling.
+
+The first increment caches generated JavaScript/CSS/font assets, public install icons and only the explicit public documents `/app`, `/manifest.webmanifest`, `/icon.svg` and `/favicon.ico`. The worker bypasses RSC/prefetch requests and does not provide generic HTML fallbacks. Document revisions include asset fingerprints and the entry/metadata source so uncommitted builds also invalidate changed documents. The client verifies the active worker's actual precache before reporting that application files are available offline; full readiness still requires the next local database increment. Registration is disabled during development. New workers wait for all controlled windows/tabs to close; the UI never forces activation or reload.
 
 ## Zustand rules
 
@@ -106,7 +108,7 @@ The add-event draft is memory-only and exists only while its UI is open. Prefere
 
 ## Localization
 
-Use next-intl from Phase 0 with English and `pt-PT` catalogs. Keep URLs independent of locale, including `/offline`. Store canonical domain values and API error codes; translate their presentation in the UI. Offline language switching uses local messages without a server refresh. See [Localization](localization.md).
+Use next-intl from Phase 0 with English and `pt-PT` catalogs. Keep the local application URL independent of locale. Store canonical domain values and API error codes; translate their presentation in the UI. Offline language switching uses local messages without a server refresh. See [Localization](localization.md).
 
 ## Sources
 

@@ -4,26 +4,26 @@
 
 PostgreSQL is authoritative for accepted shared records. The Next.js API is the access boundary, not itself a database.
 
-IndexedDB is the browser's durable working store for downloaded account/game data, local changes, the outbox and undo history. It is suitable for this production role, with storage limits that must be handled explicitly. It is not a replacement for server storage or a guarantee against device/browser data loss.
+IndexedDB is the primary working store for local teams, players, memberships, games, roster snapshots, recording, retained history and later synchronization metadata. Local workflows operate without a server account or a prior upload. PostgreSQL is authoritative for server-accepted copies, not a prerequisite for creating local records. Browser storage limits and failures must be handled explicitly; local storage is not a guarantee against device/browser data loss.
 
-Offline operation requires more than buffering events. The recorder also needs the game's roster, starters, period settings, event history and local corrections to reconstruct what the observer sees. Keep prepared match data available after successful upload; do not immediately delete it because the queue is empty.
+Offline operation includes creating teams/players and setting up a new game using retained data or new local entries. Retain the game's roster, starters, settings, history and corrections to reconstruct recording after reload. Successful upload does not remove working data. Keep team/player data and locally retained games usable offline; bounded history retention must never silently remove unsynced work. Exact retention controls are deferred.
 
-## /offline scope and preparation
+## Offline scope and installation readiness
 
-Use `/offline` as the explicit limited offline entry. It supports selecting a prepared game, recording, lineup movements, clock controls, timeline, undo and historical corrections using saved data. Account/team/player management, game creation, roster expansion and uncached remote browsing require the online application.
+Use one generic cached application entry for every local hockey workflow. Team/player management, new-match setup, roster selection, recording, clock, timeline, undo, corrections and locally retained history must work offline as those features are implemented. Account management, sign-in and server synchronization require connectivity. A limited prepared-games-only `/offline` mode is no longer the product requirement.
 
-Prepare games online. Store the account-scoped game, roster snapshots, starters, period settings, confirmed revision and event history locally. Mark a game ready only after its data and the required cached assets are available. Keep that prepared baseline and subsequent local changes through reload.
+During the initial online application download, precache the complete required code/asset set and initialize the local database. Report application readiness only after both complete. The browser's installation prompt does not prove readiness; users need not open every feature first. Each later release must include newly added offline feature code in that asset set. User data comes from local entry or an explicit server download, not from the application manifest.
 
-An unknown/unprepared game ID shows an unavailable message with an online preparation instruction; it does not attempt to invent roster/configuration or create a game offline. Validated selection/query parameters cannot bypass local account scope.
+Create stable workspace/entity IDs on the device. Starting a new game never requires prior online preparation or a confirmed server revision. Selecting an unknown existing-game ID shows unavailable without inventing a game; the explicit creation workflow remains available offline. Remote history not yet downloaded cannot be shown offline. Route/query parameters cannot bypass local workspace scope.
 
 ## Recording writes
 
-Use the same local-first recording path online and offline:
+Use the same local-first write path online and offline for management, match setup and recording as features arrive:
 
 1. Validate the completed UI command.
-2. Commit local changes, operation history and its outbox entry in one IndexedDB transaction.
+2. Commit local changes and the required durable operation/sync intent in one IndexedDB transaction. An unbound local workspace retains intent without selecting a server account automatically.
 3. Show saved locally and clear the visible creation draft.
-4. Attempt upload when connectivity and authentication permit.
+4. Attempt upload only after explicit workspace/account binding and when connectivity and authentication permit.
 5. Commit the accepted command and idempotency receipt in one PostgreSQL transaction.
 6. Persist acknowledgement locally and reconcile confirmed data without overwriting later pending work.
 7. Show synced.
@@ -32,13 +32,13 @@ This avoids an unreliable split between direct online writes and a separate offl
 
 ## Local records
 
-Keep account-scoped stores for entities, confirmed versions, pending projections, operation history, outbox commands, sync cursors and persisted clock state. The exact table layout is selected during the first recording slice.
+Keep local-workspace-scoped entities, confirmed versions, pending projections, operation history, sync intent, cursors and persisted clock state. Server account binding is separate from the local workspace identity. Never-uploaded records have no confirmed server version. Select feature tables and wire contracts during the first product/synchronization slice; Phase 2 only establishes database initialization, versioning and failure handling.
 
 Maintain a confirmed server base separately from pending local intent. The visible projection applies pending commands over that base. Receiving an older acknowledgement must not replace a newer local edit. Test that behavior before adding broad UI features.
 
 Zustand may display pending/error summaries but does not own the only copy of any mutation. An event pending upload is a committed local event, not an invisible creation draft.
 
-Generate stable event/command IDs before local writes so later edits and retries refer to the same record. Queue recording, clock and correction commands for already prepared games. Deliver an event creation before dependent edits or inverses. Game/roster creation is an online operation followed by local preparation, not an offline outbox feature.
+Generate stable entity/command IDs before local writes so later edits and retries refer to the same record. Team/player creation, membership changes, game/roster setup, recording, clock and corrections all originate locally. Synchronization delivers prerequisite creates before dependent commands, including edits and inverses. Preserve unsynced creation intent until a server binding and acknowledgements exist.
 
 ## Command protocol
 
@@ -51,7 +51,7 @@ Use versioned HTTP contracts with, at minimum:
 
 For the first recorder protocol, serialize mutations per game and use an expected game-aggregate revision. A queued chain can expect successive revisions when each accepted command increments the aggregate once. The initial expected revision comes from the confirmed base; do not silently advance it from an unrelated remote change to bypass a conflict.
 
-Prepared games have a confirmed server identity/revision before offline recording starts. Online team/player/game management has its own mutation scope. Do not create one global account revision that makes unrelated games conflict.
+A game can be created and recorded locally before server contact. Synchronization must accept its stable client ID through an idempotent create command, after team/player prerequisites, and establish a confirmed revision before delivering dependent game mutations. Do not fabricate confirmed revisions for local-only records. Team/player management has its own mutation scope; do not create one global account revision that makes unrelated games conflict. Define the exact creation/dependency protocol in Phase 3, not the Phase 2 foundation.
 
 Server handling:
 
@@ -95,7 +95,7 @@ An acknowledgement can be lost after the PostgreSQL commit. Retry the same comma
 | Lost acknowledgement. | Retry the original ID and use the recorded server receipt. |
 | Local quota/storage denied. | Never report saved; preserve the current visible draft while the page stays open. |
 
-Do not silently apply last-write-wins to movement history, starter changes, event edits or clock corrections. Working V1 policy is one active recorder per game; a second device can read and refresh accepted data. Concurrent writing is detected and resolved explicitly, not advertised as collaboration.
+Do not silently apply last-write-wins to movement history, starter changes, event edits or clock corrections. Working V1 policy is one active recorder per game; a second device can download accepted data for viewing. Concurrent writing is detected and resolved explicitly, not advertised as collaboration.
 
 ## Undo and historical edits
 
@@ -112,31 +112,37 @@ Both sides require game time for player-in/out, including corrected movements. R
 - Use an established authentication integration; provider selection precedes the account/API phase.
 - Keep online session credentials out of Zustand, IndexedDB and exported domain records.
 - Authorize every handler/service against the current session and account scope.
-- Include account scope in local keys, queues, receipts and queries.
+- Include local workspace scope in local reads/writes. Bind server-bound queues, receipts and queries to an explicitly authorized account.
 - Initial sign-in and uncached account provisioning require connectivity.
-- Session expiry must not erase data or prevent an already prepared local match from being recorded offline.
-- Explicit sign-out locks local data views and clears transient drafts. A different user cannot see or upload another account's pending commands.
+- No login is required to manage local teams/players, create a match, record or view locally retained games. Connection loss and session expiry preserve local data and pause only synchronization.
+- Explicit sign-out must remove the signing-out account's private local dataset and clear transient state, while retaining generic installed app assets. A different account must never automatically adopt or upload those records.
 - Offline access cannot check fresh revocation. Upload always revalidates current access.
 
-Detailed shared-device retention and local unlock policy must be selected before account-switching release, not invented inside a UI component.
+The agreed target is personal devices across phones, tablets and computers. Local use survives ordinary reloads, app restarts, connection loss and expired server sessions. The user's explicit sign-out requirement supersedes the earlier lock-and-retain policy: remove private local data instead of retaining it for a later local unlock. This is a planned behavior change; the current Phase 1 code is unchanged.
+
+Before implementing destructive cleanup, resolve unsynced-work handling. The recommended flow synchronizes pending work before deletion when possible. If work remains or the device is offline, ordinary sign-out must not silently delete it: offer cancellation or a separate explicit discard-and-sign-out decision describing the loss. This safeguard is a proposal awaiting agreement, not permission to delete current records.
+
+Stop writes/uploads before cleanup and coordinate other tabs so old in-memory state cannot restore deleted data. Delete the account's local working records, pending commands, undo and derived private state together; clear its binding and transient state. Keep generic HTML/JavaScript/CSS/icons/translations and unrelated workspace data. If cleanup fails, do not report completed removal or allow another account to reuse stale state. Later signing back in can restore only server-accepted data, not discarded unsynced work.
+
+Without connectivity, the application can remove private local data but cannot confirm server-session revocation. Report that distinction and ensure a surviving cookie cannot automatically reconnect the removed dataset. Exact offline revocation handling belongs to the later account/sync flow. This policy trusts the unlocked personal device and does not encrypt IndexedDB; advanced shared-device controls remain deferred.
 
 ## Service worker and routing
 
-Cache application assets separately from user records. Cache `/offline` and its complete required asset graph, including recorder/timeline controls, fonts and both language catalogs. User data remains in account-scoped IndexedDB. Local language switching requires no translation download or server refresh.
+Cache generic application assets separately from user records. The implemented public entry and manifest launch target is `/app`. Precache its complete required asset graph, including code for unvisited local views, styles, fonts/icons and both catalogs. User data will remain in workspace-scoped IndexedDB when that increment is implemented. Local language switching requires no translation download or server refresh. See [current verification and limits](phase-2-handoff.md).
 
 Prove all of these against a production build:
 
-- Reload a prepared game with the network disabled.
-- Follow an account/game recorder URL offline through its fallback.
-- Open `/offline` directly and select a prepared game. Reject unknown/unprepared game IDs without a write.
-- Continue after the online session expires, without an auth redirect breaking local boot.
+- Cold-launch and reload the normal local application with the network disabled and no authenticated session.
+- Navigate between all implemented local views without first visiting each one online.
+- After their feature phases, create teams/players, set up a new match, record, reload and view retained history entirely offline. Reject unknown existing IDs without an implicit write.
+- Continue all local workflows after the online session expires, without an auth redirect breaking local boot.
 - Move between required offline views without requesting an unavailable server component payload.
-- Keep one account's cached data unavailable to a different signed-in account.
+- Prevent account switching from reassigning or uploading another account's local data; verify sign-out cleanup and unsynced-work safeguards when implemented.
 - Switch English/Portuguese offline without losing a draft, clock or pending records.
 
 Do not cache arbitrary personalized HTML, API responses or authentication redirects to solve routing failures. The offline shell itself contains no private server-rendered account data.
 
-Show offline readiness only after required assets and match data are available. First-ever access to an uncached application cannot work offline.
+Show offline readiness only after required assets and database initialization succeed; do not require a pre-existing game. First-ever access to an uncached application cannot work offline. Recheck readiness after interrupted installation or storage loss. Local data and application caches belong to the current origin/browser context; a hostname change does not migrate them.
 
 Use prompted service-worker updates. Defer activation/reload while recording, while the add-event UI is open or while a local transaction is in progress. Keep old required assets until a safe activation point.
 

@@ -4,7 +4,7 @@
 
 Use next-intl from Phase 0. Support English (`en`) and European Portuguese (`pt-PT`). English is the fallback language. Application language does not change the instruction to communicate with the developer in English.
 
-Keep URLs independent of language, including `/offline`. No `[locale]` route segment or locale redirect is required.
+Keep URLs independent of language, including the normal cached application entry. No `[locale]` route segment or locale redirect is required.
 
 ## Phase 0 files
 
@@ -37,9 +37,9 @@ Provide an English/Portuguese selector in the Phase 0 shell and retain the choic
 
 Validate against the supported list. Fall back to English for absent/unsupported preferences. Keep online server/browser initial rendering consistent to prevent hydration mismatches.
 
-The generic `/offline` shell starts with a deterministic initial locale. After browser initialization, read the saved preference and supply locale/messages explicitly to its client provider. Update document language with the visible language. Keep this bootstrap independent of server cookie/session reads.
+The generic cached local application shell starts with a deterministic initial locale. After browser initialization, read the saved preference and supply locale/messages explicitly to its client provider. Update document language with the visible language. Keep this bootstrap independent of server cookie/session reads. The same offline application includes management and new-match setup; there is no separate limited recorder mode.
 
-Bundle both offline catalogs into the required asset graph. Do not fetch remote translations or call `router.refresh` to switch language in `/offline`. Switching language preserves the current event draft, clock and unsynced records.
+Bundle both offline catalogs into the required asset graph. Do not fetch remote translations or call `router.refresh` to switch language in the local application. Switching language preserves the current event draft, clock and unsynced records.
 
 ## Phase 0 verification
 

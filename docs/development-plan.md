@@ -4,13 +4,13 @@
 
 Planning baseline revised on 2026-10-14. Phases 0 and 1 are complete. Phase 1 reflects the agreed database/authentication scope; workspace-owned product APIs and command receipts move to Phase 3. Later phases remain unimplemented and require separate authorization.
 
-Use Next.js, an early account-scoped PostgreSQL API and local synchronization. Add English/Portuguese support from Phase 0. Prepared games remain recordable at the limited `/offline` entry without a live API.
+Use Next.js, IndexedDB as the primary local working store and an authenticated PostgreSQL API for optional synchronization. Add English/Portuguese support from Phase 0. All hockey workflows, including new-match setup and team/player management, must work offline as their features are implemented. Accounts are required only for server/account operations.
 
 | Phase | Status |
 | --- | --- |
 | 0. Project foundations | Complete. Setup-only scope; see [verification](phase-0-handoff.md#setup-only-cleanup). |
 | 1. Authentication and database foundation | Complete. PostgreSQL, modular auth schema/migrations, username/password login, admin creation commands and protected shell verified. |
-| 2. Offline boot and recorder state feasibility | Not started. |
+| 2. Offline application foundation | In progress. PWA/Serwist asset-caching increment implemented; local database/navigation feasibility remains. |
 | 3. Thin synchronized recording slice | Not started. |
 | 4. Teams and roster setup | Not started. |
 | 5. Simple countdown clock | Not started. |
@@ -47,29 +47,34 @@ Phase 1 completed on 2026-10-14. Its migrations, production browser flow, role p
 - Verification: manual migration, login/reload/sign-out and permission checks; formatting, lint, typecheck and production build. No automated tests are required or authorized by this phase.
 - Acceptance: the database retains data across container recreation; auth migrations apply and generation preserves the central schema exports; username/password login establishes a database session and survives page reload; anonymous visitors cannot access the protected home; sign-out invalidates the session; only an admin can create normal users; public signup and role escalation are denied; both locales fit the supported narrow-screen layout; all non-test project checks pass.
 
-## Phase 2. Offline boot and recorder state feasibility
+## Phase 2. Offline application foundation
 
-- Objective: prove Next.js can meet the offline requirement before building the recording workflows around it.
-- Dependencies: Phase 1; select stable worker tooling and local access policy.
-- Deliverables: explicit precached `/offline` entry limited to prepared games; account/game recorder fallback; IndexedDB prepared-game fixtures; scoped Zustand provider and visible add-event state shell; both language catalogs available locally. Fixtures are test data, not a hidden production data source. Exclude management/setup creation from offline UI.
-- Tests: production-build direct `/offline` reload; recorder URL fallback; expired server session; rejection of unprepared IDs; hydration; account switching; creation-state clearing; waiting worker update; offline language switch without server requests.
-- Acceptance: prepared-game views open at `/offline` without server rendering/auth refresh. No game/team/player creation or remote browsing is exposed. Draft exists only while its UI is visible. Account fixtures remain isolated and both languages work offline. No private HTML/RSC caching workaround is required.
+The user clarified that the normal application must support every hockey workflow offline, including new-match setup and local teams/players. This supersedes the prepared-games-only `/offline` design. Phase 2 establishes infrastructure only; product features follow in later branches/phases. Personal-device local use requires no account and survives connection loss, session expiry and app restart. Explicit sign-out must clear private local data; unsynced-work safeguards remain to be agreed before implementing destructive cleanup. See [offline policy](offline-sync.md) and the [Phase 2 proposal](phase-2-offline-proposal.md).
+
+- Objective: prove installation, offline launch/navigation, local database initialization and safe updates before adding product workflows.
+- Dependencies: Phase 1. Selected Serwist/Turbopack 9.5.13 and esbuild 0.28.2, verified with Next.js 16.4.0.
+- Deliverables: manifest and install icons; one generic precached local application entry independent of auth; explicit required-asset precaching and readiness/error state; local-only navigation structure with no product workflows; Dexie initialization/versioning and non-secret local workspace identity; both catalogs; prompted worker update handling. Keep private account/API routes outside the cached shell.
+- Exclusions: no team/player/game CRUD, prepared-game fixtures, recorder/add-event shell, Zustand demo, domain tables, outbox protocol, server sync or account data-deletion flow. Add feature schemas and state only when later phases use them. A temporary non-domain storage diagnostic may establish persistence without becoming a product feature or production data source.
+- Non-test verification: production cold launch/reload with network disabled and no session; navigation to an unvisited local placeholder view; local language switching; manual local persistence check and storage-failure handling; interrupted cache installation; waiting worker and safe activation. Run relevant non-test project checks. No automated tests are authorized.
+- Acceptance: the installed app launches without auth/API/RSC requests needed for local use; all required assets are cached before readiness is shown; local initialization and reload work without a server; both languages work offline; failed installation/storage does not claim success; updates do not force reload while the app is busy. No product features are implemented. Physical-device checks are recorded for the supported mixed-device target, including limitations when devices are unavailable.
+
+The first authorized increment adds manifest/icons, a public `/app` placeholder, production worker registration, explicit precaching, file-cache status/retry and waiting-update feedback. Production browser checks cover offline boot/reload, local language switching, failed installation/retry, cache boundaries and native waiting activation. See the [increment handoff](phase-2-handoff.md). Dexie/workspace initialization, local navigation feasibility and full application readiness remain pending; no recorder or sync features are included.
 
 ## Phase 3. Thin synchronized recording slice
 
 - Objective: prove local durability and remote acknowledgement in one narrow workflow.
 - Dependencies: Phase 2.
-- Deliverables: personal workspace table/provisioning and a minimum account-scoped product API; minimal online setup/preparation for one team/player/game/roster; player-first recovery with mandatory subtype; recent timeline; durable undo; local event+outbox transaction; PostgreSQL command handling; serial upload, transactionally persisted receipts and download/reconciliation. Record the same prepared game online or at `/offline`.
+- Deliverables: minimum local team/player/game/roster setup without an account or network; player-first recovery with mandatory subtype; recent timeline; durable undo; atomic local changes and sync intent. Add personal server workspace provisioning, explicit local/account binding, an account-scoped API, prerequisite creation delivery, PostgreSQL command handling, persisted receipts and reconciliation. Build and verify the local slice before adding its server synchronization. These are later product features, not Phase 2 infrastructure.
 - Tests: online save; offline save/reload; reconnect; lost acknowledgement after SQL commit; duplicate tap/delivery; local write failure; undo before and after acknowledgement; a later local edit surviving an earlier acknowledgement.
-- Acceptance: each workspace can persist/read its resource through the API; another user cannot access it by guessing an ID. Record a recovery offline, reload, reconnect and obtain exactly one server event. A committed receipt survives server restart and duplicate delivery applies one mutation. Reload retains undo. Saved locally and synced are distinct. A rejected or failed upload preserves local work. This is a recovery-only slice, not all V1 events.
+- Acceptance: without a network or account, create the minimum team/player/game/roster, record a recovery and retain it and undo after reload. After explicit account binding and reconnect, upload prerequisites and obtain exactly one server event. Each server workspace authorizes reads/writes; another user cannot access it by guessing an ID. A committed receipt survives server restart and duplicate delivery applies one mutation. Saved locally and synced are distinct. A rejected or failed upload preserves local work. This is a recovery-only slice, not all V1 events.
 
 ## Phase 4. Teams and roster setup
 
 - Objective: expand minimal setup into practical multi-team management.
 - Dependencies: Phase 3.
 - Deliverables: reusable player identity, team memberships, team-specific numbers, game metadata, roster selection, starter selection and game snapshots through local/API command paths.
-- Tests: player on two teams; different numbers per roster; membership archive; later player rename; invalid cross-account/game references; online preparation followed by offline selection/reload; unavailable management controls at `/offline`.
-- Acceptance: either squad can select the same player. Historical names/numbers remain stable. Setup is online; prepared data supports offline recording/reload. Unprepared games and uncached remote data are not falsely shown as available.
+- Tests: player on two teams; different numbers per roster; membership archive; later player rename; invalid workspace/account/game references; offline team/player creation; new-game/roster setup and reload without connectivity; subsequent prerequisite synchronization.
+- Acceptance: either squad can select the same player. Historical names/numbers remain stable. Management and setup work locally without login or network, including creating a new game. Unavailable remote data is not falsely shown as local.
 
 ## Phase 5. Simple countdown clock
 
@@ -123,9 +128,9 @@ Phase 1 completed on 2026-10-14. Its migrations, production browser flow, role p
 
 - Objective: validate failure recovery across realistic match sessions.
 - Dependencies: Phase 10.
-- Deliverables: actionable storage/auth/conflict UI; retry controls; migration fixtures; tab safeguards; safe update activation; prepared-match readiness; tested download cursors and pending-projection reconciliation.
-- Tests: full prepared match at `/offline`; restart/reconnect; acknowledgement loss; quota failure; interrupted transaction; SQL/IndexedDB migration failure; blocked upgrade; worker update; expired/revoked session; account switch; second writer; paginated download; offline language switch preserving draft/clock/pending records.
-- Acceptance: failures cause no partial local/server mutation, duplicate command effect or false synced status. Pending data survives reload and failed upload. Another account cannot see or upload it. The recorder never needs a live API to continue a prepared match.
+- Deliverables: actionable storage/auth/conflict UI; retry controls; migration fixtures; tab safeguards; safe update activation; complete application readiness; sign-out cleanup with agreed unsynced-work safeguards; tested download cursors and pending-projection reconciliation.
+- Tests: offline team/player and new-match setup followed by a full match; restart/reconnect; acknowledgement loss; quota failure; interrupted transaction; SQL/IndexedDB migration failure; blocked upgrade; worker update; expired/revoked session; explicit sign-out cleanup with pending work; account switch; second writer; paginated download; offline language switch preserving draft/clock/pending records.
+- Acceptance: failures cause no partial local/server mutation, duplicate command effect or false synced status. Pending data survives reload, connection loss, expiry and failed upload. Explicit sign-out removes private data only through the agreed cleanup/discard flow. Another account cannot adopt or upload it. No hockey workflow needs a live API.
 
 ## Phase 12. Responsive and observer validation
 
