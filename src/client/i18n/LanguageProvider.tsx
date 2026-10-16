@@ -8,16 +8,13 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { ReactNode } from "react";
 import { createLocalePreference } from "../../i18n/preference";
 import type { PreferenceStorage } from "../../i18n/preference";
 import { messages } from "../../i18n/messages";
-import type { Locale } from "../../i18n/locales";
-
-interface LanguageContextValue {
-  locale: Locale;
-  select(value: unknown): void;
-}
+import type {
+  LanguageContextValue,
+  LanguageProviderProps,
+} from "./LanguageProvider.interfaces";
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
@@ -29,7 +26,7 @@ function getBrowserStorage(): PreferenceStorage | undefined {
   }
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({ children }: LanguageProviderProps) {
   const [preference] = useState(() =>
     createLocalePreference(getBrowserStorage()),
   );

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useTranslations } from "next-intl";
-import { authClient } from "./client";
-import st from "./styles.module.css";
+import { authClient } from "../../features/auth/auth-client";
+import st from "./SignInPage.module.css";
 
-export function LoginForm() {
+export function SignInPage() {
   const t = useTranslations("auth");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<
@@ -14,7 +14,7 @@ export function LoginForm() {
   >(null);
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ): Promise<void> {
     event.preventDefault();
     if (pending) return;

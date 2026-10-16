@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createSerwistRoute } from "@serwist/turbopack";
+import {
+  getRoutePayloadCacheUrl,
+  offlinePagePaths,
+} from "../../../offline-pages";
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
   createSerwistRoute({
@@ -15,7 +19,10 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
       async (entries) => {
         const hash = createHash("sha256").update(JSON.stringify(entries));
         hash.update(readFileSync("src/app/layout.tsx"));
-        hash.update(readFileSync("src/app/app/page.tsx"));
+        hash.update(readFileSync("src/app/app/layout.tsx"));
+        for (const path of offlinePagePaths) {
+          hash.update(readFileSync(`src/app${path}/page.tsx`));
+        }
         hash.update(readFileSync("src/app/icon.svg"));
         hash.update(readFileSync("src/app/favicon.ico"));
         hash.update(readFileSync("src/app/manifest.ts"));
@@ -23,7 +30,10 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
         return {
           manifest: [
             ...entries,
-            { url: "/app", revision, size: 0 },
+            ...offlinePagePaths.flatMap((path) => [
+              { url: path, revision, size: 0 },
+              { url: getRoutePayloadCacheUrl(path), revision, size: 0 },
+            ]),
             { url: "/manifest.webmanifest", revision, size: 0 },
             { url: "/icon.svg", revision, size: 0 },
             { url: "/favicon.ico", revision, size: 0 },

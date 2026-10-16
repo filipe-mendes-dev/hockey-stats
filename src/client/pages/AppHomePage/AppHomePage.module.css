@@ -1,0 +1,22 @@
+.page {
+  max-width: 46rem;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+.header {
+  margin-bottom: 1.75rem;
+}
+
+.header h1 {
+  margin: 0 0 0.625rem;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}

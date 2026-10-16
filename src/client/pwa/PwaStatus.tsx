@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { LocalStorageStatus } from "./local-storage-status";
+import { isOfflinePagePath } from "../../offline-pages";
+import { LocalStorageStatus } from "./LocalStorageStatus";
 import { useServiceWorker } from "./use-service-worker";
-import st from "./styles.module.css";
+import st from "./PwaStatus.module.css";
 
 export function PwaStatus() {
   const t = useTranslations("pwa");
@@ -21,7 +22,7 @@ export function PwaStatus() {
           {t("retry")}
         </button>
       )}
-      {pathname === "/app" && (
+      {isOfflinePagePath(pathname) && (
         <LocalStorageStatus filesCached={status === "cached"} />
       )}
       {updateAvailable && <p role="status">{t("updateAvailable")}</p>}

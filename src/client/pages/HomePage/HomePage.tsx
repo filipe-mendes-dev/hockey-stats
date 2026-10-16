@@ -1,13 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import st from "./styles.module.css";
+import type { HomePageProps } from "./HomePage.interfaces";
+import st from "./HomePage.module.css";
 
-interface HomeContentProps {
-  name: string;
-}
-
-export function HomeContent({ name }: HomeContentProps) {
+export function HomePage({ name }: HomePageProps) {
   const t = useTranslations("home");
   return (
     <section className={st.content}>
