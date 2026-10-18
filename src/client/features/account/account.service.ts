@@ -1,5 +1,5 @@
-import { accountSchema } from "../../../contracts/players-sync.schema";
-import type { LocalAccount } from "../../../contracts/players-sync.schema";
+import { authenticatedUserSchema } from "./account.schema";
+import type { AuthenticatedUser } from "./account.schema";
 import { authClient } from "../auth/auth-client";
 import { getDatabase } from "../../storage/database";
 import { notifyLocalDataChanged } from "../../storage/localDataEvents";
@@ -26,16 +26,18 @@ export class LocalAccountRequiredError extends Error {
   }
 }
 
-export async function getOnlineAccount(): Promise<LocalAccount | null> {
+export async function getOnlineAccount(): Promise<AuthenticatedUser | null> {
   const result = await authClient.getSession({
     query: { disableCookieCache: true },
   });
   if (result.error) throw new Error("Could not verify the online session.");
-  return result.data === null ? null : accountSchema.parse(result.data.user);
+  return result.data === null
+    ? null
+    : authenticatedUserSchema.parse(result.data.user);
 }
 
 export async function setUpLocalAccount(
-  account: LocalAccount,
+  account: AuthenticatedUser,
   options: LocalAccountSetupOptions,
 ): Promise<void> {
   const authenticated = await getOnlineAccount();

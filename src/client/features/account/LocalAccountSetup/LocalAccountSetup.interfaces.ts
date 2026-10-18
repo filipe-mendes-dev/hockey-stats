@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { LocalAccount } from "../../../../contracts/players-sync.schema";
+import type { AuthenticatedUser } from "../account.schema";
 
 export interface LocalAccountSetupProps {
   children: ReactNode;
@@ -7,6 +7,6 @@ export interface LocalAccountSetupProps {
 
 export interface AccountSetupState {
   status: "loading" | "ready" | "signIn" | "import" | "failed";
-  account: LocalAccount | null;
+  account: AuthenticatedUser | null;
   playerCount: number;
 }

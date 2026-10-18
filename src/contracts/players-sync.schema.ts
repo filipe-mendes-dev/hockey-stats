@@ -1,13 +1,6 @@
 import { z } from "zod";
 import { playerSchema } from "../domain/players/player.schema";
 
-export const accountSchema = z.object({
-  id: z.string().min(1),
-  name: z.string(),
-  username: z.string().nullable().optional(),
-});
-export type LocalAccount = z.infer<typeof accountSchema>;
-
 export const createPlayerCommandSchema = z.object({
   version: z.literal(1),
   operationId: z.uuidv4(),
