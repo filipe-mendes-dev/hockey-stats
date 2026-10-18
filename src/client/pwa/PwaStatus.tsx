@@ -22,8 +22,10 @@ export function PwaStatus() {
           {t("retry")}
         </button>
       )}
-      {isOfflinePagePath(pathname) && (
-        <LocalStorageStatus filesCached={status === "cached"} />
+      {(pathname === "/app" || pathname.startsWith("/app/")) && (
+        <LocalStorageStatus
+          filesCached={status === "cached" && isOfflinePagePath(pathname)}
+        />
       )}
       {updateAvailable && <p role="status">{t("updateAvailable")}</p>}
     </footer>

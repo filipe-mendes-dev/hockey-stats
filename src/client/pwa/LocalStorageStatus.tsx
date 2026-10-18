@@ -1,13 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useLocalStorage } from "../storage/use-local-storage";
+import { useDatabaseStatus } from "../storage/useDatabaseStatus";
 import type { LocalStorageStatusProps } from "./LocalStorageStatus.interfaces";
 import st from "./LocalStorageStatus.module.css";
 
 export function LocalStorageStatus({ filesCached }: LocalStorageStatusProps) {
   const t = useTranslations("storage");
-  const { status, persistence, retry } = useLocalStorage();
+  const { status, persistence, retry } = useDatabaseStatus();
 
   return (
     <div>
