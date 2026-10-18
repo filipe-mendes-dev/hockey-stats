@@ -32,7 +32,7 @@ export const createTeamPlayerCommandSchema = z.object({
   operationId: z.uuidv4(),
   kind: z.literal("teamPlayer.create"),
   teamPlayer: teamPlayerSchema.refine(
-    (membership) => membership.revision === 1 && membership.status === "active",
+    (membership) => membership.revision === 1,
   ),
 });
 export const updateTeamPlayerCommandSchema = z

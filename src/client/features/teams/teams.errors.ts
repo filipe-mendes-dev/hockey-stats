@@ -4,11 +4,11 @@ export class LocalRevisionConflictError extends Error {
     this.name = "LocalRevisionConflictError";
   }
 }
-export class TeamRosterError extends Error {
+export class TeamPlayersError extends Error {
   constructor() {
     super(
       "The team or player is unavailable, or the player is already a member.",
     );
-    this.name = "TeamRosterError";
+    this.name = "TeamPlayersError";
   }
 }

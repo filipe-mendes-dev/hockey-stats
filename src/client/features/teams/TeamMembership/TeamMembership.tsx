@@ -15,7 +15,7 @@ export function TeamMembership({
   playerName,
   duplicateNumber,
 }: TeamMembershipProps) {
-  const t = useTranslations("teamRoster");
+  const t = useTranslations("teamPlayers");
   const teamsText = useTranslations("teams");
   const update = useUpdateTeamPlayer();
   const [draft, setDraft] = useState<TeamPlayer | null>(null);
@@ -29,7 +29,6 @@ export function TeamMembership({
         expectedRevision: draft.revision,
         jerseyNumber: draft.jerseyNumber,
         role: draft.role,
-        status: draft.status,
       });
       setDraft(null);
     } catch {
@@ -49,7 +48,7 @@ export function TeamMembership({
         </ButtonLink>
       </h3>
       <p>
-        {t(membership.role)} · {t(membership.status)}
+        {t(membership.role)}
         {membership.jerseyNumber ? ` · #${membership.jerseyNumber}` : ""}
       </p>
       <DeliveryStatus kind="teamPlayer.create" entityId={membership.id} />
@@ -84,21 +83,6 @@ export function TeamMembership({
             }
             onRoleChange={(role) => setDraft({ ...draft, role })}
           />
-          <fieldset className={st.status} disabled={update.isPending}>
-            <legend>{t("status")}</legend>
-            {(["active", "inactive"] as const).map((status) => (
-              <label key={status}>
-                <input
-                  type="radio"
-                  name={`status-${membership.id}`}
-                  value={status}
-                  checked={draft.status === status}
-                  onChange={() => setDraft({ ...draft, status })}
-                />
-                {t(status)}
-              </label>
-            ))}
-          </fieldset>
         </EntityForm>
       ) : (
         <div>

@@ -12,12 +12,15 @@ import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDat
 import { TeamPlayerFields } from "../TeamPlayerFields/TeamPlayerFields";
 import { TeamMembership } from "../TeamMembership/TeamMembership";
 import { normalizeSearch } from "../../../utils/search";
-import type { TeamRosterProps, PlayerSelection } from "./TeamRoster.interfaces";
-import st from "./TeamRoster.module.css";
-export function TeamRoster({ teamId }: TeamRosterProps) {
-  const t = useTranslations("teamRoster");
+import type {
+  TeamPlayersProps,
+  PlayerSelection,
+} from "./TeamPlayers.interfaces";
+import st from "./TeamPlayers.module.css";
+export function TeamPlayers({ teamId }: TeamPlayersProps) {
+  const t = useTranslations("teamPlayers");
   const players = usePlayers();
-  const roster = useTeamPlayers(teamId);
+  const teamPlayers = useTeamPlayers(teamId);
   const addition = useAddTeamPlayers();
   const { locale } = useLanguage();
   const [adding, setAdding] = useState(false);
@@ -25,7 +28,7 @@ export function TeamRoster({ teamId }: TeamRosterProps) {
   const [selected, setSelected] = useState<Record<string, PlayerSelection>>({});
   const [saved, setSaved] = useState(false);
   const submitting = useRef(false);
-  const members = roster.data ?? [];
+  const members = teamPlayers.data ?? [];
   const memberIds = new Set(members.map((entry) => entry.playerId));
   const collator = new Intl.Collator(locale, { sensitivity: "base" });
   const filtered = (players.data ?? [])
@@ -37,9 +40,7 @@ export function TeamRoster({ teamId }: TeamRosterProps) {
     .sort((a, b) => collator.compare(a.name, b.name));
   const selectedEntries = Object.entries(selected);
   const numbers = [
-    ...members
-      .filter((member) => member.status === "active")
-      .map((member) => member.jerseyNumber),
+    ...members.map((member) => member.jerseyNumber),
     ...selectedEntries.map(([, field]) => field.jerseyNumber.trim()),
   ].filter(Boolean);
   const duplicate = new Set(numbers).size !== numbers.length;
@@ -68,28 +69,28 @@ export function TeamRoster({ teamId }: TeamRosterProps) {
     }
   }
   if (
-    roster.isPending ||
-    roster.isError ||
+    teamPlayers.isPending ||
+    teamPlayers.isError ||
     players.isPending ||
     players.isError
   )
     return (
-      <section className={st.roster}>
+      <section className={st.players}>
         <h2>{t("title")}</h2>
         <EntityDataStatus
           loadingLabel={t("loading")}
           failedLabel={t("loadFailed")}
           retryLabel={t("retry")}
-          failed={roster.isError || players.isError}
+          failed={teamPlayers.isError || players.isError}
           onRetry={() => {
-            void roster.refetch();
+            void teamPlayers.refetch();
             void players.refetch();
           }}
         />
       </section>
     );
   return (
-    <section className={st.roster} aria-label={t("title")}>
+    <section className={st.players} aria-label={t("title")}>
       <h2>{t("title")}</h2>
       {saved && <p role="status">{t("saved")}</p>}
       {members.length === 0 ? (
@@ -105,12 +106,10 @@ export function TeamRoster({ teamId }: TeamRosterProps) {
                   ?.name ?? t("unknown")
               }
               duplicateNumber={
-                member.status === "active" &&
                 !!member.jerseyNumber &&
                 members.some(
                   (other) =>
                     other.id !== member.id &&
-                    other.status === "active" &&
                     other.jerseyNumber === member.jerseyNumber,
                 )
               }

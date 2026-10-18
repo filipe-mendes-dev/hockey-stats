@@ -1,11 +1,11 @@
-.roster,
+.players,
 .picker {
   display: grid;
   gap: 1rem;
   min-width: 0;
 }
-.roster h2,
-.roster p {
+.players h2,
+.players p {
   margin: 0;
   overflow-wrap: anywhere;
 }

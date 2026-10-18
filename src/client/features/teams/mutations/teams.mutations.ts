@@ -1,6 +1,6 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addPlayersToTeam, updateTeamPlayer } from "../teamRoster.service";
+import { addPlayersToTeam, updateTeamPlayer } from "../teamPlayers.service";
 import { createTeam, updateTeam } from "../teams.service";
 import { teamsListKey, teamDetailsKey } from "../queries/teams.queries";
 export function useCreateTeam() {

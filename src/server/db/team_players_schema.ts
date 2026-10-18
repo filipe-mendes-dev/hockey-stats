@@ -15,10 +15,6 @@ export const teamPlayerRole = pgEnum("team_player_role", [
   "field-player",
   "goalkeeper",
 ]);
-export const teamPlayerStatus = pgEnum("team_player_status", [
-  "active",
-  "inactive",
-]);
 export const teamPlayers = pgTable(
   "team_player",
   {
@@ -34,7 +30,6 @@ export const teamPlayers = pgTable(
       .references(() => players.id, { onDelete: "cascade" }),
     jerseyNumber: text("jersey_number"),
     role: teamPlayerRole("role").notNull(),
-    status: teamPlayerStatus("status").notNull(),
     revision: integer("revision").notNull(),
     createdAt: bigint("created_at", { mode: "number" }).notNull(),
     updatedAt: bigint("updated_at", { mode: "number" }).notNull(),

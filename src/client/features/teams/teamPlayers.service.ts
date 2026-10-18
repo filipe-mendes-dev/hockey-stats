@@ -20,7 +20,7 @@ import {
   insertTeamPlayer,
   updateTeamPlayerRecord,
 } from "./teamPlayers.repository";
-import { LocalRevisionConflictError, TeamRosterError } from "./teams.errors";
+import { LocalRevisionConflictError, TeamPlayersError } from "./teams.errors";
 
 export async function addPlayersToTeam(
   input: AddTeamPlayersInput,
@@ -33,7 +33,7 @@ export async function addPlayersToTeam(
     async () => {
       if (!(await getLocalIdentity())) throw new LocalAccountRequiredError();
       const team = await getTeamById(fields.teamId);
-      if (!team || team.archivedAt) throw new TeamRosterError();
+      if (!team || team.archivedAt) throw new TeamPlayersError();
       const existing = await listTeamPlayers(team.id);
       for (const field of fields.players) {
         const player = await getPlayerById(field.playerId);
@@ -42,13 +42,12 @@ export async function addPlayersToTeam(
           player.archivedAt ||
           existing.some((entry) => entry.playerId === player.id)
         )
-          throw new TeamRosterError();
+          throw new TeamPlayersError();
         const now = Date.now();
         const teamPlayer: TeamPlayer = {
           ...field,
           id: crypto.randomUUID(),
           teamId: team.id,
-          status: "active",
           revision: 1,
           createdAt: now,
           updatedAt: now,
@@ -82,14 +81,13 @@ export async function updateTeamPlayer(
     async () => {
       if (!(await getLocalIdentity())) throw new LocalAccountRequiredError();
       const current = await getTeamPlayer(fields.id);
-      if (!current) throw new TeamRosterError();
+      if (!current) throw new TeamPlayersError();
       if (current.revision !== fields.expectedRevision)
         throw new LocalRevisionConflictError();
       const teamPlayer: TeamPlayer = {
         ...current,
         jerseyNumber: fields.jerseyNumber,
         role: fields.role,
-        status: fields.status,
         revision: current.revision + 1,
         updatedAt: Math.max(Date.now(), current.updatedAt),
       };

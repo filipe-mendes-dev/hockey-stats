@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Team } from "../../../../domain/teams/team.schema";
 import { TeamForm } from "../../../features/teams/TeamForm/TeamForm";
-import { TeamRoster } from "../../../features/teams/TeamRoster/TeamRoster";
+import { TeamPlayers } from "../../../features/teams/TeamPlayers/TeamPlayers";
 import { useUpdateTeam } from "../../../features/teams/mutations/teams.mutations";
 import { LocalRevisionConflictError } from "../../../features/teams/teams.errors";
 import { Button } from "../../../components/Button/Button";
@@ -111,7 +111,7 @@ export function TeamDetailsPage() {
               </Button>
             </div>
           )}
-          <TeamRoster key={team.id} teamId={team.id} />
+          <TeamPlayers key={team.id} teamId={team.id} />
         </div>
       ) : (
         <div className={st.unavailable}>

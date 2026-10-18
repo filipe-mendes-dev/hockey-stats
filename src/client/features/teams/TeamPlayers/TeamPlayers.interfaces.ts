@@ -1,5 +1,5 @@
 import type { TeamPlayer } from "../../../../domain/teams/teamPlayer.schema";
-export interface TeamRosterProps {
+export interface TeamPlayersProps {
   teamId: string;
 }
 export interface PlayerSelection {

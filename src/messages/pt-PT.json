@@ -172,7 +172,7 @@
     "save": "Guardar alterações",
     "changed": "Este registo foi alterado. Cancele e reabra o formulário para carregar a versão mais recente."
   },
-  "teamRoster": {
+  "teamPlayers": {
     "title": "Jogadores da equipa",
     "add": "Adicionar jogadores",
     "empty": "Ainda não foram atribuídos jogadores.",
@@ -185,20 +185,17 @@
     "role": "Posição",
     "field-player": "Jogador de campo",
     "goalkeeper": "Guarda-redes",
-    "active": "Ativo",
-    "inactive": "Inativo",
-    "status": "Estado na equipa",
     "member": "Já pertence a esta equipa",
     "edit": "Editar inscrição",
     "save": "Guardar inscrição",
     "saving": "A guardar…",
     "cancel": "Cancelar",
-    "failed": "Não foi possível guardar o plantel. As seleções foram mantidas. Verifique se os jogadores estão disponíveis e se ainda não pertencem à equipa e tente novamente.",
-    "loadFailed": "Não foi possível carregar o plantel. Tente novamente.",
+    "failed": "Não foi possível guardar os jogadores da equipa. As seleções foram mantidas. Verifique se os jogadores estão disponíveis e se ainda não pertencem à equipa e tente novamente.",
+    "loadFailed": "Não foi possível carregar os jogadores da equipa. Tente novamente.",
     "retry": "Tentar novamente",
     "loading": "A carregar jogadores da equipa…",
-    "duplicate": "Alguns jogadores ativos têm o mesmo número de camisola. Pode guardar na mesma.",
+    "duplicate": "Alguns jogadores têm o mesmo número de camisola. Pode guardar na mesma.",
     "unknown": "Jogador indisponível",
-    "saved": "Plantel guardado neste dispositivo."
+    "saved": "Jogadores da equipa guardados neste dispositivo."
   }
 }

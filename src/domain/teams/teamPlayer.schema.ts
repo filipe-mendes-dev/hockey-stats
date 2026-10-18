@@ -11,7 +11,6 @@ export const teamPlayerSchema = z
       .refine((number) => number === number.trim())
       .optional(),
     role: z.enum(["field-player", "goalkeeper"]),
-    status: z.enum(["active", "inactive"]),
     revision: z.int().positive(),
     createdAt: z.int().positive(),
     updatedAt: z.int().positive(),
@@ -44,6 +43,5 @@ export type AddTeamPlayersInput = z.infer<typeof addTeamPlayersInputSchema>;
 export const updateTeamPlayerInputSchema = teamPlayerFieldsSchema.extend({
   id: z.uuidv4(),
   expectedRevision: z.int().positive(),
-  status: teamPlayerSchema.shape.status,
 });
 export type UpdateTeamPlayerInput = z.infer<typeof updateTeamPlayerInputSchema>;

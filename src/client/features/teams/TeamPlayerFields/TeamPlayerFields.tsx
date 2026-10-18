@@ -10,7 +10,7 @@ export function TeamPlayerFields({
   onNumberChange,
   onRoleChange,
 }: TeamPlayerFieldsProps) {
-  const t = useTranslations("teamRoster");
+  const t = useTranslations("teamPlayers");
   const id = useId();
   return (
     <div className={st.fields}>

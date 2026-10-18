@@ -172,7 +172,7 @@
     "save": "Save changes",
     "changed": "This record changed. Cancel and reopen the form to load the latest version."
   },
-  "teamRoster": {
+  "teamPlayers": {
     "title": "Team players",
     "add": "Add players",
     "empty": "No players assigned yet.",
@@ -185,20 +185,17 @@
     "role": "Position",
     "field-player": "Field player",
     "goalkeeper": "Goalkeeper",
-    "active": "Active",
-    "inactive": "Inactive",
-    "status": "Membership status",
     "member": "Already in this team",
     "edit": "Edit membership",
     "save": "Save membership",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "failed": "Could not save the roster. Your selections are still here. Check that the players are available and not already members, then try again.",
-    "loadFailed": "Could not load the roster. Try again.",
+    "failed": "Could not save the team players. Your selections are still here. Check that the players are available and not already in the team, then try again.",
+    "loadFailed": "Could not load the team players. Try again.",
     "retry": "Try again",
     "loading": "Loading team players…",
-    "duplicate": "Some active players have the same jersey number. You can still save.",
+    "duplicate": "Some players have the same jersey number. You can still save.",
     "unknown": "Player unavailable",
-    "saved": "Team roster saved on this device."
+    "saved": "Team players saved on this device."
   }
 }

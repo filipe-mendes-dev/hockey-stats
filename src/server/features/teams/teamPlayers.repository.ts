@@ -16,7 +16,6 @@ export async function listTeamPlayersForOwner(
       playerId: teamPlayers.playerId,
       jerseyNumber: teamPlayers.jerseyNumber,
       role: teamPlayers.role,
-      status: teamPlayers.status,
       revision: teamPlayers.revision,
       createdAt: teamPlayers.createdAt,
       updatedAt: teamPlayers.updatedAt,
@@ -80,7 +79,6 @@ export async function updateTeamPlayer(
         .set({
           jerseyNumber: membership.jerseyNumber ?? null,
           role: membership.role,
-          status: membership.status,
           revision: membership.revision,
           updatedAt: membership.updatedAt,
         })
