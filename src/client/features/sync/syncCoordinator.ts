@@ -1,16 +1,16 @@
-import {
-  playerAcknowledgementSchema,
-  playersDownloadSchema,
-} from "../../../contracts/players-sync.schema";
+import { playersDownloadSchema } from "../../../contracts/players-sync.schema";
+import { parseAcknowledgement } from "../../../contracts/sync.schema";
+import { teamsDownloadSchema } from "../../../contracts/teams-sync.schema";
+import type { LocalDataChange } from "../../storage/localDataEvents";
 import { getLocalIdentity } from "../account/account.repository";
 import { AccountMismatchError } from "../account/account.service";
 import { subscribeLocalDataChanges } from "../../storage/localDataEvents";
 import { listOutboxOperations } from "./outbox.repository";
 import {
-  acknowledgePlayer,
-  mergeDownloadedPlayers,
-  rejectPlayerOperation,
-} from "../players/playerSyncResults.service";
+  acknowledgeOperation,
+  mergeDownloadedEntities,
+  rejectOperation,
+} from "./syncResults.service";
 import { SyncRequestError, syncRequest } from "./sync.transport";
 
 export interface SyncStatus {
@@ -90,6 +90,7 @@ async function synchronize(signal: AbortSignal): Promise<void> {
   }
   updateStatus({ phase: "syncing" });
   await navigator.locks.request(
+    // Retain the lock name so older open Player-only tabs share the same lock.
     "benchline.players-sync",
     { signal },
     async () => {
@@ -98,7 +99,8 @@ async function synchronize(signal: AbortSignal): Promise<void> {
       for (const operation of operations) {
         if (operation.status === "blocked") continue;
         try {
-          const result = playerAcknowledgementSchema.parse(
+          const result = parseAcknowledgement(
+            operation.command,
             await syncRequest(
               "/api/sync/commands",
               identity.ownerUserId,
@@ -108,14 +110,14 @@ async function synchronize(signal: AbortSignal): Promise<void> {
           );
           if (result.operationId !== operation.operationId)
             throw new Error("Unexpected operation acknowledgement.");
-          await acknowledgePlayer(identity.ownerUserId, result, signal);
+          await acknowledgeOperation(identity.ownerUserId, result, signal);
         } catch (error: unknown) {
           signal.throwIfAborted();
           if (
             error instanceof SyncRequestError &&
             [400, 409, 415, 422].includes(error.status)
           ) {
-            await rejectPlayerOperation(
+            await rejectOperation(
               identity.ownerUserId,
               operation.operationId,
               error.code,
@@ -131,9 +133,13 @@ async function synchronize(signal: AbortSignal): Promise<void> {
       );
       if (download.ownerUserId !== identity.ownerUserId)
         throw new AccountMismatchError();
-      await mergeDownloadedPlayers(
+      await mergeDownloadedEntities(identity.ownerUserId, download, signal);
+      const teamsDownload = teamsDownloadSchema.parse(
+        await syncRequest("/api/sync/teams", identity.ownerUserId, signal),
+      );
+      await mergeDownloadedEntities(
         identity.ownerUserId,
-        download.players,
+        teamsDownload,
         signal,
       );
       signal.throwIfAborted();
@@ -229,11 +235,11 @@ export function startSynchronization(): () => void {
       void requestSynchronization(true);
     }
   }
-  function localChange(reason: "write" | "sync"): void {
+  function localChange(change: LocalDataChange): void {
     void refreshCounts().catch(() => {
       if (!stopped) updateStatus({ phase: "failed" });
     });
-    if (reason === "write") void requestSynchronization();
+    if (change.reason === "write") void requestSynchronization();
   }
   const unsubscribe = subscribeLocalDataChanges(localChange);
   function wentOffline(): void {

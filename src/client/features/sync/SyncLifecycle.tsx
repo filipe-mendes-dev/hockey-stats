@@ -9,8 +9,12 @@ export function SyncLifecycle() {
   const client = useQueryClient();
   useEffect(() => {
     const stop = startSynchronization();
-    const unsubscribe = subscribeLocalDataChanges(() => {
-      void client.invalidateQueries({ queryKey: ["players"] });
+    const unsubscribe = subscribeLocalDataChanges((change) => {
+      const features =
+        change.feature === "all" ? ["players", "teams"] : [change.feature];
+      for (const feature of features)
+        void client.invalidateQueries({ queryKey: [feature] });
+      void client.invalidateQueries({ queryKey: ["outbox"] });
     });
     return () => {
       unsubscribe();
