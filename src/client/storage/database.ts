@@ -88,6 +88,10 @@ async function openDatabase(): Promise<Dexie> {
       }
     });
 
+  connection
+    .version(6)
+    .stores({ teamPlayers: "id, &[teamId+playerId], teamId, playerId" });
+
   connection.on("blocked", () => setStatus("blocked"));
   connection.on("versionchange", (event) => {
     opening = undefined;

@@ -1,5 +1,5 @@
 export type LocalDataChangeReason = "write" | "sync";
-export type LocalDataFeature = "players" | "teams" | "all";
+export type LocalDataFeature = "players" | "teams" | "teamPlayers" | "all";
 export interface LocalDataChange {
   reason: LocalDataChangeReason;
   feature: LocalDataFeature;
@@ -27,7 +27,10 @@ function parseChange(value: unknown): LocalDataChange | null {
   const { reason, feature } = value;
   if (
     (reason === "write" || reason === "sync") &&
-    (feature === "players" || feature === "teams" || feature === "all")
+    (feature === "players" ||
+      feature === "teams" ||
+      feature === "teamPlayers" ||
+      feature === "all")
   )
     return { reason, feature };
   return null;

@@ -129,7 +129,8 @@
     "signInAction": "Iniciar sessão",
     "recordBlocked": "Guardado neste dispositivo · Precisa de atenção",
     "recordSynced": "Sincronizado",
-    "deliveryUnavailable": "Estado de sincronização indisponível"
+    "deliveryUnavailable": "Estado de sincronização indisponível",
+    "waiting": "Guardado neste dispositivo · A aguardar uma alteração anterior"
   },
   "teams": {
     "title": "Equipas",
@@ -145,7 +146,7 @@
     "results": "{count, plural, one {# equipa} other {# equipas}}",
     "back": "Voltar às equipas",
     "newTitle": "Nova equipa",
-    "newDescription": "Adicione uma equipa. O escalão e a época são opcionais. Poderá associar jogadores numa atualização futura.",
+    "newDescription": "Adicione uma equipa. O escalão e a época são opcionais.",
     "name": "Nome",
     "required": "Obrigatório",
     "namePlaceholder": "Nome da equipa",
@@ -166,6 +167,38 @@
     "loadFailed": "Não foi possível ler os dados das equipas. Tente novamente. Os registos existentes não foram eliminados.",
     "retry": "Tentar novamente",
     "saving": "A guardar equipa…",
-    "saveFailed": "Não foi possível guardar a equipa. Os dados introduzidos foram mantidos. Tente criar a equipa novamente."
+    "saveFailed": "Não foi possível guardar. Os dados introduzidos foram mantidos. Tente novamente.",
+    "edit": "Editar equipa",
+    "save": "Guardar alterações",
+    "changed": "Este registo foi alterado. Cancele e reabra o formulário para carregar a versão mais recente."
+  },
+  "teamRoster": {
+    "title": "Jogadores da equipa",
+    "add": "Adicionar jogadores",
+    "empty": "Ainda não foram atribuídos jogadores.",
+    "search": "Pesquisar jogadores",
+    "clear": "Limpar pesquisa",
+    "noMatches": "Nenhum jogador encontrado.",
+    "selected": "{count, plural, one {# jogador selecionado} other {# jogadores selecionados}}",
+    "addSelected": "Adicionar jogadores selecionados",
+    "number": "Número de camisola (opcional)",
+    "role": "Posição",
+    "field-player": "Jogador de campo",
+    "goalkeeper": "Guarda-redes",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "status": "Estado na equipa",
+    "member": "Já pertence a esta equipa",
+    "edit": "Editar inscrição",
+    "save": "Guardar inscrição",
+    "saving": "A guardar…",
+    "cancel": "Cancelar",
+    "failed": "Não foi possível guardar o plantel. As seleções foram mantidas. Verifique se os jogadores estão disponíveis e se ainda não pertencem à equipa e tente novamente.",
+    "loadFailed": "Não foi possível carregar o plantel. Tente novamente.",
+    "retry": "Tentar novamente",
+    "loading": "A carregar jogadores da equipa…",
+    "duplicate": "Alguns jogadores ativos têm o mesmo número de camisola. Pode guardar na mesma.",
+    "unknown": "Jogador indisponível",
+    "saved": "Plantel guardado neste dispositivo."
   }
 }

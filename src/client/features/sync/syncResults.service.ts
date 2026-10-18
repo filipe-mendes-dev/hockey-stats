@@ -2,6 +2,8 @@ import type {
   SyncAcknowledgement,
   SyncDownload,
 } from "../../../contracts/sync.schema";
+import { getCommandFeature } from "../../../contracts/sync.schema";
+import { teamPlayerSchema } from "../../../domain/teams/teamPlayer.schema";
 import { playerSchema } from "../../../domain/players/player.schema";
 import { teamSchema } from "../../../domain/teams/team.schema";
 import { getDatabase } from "../../storage/database";
@@ -34,10 +36,21 @@ export async function acknowledgeOperation(
   if (acknowledgement.ownerUserId !== expectedOwner)
     throw new AccountMismatchError();
   const isPlayer = "player" in acknowledgement;
-  const feature = isPlayer ? "players" : "teams";
-  const entity = isPlayer ? acknowledgement.player : acknowledgement.team;
-  const kind = isPlayer ? "player.create" : "team.create";
-  const schema = isPlayer ? playerSchema : teamSchema;
+  const feature = isPlayer
+    ? "players"
+    : "team" in acknowledgement
+      ? "teams"
+      : "teamPlayers";
+  const entity = isPlayer
+    ? acknowledgement.player
+    : "team" in acknowledgement
+      ? acknowledgement.team
+      : acknowledgement.teamPlayer;
+  const schema = isPlayer
+    ? playerSchema
+    : "team" in acknowledgement
+      ? teamSchema
+      : teamPlayerSchema;
   const database = await getDatabase();
   await database.transaction(
     "rw",
@@ -46,7 +59,10 @@ export async function acknowledgeOperation(
       await requireOwner(expectedOwner, signal);
       const operation = await getOutboxOperation(acknowledgement.operationId);
       if (!operation) return;
-      if (operation.entityId !== entity.id || operation.command.kind !== kind)
+      if (
+        operation.entityId !== entity.id ||
+        getCommandFeature(operation.command) !== feature
+      )
         throw new Error("Acknowledgement refers to another entity.");
       const table = database.table<unknown, string>(feature);
       const row = await table.get(entity.id);
@@ -68,10 +84,21 @@ export async function mergeDownloadedEntities(
   signal.throwIfAborted();
   if (download.ownerUserId !== expectedOwner) throw new AccountMismatchError();
   const isPlayers = "players" in download;
-  const feature = isPlayers ? "players" : "teams";
-  const kind = isPlayers ? "player.create" : "team.create";
-  const records = isPlayers ? download.players : download.teams;
-  const schema = isPlayers ? playerSchema : teamSchema;
+  const feature = isPlayers
+    ? "players"
+    : "teams" in download
+      ? "teams"
+      : "teamPlayers";
+  const records = isPlayers
+    ? download.players
+    : "teams" in download
+      ? download.teams
+      : download.teamPlayers;
+  const schema = isPlayers
+    ? playerSchema
+    : "teams" in download
+      ? teamSchema
+      : teamPlayerSchema;
   const database = await getDatabase();
   await database.transaction(
     "rw",
@@ -80,7 +107,7 @@ export async function mergeDownloadedEntities(
       await requireOwner(expectedOwner, signal);
       const pendingIds = new Set(
         (await listOutboxOperations())
-          .filter((entry) => entry.command.kind === kind)
+          .filter((entry) => getCommandFeature(entry.command) === feature)
           .map((entry) => entry.entityId),
       );
       const table = database.table<unknown, string>(feature);

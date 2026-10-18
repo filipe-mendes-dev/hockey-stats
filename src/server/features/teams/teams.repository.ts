@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq, lte } from "drizzle-orm";
 import type { Team } from "../../../domain/teams/team.schema";
 import { db } from "../../db/client.ts";
 import type { DatabaseTransaction } from "../../db/client.ts";
@@ -43,6 +43,34 @@ export async function insertTeam(
       updatedAt: team.updatedAt,
     })
     .onConflictDoNothing({ target: teams.id })
+    .returning({ id: teams.id });
+  return rows.length === 1;
+}
+
+export async function updateTeam(
+  transaction: DatabaseTransaction,
+  ownerUserId: string,
+  team: Team,
+  expectedRevision: number,
+): Promise<boolean> {
+  const rows = await transaction
+    .update(teams)
+    .set({
+      name: team.name,
+      category: team.category ?? null,
+      season: team.season ?? null,
+      revision: team.revision,
+      updatedAt: team.updatedAt,
+    })
+    .where(
+      and(
+        eq(teams.id, team.id),
+        eq(teams.ownerUserId, ownerUserId),
+        eq(teams.revision, expectedRevision),
+        eq(teams.createdAt, team.createdAt),
+        lte(teams.updatedAt, team.updatedAt),
+      ),
+    )
     .returning({ id: teams.id });
   return rows.length === 1;
 }

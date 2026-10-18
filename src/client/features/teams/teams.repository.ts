@@ -21,3 +21,9 @@ export async function insertTeam(team: Team): Promise<void> {
   const database = await getDatabase();
   await database.table<Team, string>("teams").add(team);
 }
+
+export async function updateTeamRecord(team: Team): Promise<void> {
+  const database = await getDatabase();
+  if ((await database.table<Team, string>("teams").update(team.id, team)) !== 1)
+    throw new Error("Team unavailable.");
+}

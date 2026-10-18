@@ -1,6 +1,10 @@
 import { playersDownloadSchema } from "../../../contracts/players-sync.schema";
 import { parseAcknowledgement } from "../../../contracts/sync.schema";
-import { teamsDownloadSchema } from "../../../contracts/teams-sync.schema";
+import { getBlockingOperation } from "./dependencies";
+import {
+  teamPlayersDownloadSchema,
+  teamsDownloadSchema,
+} from "../../../contracts/teams-sync.schema";
 import type { LocalDataChange } from "../../storage/localDataEvents";
 import { getLocalIdentity } from "../account/account.repository";
 import { AccountMismatchError } from "../account/account.service";
@@ -97,7 +101,11 @@ async function synchronize(signal: AbortSignal): Promise<void> {
       const operations = await listOutboxOperations();
       signal.throwIfAborted();
       for (const operation of operations) {
-        if (operation.status === "blocked") continue;
+        if (
+          operation.status === "blocked" ||
+          getBlockingOperation(operation, await listOutboxOperations())
+        )
+          continue;
         try {
           const result = parseAcknowledgement(
             operation.command,
@@ -140,6 +148,17 @@ async function synchronize(signal: AbortSignal): Promise<void> {
       await mergeDownloadedEntities(
         identity.ownerUserId,
         teamsDownload,
+        signal,
+      );
+      await mergeDownloadedEntities(
+        identity.ownerUserId,
+        teamPlayersDownloadSchema.parse(
+          await syncRequest(
+            "/api/sync/team-players",
+            identity.ownerUserId,
+            signal,
+          ),
+        ),
         signal,
       );
       signal.throwIfAborted();

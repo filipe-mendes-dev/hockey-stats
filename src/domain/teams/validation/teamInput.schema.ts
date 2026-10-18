@@ -20,3 +20,9 @@ export const createTeamInputSchema = z.object({
 });
 
 export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
+
+export const updateTeamInputSchema = createTeamInputSchema.extend({
+  id: z.uuidv4(),
+  expectedRevision: z.int().positive(),
+});
+export type UpdateTeamInput = z.infer<typeof updateTeamInputSchema>;

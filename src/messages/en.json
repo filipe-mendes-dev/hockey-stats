@@ -129,7 +129,8 @@
     "signInAction": "Sign in",
     "recordBlocked": "Saved on this device · Needs attention",
     "recordSynced": "Synced",
-    "deliveryUnavailable": "Sync status unavailable"
+    "deliveryUnavailable": "Sync status unavailable",
+    "waiting": "Saved on this device · Waiting for an earlier change"
   },
   "teams": {
     "title": "Teams",
@@ -145,7 +146,7 @@
     "results": "{count, plural, one {# team} other {# teams}}",
     "back": "Back to teams",
     "newTitle": "New team",
-    "newDescription": "Add a team. Category and season are optional. Players can be assigned in a later update.",
+    "newDescription": "Add a team. Category and season are optional.",
     "name": "Name",
     "required": "Required",
     "namePlaceholder": "Team name",
@@ -166,6 +167,38 @@
     "loadFailed": "Could not read the team data. Try again. Existing records have not been removed.",
     "retry": "Try again",
     "saving": "Saving team…",
-    "saveFailed": "The team could not be saved. Your entries are still here. Try creating the team again."
+    "saveFailed": "Could not save. Your entries are still here. Try again.",
+    "edit": "Edit team",
+    "save": "Save changes",
+    "changed": "This record changed. Cancel and reopen the form to load the latest version."
+  },
+  "teamRoster": {
+    "title": "Team players",
+    "add": "Add players",
+    "empty": "No players assigned yet.",
+    "search": "Search players",
+    "clear": "Clear search",
+    "noMatches": "No matching players.",
+    "selected": "{count, plural, one {# player selected} other {# players selected}}",
+    "addSelected": "Add selected players",
+    "number": "Jersey number (optional)",
+    "role": "Position",
+    "field-player": "Field player",
+    "goalkeeper": "Goalkeeper",
+    "active": "Active",
+    "inactive": "Inactive",
+    "status": "Membership status",
+    "member": "Already in this team",
+    "edit": "Edit membership",
+    "save": "Save membership",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "failed": "Could not save the roster. Your selections are still here. Check that the players are available and not already members, then try again.",
+    "loadFailed": "Could not load the roster. Try again.",
+    "retry": "Try again",
+    "loading": "Loading team players…",
+    "duplicate": "Some active players have the same jersey number. You can still save.",
+    "unknown": "Player unavailable",
+    "saved": "Team roster saved on this device."
   }
 }

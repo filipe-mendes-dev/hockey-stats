@@ -9,7 +9,12 @@ import type {
 } from "../../../contracts/sync.schema";
 import { db } from "../../db/client.ts";
 import { insertPlayer } from "../players/players.repository";
-import { insertTeam } from "../teams/teams.repository";
+import {
+  hasOwnedMembershipParents,
+  insertTeamPlayer,
+  updateTeamPlayer,
+} from "../teams/teamPlayers.repository";
+import { insertTeam, updateTeam } from "../teams/teams.repository";
 import {
   getOperationReceipt,
   insertOperationReceipt,
@@ -18,7 +23,12 @@ import {
 export class SyncConflictError extends Error {
   constructor(
     public readonly code:
-      "operation_conflict" | "player_conflict" | "team_conflict",
+      | "operation_conflict"
+      | "player_conflict"
+      | "team_conflict"
+      | "membership_conflict"
+      | "revision_conflict"
+      | "reference_unavailable",
   ) {
     super(code);
     this.name = "SyncConflictError";
@@ -39,7 +49,9 @@ export async function acceptSyncCommand(
     const result: SyncAcknowledgement =
       command.kind === "player.create"
         ? { ...base, player: command.player }
-        : { ...base, team: command.team };
+        : "team" in command
+          ? { ...base, team: command.team }
+          : { ...base, teamPlayer: command.teamPlayer };
     // The unique receipt reservation serializes concurrent deliveries before the entity insert.
     if (
       !(await insertOperationReceipt(transaction, ownerUserId, command, result))
@@ -64,6 +76,46 @@ export async function acceptSyncCommand(
       case "team.create":
         if (!(await insertTeam(transaction, ownerUserId, command.team)))
           throw new SyncConflictError("team_conflict");
+        break;
+      case "team.update":
+        if (
+          !(await updateTeam(
+            transaction,
+            ownerUserId,
+            command.team,
+            command.expectedRevision,
+          ))
+        )
+          throw new SyncConflictError("revision_conflict");
+        break;
+      case "teamPlayer.create":
+        if (
+          !(await hasOwnedMembershipParents(
+            transaction,
+            ownerUserId,
+            command.teamPlayer,
+          ))
+        )
+          throw new SyncConflictError("reference_unavailable");
+        if (
+          !(await insertTeamPlayer(
+            transaction,
+            ownerUserId,
+            command.teamPlayer,
+          ))
+        )
+          throw new SyncConflictError("membership_conflict");
+        break;
+      case "teamPlayer.update":
+        if (
+          !(await updateTeamPlayer(
+            transaction,
+            ownerUserId,
+            command.teamPlayer,
+            command.expectedRevision,
+          ))
+        )
+          throw new SyncConflictError("revision_conflict");
         break;
     }
     return result;

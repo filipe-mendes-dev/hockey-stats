@@ -6,6 +6,11 @@ import {
 } from "./players-sync.schema";
 import {
   createTeamCommandSchema,
+  updateTeamCommandSchema,
+  createTeamPlayerCommandSchema,
+  updateTeamPlayerCommandSchema,
+  teamPlayerAcknowledgementSchema,
+  teamPlayersDownloadSchema,
   teamAcknowledgementSchema,
   teamsDownloadSchema,
 } from "./teams-sync.schema";
@@ -13,22 +18,32 @@ import {
 export const syncCommandSchema = z.discriminatedUnion("kind", [
   createPlayerCommandSchema,
   createTeamCommandSchema,
+  updateTeamCommandSchema,
+  createTeamPlayerCommandSchema,
+  updateTeamPlayerCommandSchema,
 ]);
 export type SyncCommand = z.infer<typeof syncCommandSchema>;
 export const syncAcknowledgementSchema = z.union([
   playerAcknowledgementSchema,
   teamAcknowledgementSchema,
+  teamPlayerAcknowledgementSchema,
 ]);
 export type SyncAcknowledgement = z.infer<typeof syncAcknowledgementSchema>;
 export type SyncDownload =
-  z.infer<typeof playersDownloadSchema> | z.infer<typeof teamsDownloadSchema>;
+  | z.infer<typeof playersDownloadSchema>
+  | z.infer<typeof teamsDownloadSchema>
+  | z.infer<typeof teamPlayersDownloadSchema>;
 
 export function getCommandEntity(command: SyncCommand) {
   switch (command.kind) {
     case "player.create":
       return command.player;
     case "team.create":
+    case "team.update":
       return command.team;
+    case "teamPlayer.create":
+    case "teamPlayer.update":
+      return command.teamPlayer;
   }
 }
 
@@ -37,10 +52,17 @@ export function parseAcknowledgement(
   value: unknown,
 ): SyncAcknowledgement {
   const result =
-    command.kind === "player.create"
+    getCommandFeature(command) === "players"
       ? playerAcknowledgementSchema.parse(value)
-      : teamAcknowledgementSchema.parse(value);
-  const entity = "player" in result ? result.player : result.team;
+      : getCommandFeature(command) === "teams"
+        ? teamAcknowledgementSchema.parse(value)
+        : teamPlayerAcknowledgementSchema.parse(value);
+  const entity =
+    "player" in result
+      ? result.player
+      : "team" in result
+        ? result.team
+        : result.teamPlayer;
   if (
     result.operationId !== command.operationId ||
     entity.id !== getCommandEntity(command).id
@@ -57,6 +79,24 @@ export const syncErrorSchema = z.object({
     "operation_conflict",
     "player_conflict",
     "team_conflict",
+    "revision_conflict",
+    "membership_conflict",
+    "reference_unavailable",
     "unavailable",
   ]),
 });
+
+export function getCommandFeature(
+  command: SyncCommand,
+): "players" | "teams" | "teamPlayers" {
+  switch (command.kind) {
+    case "player.create":
+      return "players";
+    case "team.create":
+    case "team.update":
+      return "teams";
+    case "teamPlayer.create":
+    case "teamPlayer.update":
+      return "teamPlayers";
+  }
+}

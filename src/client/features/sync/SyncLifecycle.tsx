@@ -11,7 +11,9 @@ export function SyncLifecycle() {
     const stop = startSynchronization();
     const unsubscribe = subscribeLocalDataChanges((change) => {
       const features =
-        change.feature === "all" ? ["players", "teams"] : [change.feature];
+        change.feature === "all"
+          ? ["players", "teams", "teamPlayers"]
+          : [change.feature];
       for (const feature of features)
         void client.invalidateQueries({ queryKey: [feature] });
       void client.invalidateQueries({ queryKey: ["outbox"] });
