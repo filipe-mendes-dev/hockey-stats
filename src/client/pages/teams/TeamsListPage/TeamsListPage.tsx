@@ -79,7 +79,7 @@ export function TeamsListPage() {
                 <ListItem
                   key={team.id}
                   title={team.name}
-                  href={`/app/teams/${encodeURIComponent(team.id)}`}
+                  href={`/app/teams/view?id=${encodeURIComponent(team.id)}`}
                 >
                   <p className={st.metadata}>
                     {[team.category, team.season].filter(Boolean).join(" · ")}

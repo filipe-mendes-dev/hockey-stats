@@ -79,7 +79,7 @@ export function PlayersListPage() {
                 <ListItem
                   key={player.id}
                   title={player.name}
-                  href={`/app/players/${encodeURIComponent(player.id)}`}
+                  href={`/app/players/view?id=${encodeURIComponent(player.id)}`}
                 >
                   <DeliveryStatus kind="player.create" entityId={player.id} />
                 </ListItem>

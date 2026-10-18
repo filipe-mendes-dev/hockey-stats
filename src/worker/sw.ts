@@ -46,6 +46,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
     request.headers.get("rsc") === "1" ||
     request.headers.get("accept")?.includes("text/x-component");
 
+  // Generic view shells are cached by pathname. The client reads the query ID
+  // and selects the record from IndexedDB, including IDs created offline.
   if (isOfflinePagePath(url.pathname)) {
     if (
       isRoutePayload &&

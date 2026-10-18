@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { usePlayer } from "../../../features/players/queries/players.queries";
 import { EntityPage } from "../../../components/EntityPage/EntityPage";
@@ -11,7 +11,10 @@ import st from "./PlayerDetailsPage.module.css";
 export function PlayerDetailsPage() {
   const t = useTranslations("players");
   const params = useParams();
-  const playerId = typeof params.id === "string" ? params.id : undefined;
+  const searchParams = useSearchParams();
+  const playerId =
+    searchParams.get("id") ??
+    (typeof params.id === "string" ? params.id : undefined);
   const playerQuery = usePlayer(playerId);
   const syncText = useTranslations("sync");
   const player = playerQuery.data;
