@@ -18,3 +18,7 @@ const database = (databaseGlobal.benchlineDatabase ??= createDatabase());
 
 export const db = database.db;
 export const pool = database.pool;
+
+export type DatabaseTransaction = Parameters<
+  Parameters<typeof db.transaction>[0]
+>[0];

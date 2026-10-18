@@ -1,10 +1,12 @@
 import { z } from "zod";
-import { playerNameSchema } from "./validation/player.rules";
 
 export const playerSchema = z
   .object({
     id: z.uuidv4(),
-    name: playerNameSchema,
+    name: z
+      .string()
+      .min(1)
+      .refine((name) => name === name.trim()),
     revision: z.int().positive(),
     createdAt: z.int().positive(),
     updatedAt: z.int().positive(),

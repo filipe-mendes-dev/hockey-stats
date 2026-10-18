@@ -8,6 +8,10 @@ import { listStoredPlayers } from "../players/players.repository";
 import { insertOutboxOperation } from "../sync/outbox.repository";
 import { createPlayerCommandSchema } from "../../../contracts/players-sync.schema";
 
+export interface LocalAccountSetupOptions {
+  importExistingData: boolean;
+}
+
 export class AccountMismatchError extends Error {
   constructor() {
     super("The authenticated account does not own this local dataset.");
@@ -32,7 +36,7 @@ export async function getOnlineAccount(): Promise<LocalAccount | null> {
 
 export async function setUpLocalAccount(
   account: LocalAccount,
-  importPlayers: boolean,
+  options: LocalAccountSetupOptions,
 ): Promise<void> {
   const authenticated = await getOnlineAccount();
   if (!authenticated || authenticated.id !== account.id)
@@ -49,7 +53,7 @@ export async function setUpLocalAccount(
         return;
       }
       const players = await listStoredPlayers();
-      if (players.length > 0 && !importPlayers)
+      if (players.length > 0 && !options.importExistingData)
         throw new LocalAccountRequiredError();
       for (const player of players) {
         const command = createPlayerCommandSchema.parse({

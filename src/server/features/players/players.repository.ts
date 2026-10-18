@@ -2,11 +2,8 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import type { Player } from "../../../domain/players/player.schema";
 import { db } from "../../db/client.ts";
+import type { DatabaseTransaction } from "../../db/client.ts";
 import { players } from "../../db/players_schema.ts";
-
-export type PlayerTransaction = Parameters<
-  Parameters<typeof db.transaction>[0]
->[0];
 
 export async function listPlayersForOwner(
   ownerUserId: string,
@@ -25,7 +22,7 @@ export async function listPlayersForOwner(
 }
 
 export async function insertPlayer(
-  transaction: PlayerTransaction,
+  transaction: DatabaseTransaction,
   ownerUserId: string,
   player: Player,
 ): Promise<boolean> {

@@ -51,7 +51,7 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
           return;
         }
         if (!active) return;
-        await setUpLocalAccount(account, false);
+        await setUpLocalAccount(account, { importExistingData: false });
         if (active)
           setState({ status: "ready", account: null, playerCount: 0 });
       } catch {
@@ -69,12 +69,12 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
     };
   }, [attempt]);
 
-  async function importPlayers(): Promise<void> {
+  async function importExistingData(): Promise<void> {
     if (!state.account || pending) return;
     setPending(true);
     setImportFailed(false);
     try {
-      await setUpLocalAccount(state.account, true);
+      await setUpLocalAccount(state.account, { importExistingData: true });
       setState({ status: "ready", account: null, playerCount: 0 });
     } catch {
       setImportFailed(true);
@@ -111,7 +111,7 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
             <Button
               disabled={pending}
               onClick={() => {
-                void importPlayers();
+                void importExistingData();
               }}
             >
               {t(pending ? "importing" : "import")}
