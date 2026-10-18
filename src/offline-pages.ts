@@ -1,5 +1,10 @@
 export const offlinePagePaths = [
   "/app",
+  "/app/matches",
+  "/app/matches/new",
+  "/app/matches/view",
+  "/app/matches/start",
+  "/app/matches/live",
   "/app/players",
   "/app/players/new",
   "/app/players/view",

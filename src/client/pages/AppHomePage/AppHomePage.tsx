@@ -24,6 +24,7 @@ export function AppHomePage() {
       id: "matches",
       title: t("matches"),
       description: t("matchesDescription"),
+      href: "/app/matches",
     },
   ];
 
