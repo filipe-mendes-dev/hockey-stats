@@ -20,20 +20,9 @@ import {
   insertOperationReceipt,
 } from "./receipts.repository";
 
-export class SyncConflictError extends Error {
-  constructor(
-    public readonly code:
-      | "operation_conflict"
-      | "player_conflict"
-      | "team_conflict"
-      | "membership_conflict"
-      | "revision_conflict"
-      | "reference_unavailable",
-  ) {
-    super(code);
-    this.name = "SyncConflictError";
-  }
-}
+import { applyMatchCommand } from "../matches/matches.service";
+import { SyncConflictError } from "./sync.errors";
+export { SyncConflictError } from "./sync.errors";
 
 export async function acceptSyncCommand(
   ownerUserId: string,
@@ -47,11 +36,13 @@ export async function acceptSyncCommand(
       acceptedAt: Date.now(),
     };
     const result: SyncAcknowledgement =
-      command.kind === "player.create"
-        ? { ...base, player: command.player }
-        : "team" in command
-          ? { ...base, team: command.team }
-          : { ...base, teamPlayer: command.teamPlayer };
+      "match" in command
+        ? { ...base, match: command.match, players: command.players }
+        : command.kind === "player.create"
+          ? { ...base, player: command.player }
+          : "team" in command
+            ? { ...base, team: command.team }
+            : { ...base, teamPlayer: command.teamPlayer };
     // The unique receipt reservation serializes concurrent deliveries before the entity insert.
     if (
       !(await insertOperationReceipt(transaction, ownerUserId, command, result))
@@ -69,6 +60,11 @@ export async function acceptSyncCommand(
       return parseAcknowledgement(command, receipt.result);
     }
     switch (command.kind) {
+      case "match.create":
+      case "match.updateSetup":
+      case "match.start":
+        await applyMatchCommand(transaction, ownerUserId, command);
+        break;
       case "player.create":
         if (!(await insertPlayer(transaction, ownerUserId, command.player)))
           throw new SyncConflictError("player_conflict");

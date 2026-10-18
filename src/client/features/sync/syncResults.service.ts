@@ -1,3 +1,5 @@
+import { matchSchema } from "../../../domain/matches/match.schema";
+import { replaceMatchSnapshot } from "../matches/matches.repository";
 import type {
   SyncAcknowledgement,
   SyncDownload,
@@ -35,6 +37,34 @@ export async function acknowledgeOperation(
   signal.throwIfAborted();
   if (acknowledgement.ownerUserId !== expectedOwner)
     throw new AccountMismatchError();
+  if ("match" in acknowledgement) {
+    const database = await getDatabase();
+    await database.transaction(
+      "rw",
+      ["metadata", "matches", "matchPlayers", "outbox"],
+      async () => {
+        await requireOwner(expectedOwner, signal);
+        const operation = await getOutboxOperation(acknowledgement.operationId);
+        if (!operation) return;
+        if (
+          getCommandFeature(operation.command) !== "matches" ||
+          operation.entityId !== acknowledgement.match.id
+        )
+          throw new Error("Acknowledgement refers to another Match.");
+        const row = await database
+          .table<unknown, string>("matches")
+          .get(acknowledgement.match.id);
+        const current = row === undefined ? null : matchSchema.parse(row);
+        signal.throwIfAborted();
+        if (!current || current.revision <= acknowledgement.match.revision)
+          await replaceMatchSnapshot(acknowledgement);
+        signal.throwIfAborted();
+        await deleteOutboxOperation(operation.operationId);
+      },
+    );
+    notifyLocalDataChanged("sync", "matches");
+    return;
+  }
   const isPlayer = "player" in acknowledgement;
   const feature = isPlayer
     ? "players"
@@ -83,6 +113,34 @@ export async function mergeDownloadedEntities(
 ): Promise<void> {
   signal.throwIfAborted();
   if (download.ownerUserId !== expectedOwner) throw new AccountMismatchError();
+  if ("matches" in download) {
+    const database = await getDatabase();
+    await database.transaction(
+      "rw",
+      ["metadata", "matches", "matchPlayers", "outbox"],
+      async () => {
+        await requireOwner(expectedOwner, signal);
+        const pending = new Set(
+          (await listOutboxOperations())
+            .filter((entry) => getCommandFeature(entry.command) === "matches")
+            .map((entry) => entry.entityId),
+        );
+        for (const snapshot of download.matches) {
+          signal.throwIfAborted();
+          if (pending.has(snapshot.match.id)) continue;
+          const row = await database
+            .table<unknown, string>("matches")
+            .get(snapshot.match.id);
+          const current = row === undefined ? null : matchSchema.parse(row);
+          if (!current || current.revision <= snapshot.match.revision)
+            await replaceMatchSnapshot(snapshot);
+        }
+        signal.throwIfAborted();
+      },
+    );
+    notifyLocalDataChanged("sync", "matches");
+    return;
+  }
   const isPlayers = "players" in download;
   const feature = isPlayers
     ? "players"

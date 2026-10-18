@@ -12,7 +12,7 @@ export function SyncLifecycle() {
     const unsubscribe = subscribeLocalDataChanges((change) => {
       const features =
         change.feature === "all"
-          ? ["players", "teams", "teamPlayers"]
+          ? ["players", "teams", "teamPlayers", "matches"]
           : [change.feature];
       for (const feature of features)
         void client.invalidateQueries({ queryKey: [feature] });

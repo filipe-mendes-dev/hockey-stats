@@ -1,3 +1,4 @@
+import { matchesDownloadSchema } from "../../../contracts/matches-sync.schema";
 import { playersDownloadSchema } from "../../../contracts/players-sync.schema";
 import { parseAcknowledgement } from "../../../contracts/sync.schema";
 import { getBlockingOperation } from "./dependencies";
@@ -158,6 +159,13 @@ async function synchronize(signal: AbortSignal): Promise<void> {
             identity.ownerUserId,
             signal,
           ),
+        ),
+        signal,
+      );
+      await mergeDownloadedEntities(
+        identity.ownerUserId,
+        matchesDownloadSchema.parse(
+          await syncRequest("/api/sync/matches", identity.ownerUserId, signal),
         ),
         signal,
       );

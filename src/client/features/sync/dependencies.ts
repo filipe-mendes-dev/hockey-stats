@@ -14,6 +14,25 @@ export function getBlockingOperation(
       (entry.sequence ?? 0) < (operation.sequence ?? 0)
     )
       return true;
+    if (
+      operation.command.kind === "match.create" ||
+      operation.command.kind === "match.updateSetup"
+    ) {
+      const { match, players } = operation.command;
+      return (
+        (entry.command.kind === "team.create" &&
+          entry.entityId === match.teamId) ||
+        (entry.command.kind === "player.create" &&
+          players.some((player) => player.playerId === entry.entityId)) ||
+        (entry.command.kind === "teamPlayer.create" &&
+          entry.command.teamPlayer.teamId === match.teamId &&
+          players.some(
+            (player) =>
+              entry.command.kind === "teamPlayer.create" &&
+              player.playerId === entry.command.teamPlayer.playerId,
+          ))
+      );
+    }
     if (operation.command.kind !== "teamPlayer.create") return false;
     const membership = operation.command.teamPlayer;
     return (
