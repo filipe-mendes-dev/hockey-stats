@@ -6,7 +6,7 @@ import { useUpdateTeamPlayer } from "../mutations/teams.mutations";
 import { LocalRevisionConflictError } from "../teams.errors";
 import { Button, ButtonLink } from "../../../components/Button/Button";
 import { EntityForm } from "../../../components/EntityForm/EntityForm";
-import { TeamPlayerFields } from "../TeamPlayerFields/TeamPlayerFields";
+import { PlayerAssignmentFields } from "../../../components/PlayerAssignmentFields/PlayerAssignmentFields";
 import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
 import type { TeamMembershipProps } from "./TeamMembership.interfaces";
 import st from "./TeamMembership.module.css";
@@ -74,7 +74,7 @@ export function TeamMembership({
             void save();
           }}
         >
-          <TeamPlayerFields
+          <PlayerAssignmentFields
             jerseyNumber={draft.jerseyNumber ?? ""}
             role={draft.role}
             disabled={update.isPending}

@@ -9,7 +9,7 @@ import { Button } from "../../../components/Button/Button";
 import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
 import { SelectableListItem } from "../../../components/SelectableListItem/SelectableListItem";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
-import { TeamPlayerFields } from "../TeamPlayerFields/TeamPlayerFields";
+import { PlayerAssignmentFields } from "../../../components/PlayerAssignmentFields/PlayerAssignmentFields";
 import { TeamMembership } from "../TeamMembership/TeamMembership";
 import { normalizeSearch } from "../../../utils/search";
 import type {
@@ -166,7 +166,7 @@ export function TeamPlayers({ teamId }: TeamPlayersProps) {
                 }}
               >
                 {selected[player.id] && (
-                  <TeamPlayerFields
+                  <PlayerAssignmentFields
                     jerseyNumber={selected[player.id]!.jerseyNumber}
                     role={selected[player.id]!.role}
                     disabled={addition.isPending}
