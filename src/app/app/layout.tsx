@@ -1,12 +1,21 @@
 import { AppShell } from "../../client/components/AppShell/AppShell";
-import { PlayersPreviewProvider } from "../../client/features/players/PlayersPreviewProvider";
+import { LocalAccountSetup } from "../../client/features/account/LocalAccountSetup/LocalAccountSetup";
+import { SyncLifecycle } from "../../client/features/sync/SyncLifecycle";
+import { SyncStatusPanel } from "../../client/features/sync/SyncStatusPanel/SyncStatusPanel";
+import { QueryProvider } from "../../client/query/QueryProvider";
 
 export default function LocalApplicationLayout({
   children,
 }: LayoutProps<"/app">) {
   return (
-    <AppShell>
-      <PlayersPreviewProvider>{children}</PlayersPreviewProvider>
-    </AppShell>
+    <QueryProvider>
+      <AppShell authenticated>
+        <LocalAccountSetup>
+          <SyncLifecycle />
+          <SyncStatusPanel />
+          {children}
+        </LocalAccountSetup>
+      </AppShell>
+    </QueryProvider>
   );
 }

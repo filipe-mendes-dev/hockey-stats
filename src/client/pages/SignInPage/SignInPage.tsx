@@ -41,7 +41,7 @@ export function SignInPage() {
         );
         return;
       }
-      window.location.replace("/");
+      window.location.replace("/app");
     } catch {
       setError("unavailable");
     } finally {

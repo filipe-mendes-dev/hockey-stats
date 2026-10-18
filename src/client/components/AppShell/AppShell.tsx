@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import {
+  resumeSynchronization,
+  stopSynchronization,
+} from "../../features/sync/syncCoordinator";
 import { authClient } from "../../features/auth/auth-client";
+import {
+  clearLocalDatabase,
+  closeDatabaseForSignOut,
+  localDataClearedEvent,
+} from "../../storage/database";
 import { useLanguage } from "../../i18n/LanguageProvider";
 import type { AppShellProps } from "./AppShell.interfaces";
 import st from "./AppShell.module.css";
@@ -11,21 +20,53 @@ export function AppShell({ children, authenticated = false }: AppShellProps) {
   const t = useTranslations();
   const { locale, select } = useLanguage();
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<
+    "signOutFailed" | "signOutCleanupFailed" | null
+  >(null);
+  const sessionEnded = useRef(false);
+
+  useEffect(() => {
+    function leaveLocalApp(): void {
+      stopSynchronization();
+      closeDatabaseForSignOut();
+      window.location.replace("/sign-in");
+    }
+
+    function receiveSignOut(event: StorageEvent): void {
+      if (event.key === localDataClearedEvent && event.newValue !== null)
+        leaveLocalApp();
+    }
+
+    window.addEventListener("storage", receiveSignOut);
+    window.addEventListener(localDataClearedEvent, leaveLocalApp);
+    return () => {
+      window.removeEventListener("storage", receiveSignOut);
+      window.removeEventListener(localDataClearedEvent, leaveLocalApp);
+    };
+  }, []);
 
   async function signOut(): Promise<void> {
     if (pending) return;
     setPending(true);
-    setFailed(false);
+    setFailed(null);
+    stopSynchronization();
     try {
-      const result = await authClient.signOut();
-      if (result.error) {
-        setFailed(true);
-        return;
+      if (!sessionEnded.current) {
+        const result = await authClient.signOut();
+        if (result.error) {
+          resumeSynchronization();
+          setFailed("signOutFailed");
+          return;
+        }
+        sessionEnded.current = true;
       }
+      await clearLocalDatabase();
       window.location.replace("/sign-in");
     } catch {
-      setFailed(true);
+      if (!sessionEnded.current) resumeSynchronization();
+      setFailed(
+        sessionEnded.current ? "signOutCleanupFailed" : "signOutFailed",
+      );
     } finally {
       setPending(false);
     }
@@ -60,12 +101,18 @@ export function AppShell({ children, authenticated = false }: AppShellProps) {
           </div>
           {failed && (
             <p className={st.error} role="alert">
-              {t("auth.signOutFailed")}
+              {t(`auth.${failed}`)}
             </p>
           )}
         </div>
       </header>
-      <main className={st.main}>{children}</main>
+      <main className={st.main}>
+        {failed === "signOutCleanupFailed" ? (
+          <h1>{t("auth.signOutCleanupTitle")}</h1>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }

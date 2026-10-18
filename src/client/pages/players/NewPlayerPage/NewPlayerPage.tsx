@@ -5,13 +5,15 @@ import type { SubmitEvent } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePlayersPreview } from "../../../features/players/PlayersPreviewProvider";
+import { useCreatePlayer } from "../../../features/players/mutations/players.mutations";
+import { createPlayerInputSchema } from "../../../../domain/players/validation/createPlayer.schema";
+import type { CreatePlayerInput } from "../../../../domain/players/validation/createPlayer.schema";
 import { Button, ButtonLink } from "../../../components/Button/Button";
 import { TextInputField } from "../../../components/TextInputField/TextInputField";
 import st from "./NewPlayerPage.module.css";
 
 export function NewPlayerPage() {
-  const { addPlayer } = usePlayersPreview();
+  const creation = useCreatePlayer();
   const router = useRouter();
   const t = useTranslations("players");
   const [name, setName] = useState("");
@@ -21,16 +23,24 @@ export function NewPlayerPage() {
 
   function submit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (submitted.current) return;
-    const trimmedName = name.trim();
-    if (!trimmedName) {
+    if (submitted.current || creation.isPending) return;
+    const input = createPlayerInputSchema.safeParse({ name });
+    if (!input.success) {
       setInvalid(true);
       nameInput.current?.focus();
       return;
     }
     submitted.current = true;
-    addPlayer(trimmedName);
-    router.replace("/app/players");
+    void save(input.data);
+  }
+
+  async function save(input: CreatePlayerInput): Promise<void> {
+    try {
+      await creation.mutateAsync(input);
+      router.replace("/app/players");
+    } catch {
+      submitted.current = false;
+    }
   }
 
   return (
@@ -42,7 +52,12 @@ export function NewPlayerPage() {
         <h1>{t("newTitle")}</h1>
         <p>{t("newDescription")}</p>
       </header>
-      <form className={st.form} noValidate onSubmit={submit}>
+      <form
+        className={st.form}
+        noValidate
+        onSubmit={submit}
+        aria-busy={creation.isPending}
+      >
         <TextInputField
           inputRef={nameInput}
           name="name"
@@ -52,21 +67,30 @@ export function NewPlayerPage() {
           autoComplete="off"
           autoCapitalize="words"
           required
+          disabled={creation.isPending}
           value={name}
           error={invalid ? t("nameRequired") : undefined}
           onChange={(event) => {
             setName(event.target.value);
+            if (creation.isError) creation.reset();
             if (invalid && event.target.value.trim()) setInvalid(false);
           }}
         />
+        {creation.isError && (
+          <p className={st.error} role="alert">
+            {t("saveFailed")}
+          </p>
+        )}
         <div className={st.formActions}>
-          <Button type="submit">{t("create")}</Button>
+          <Button type="submit" disabled={creation.isPending}>
+            {t(creation.isPending ? "saving" : "create")}
+          </Button>
           <ButtonLink variant="secondary" href="/app/players">
             {t("cancel")}
           </ButtonLink>
         </div>
       </form>
-      <p className={st.preview}>{t("previewNotice")}</p>
+      <p className={st.storageNotice}>{t("storageNotice")}</p>
     </section>
   );
 }

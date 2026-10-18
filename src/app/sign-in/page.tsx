@@ -5,7 +5,7 @@ import { getSession } from "../../server/auth/session";
 
 export default async function SignInPage() {
   const session = await getSession();
-  if (session) redirect("/");
+  if (session) redirect("/app");
   return (
     <AppShell>
       <SignInPageView />

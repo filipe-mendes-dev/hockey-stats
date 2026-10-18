@@ -12,7 +12,9 @@
     "rateLimited": "Too many attempts. Please wait before trying again.",
     "signOut": "Sign out",
     "signingOut": "Signing out…",
-    "signOutFailed": "Unable to sign out. Please try again."
+    "signOutFailed": "Unable to sign out. Please try again.",
+    "signOutCleanupFailed": "Your session ended, but local data could not be removed. Close other application tabs, then choose Sign out again to retry cleanup.",
+    "signOutCleanupTitle": "Finish signing out"
   },
   "home": {
     "welcome": "Welcome, {name}",
@@ -25,7 +27,7 @@
   },
   "storage": {
     "preparing": "Preparing local storage…",
-    "ready": "Local storage is ready on this browser.",
+    "ready": "Local storage is ready in this browser.",
     "offlineReady": "The application is ready for offline use on this browser.",
     "blocked": "Local storage is waiting for another tab. Close other Benchline Stats tabs and app windows to allow initialization to continue.",
     "closed": "Local storage was closed, possibly by an update in another tab. Reload when you are ready, or try opening storage again. Existing data has not been reset.",
@@ -62,7 +64,7 @@
     "noMatchesTitle": "No matching players",
     "noMatchesDescription": "Try another name or clear your search.",
     "results": "{count, plural, one {# player} other {# players}}",
-    "added": "Player added for this session.",
+    "added": "Player saved on this device.",
     "back": "Back to players",
     "newTitle": "New player",
     "newDescription": "Add a player by name. You can assign them to a team later.",
@@ -72,12 +74,17 @@
     "nameRequired": "Enter a player name.",
     "create": "Create player",
     "cancel": "Cancel",
-    "previewNotice": "Layout preview. Players added here are temporary and will disappear when you reload or close this page.",
     "detailsTitle": "Player details",
     "playerId": "Player ID",
     "unavailableTitle": "Player unavailable",
-    "unavailableDescription": "This player is not available in the current preview. Preview players disappear when you reload or close the page.",
-    "backToMenu": "Back to menu"
+    "unavailableDescription": "This player was not found in the data stored on this device.",
+    "backToMenu": "Back to menu",
+    "storageNotice": "Players are saved on this device and sync when you are connected and signed in. Signing out removes all local data, including players that have not synced.",
+    "loading": "Loading players…",
+    "loadFailed": "Could not read the player data. Try again. Existing records have not been removed.",
+    "retry": "Try again",
+    "saving": "Saving player…",
+    "saveFailed": "The player could not be saved. Your name is still here. Try creating the player again."
   },
   "appHome": {
     "title": "Home",
@@ -90,5 +97,37 @@
     "matches": "Matches",
     "matchesDescription": "Create matches and follow the action.",
     "comingSoon": "Coming soon"
+  },
+  "localAccount": {
+    "title": "Set up this device",
+    "loading": "Checking local account setup…",
+    "signInRequired": "Connect to the internet and sign in once to use this device. After setup, you can create and view players offline.",
+    "signIn": "Sign in",
+    "retry": "Try again",
+    "failed": "Setup could not be completed. Check your connection and local storage, then try again. Existing players have been kept.",
+    "importDescription": "This device has {count, plural, one {# prototype player} other {# prototype players}} without an owner. Import them into {account}?",
+    "import": "Import players",
+    "importing": "Importing players…",
+    "notNow": "Not now",
+    "deferred": "Your players have been kept. Import them to finish setup and use Players."
+  },
+  "sync": {
+    "title": "Synchronization",
+    "account": "Local account: {name}",
+    "saved": "Saved on this device",
+    "upToDate": "Up to date",
+    "syncing": "Syncing…",
+    "offline": "Offline. Your players stay on this device and will sync when you reconnect.",
+    "signIn": "Sign in to sync. You can continue using Players offline.",
+    "mismatch": "The signed-in account does not match this device’s local account. Sync is paused. Sign out to remove this local dataset before using another account.",
+    "unsupported": "Sync requires a browser with Web Locks over a secure connection. Your players remain saved on this device.",
+    "failed": "Sync could not finish. Your local players have been kept. We will retry, or you can try now.",
+    "blocked": "Some players need attention before they can sync.",
+    "pending": "{count, plural, one {# player waiting to sync} other {# players waiting to sync}}",
+    "blockedCount": "{count, plural, one {# player could not sync} other {# players could not sync}}. Automatic retries for these players are paused. They remain on this device and will be removed if you sign out.",
+    "retry": "Sync now",
+    "signInAction": "Sign in",
+    "playerBlocked": "Saved on this device · Needs attention",
+    "playerSynced": "Synced"
   }
 }

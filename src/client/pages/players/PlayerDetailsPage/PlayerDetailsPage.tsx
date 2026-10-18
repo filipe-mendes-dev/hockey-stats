@@ -3,15 +3,22 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { usePlayersPreview } from "../../../features/players/PlayersPreviewProvider";
+import {
+  usePlayer,
+  usePlayerDelivery,
+} from "../../../features/players/queries/players.queries";
+import { PlayersDataStatus } from "../../../features/players/PlayersDataStatus/PlayersDataStatus";
 import st from "./PlayerDetailsPage.module.css";
 
 export function PlayerDetailsPage() {
   const t = useTranslations("players");
   const params = useParams();
-  const { players } = usePlayersPreview();
   const playerId = typeof params.id === "string" ? params.id : undefined;
-  const player = players.find((candidate) => candidate.id === playerId);
+  const playerQuery = usePlayer(playerId);
+  const delivery = usePlayerDelivery();
+  const syncText = useTranslations("sync");
+  const operation = delivery.data?.find((entry) => entry.playerId === playerId);
+  const player = playerQuery.data;
 
   return (
     <section className={st.page}>
@@ -21,8 +28,29 @@ export function PlayerDetailsPage() {
       <header className={st.pageHeader}>
         <h1>{t("detailsTitle")}</h1>
       </header>
-      {player ? (
+      {playerQuery.isPending || playerQuery.isError ? (
+        <PlayersDataStatus
+          failed={playerQuery.isError}
+          onRetry={() => {
+            void playerQuery.refetch();
+          }}
+        />
+      ) : player ? (
         <dl className={st.details}>
+          {delivery.data && (
+            <div>
+              <dt>{syncText("title")}</dt>
+              <dd>
+                {syncText(
+                  operation?.status === "blocked"
+                    ? "playerBlocked"
+                    : operation
+                      ? "saved"
+                      : "playerSynced",
+                )}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>{t("name")}</dt>
             <dd>{player.name}</dd>
@@ -38,7 +66,7 @@ export function PlayerDetailsPage() {
           <p>{t("unavailableDescription")}</p>
         </div>
       )}
-      <p className={st.preview}>{t("previewNotice")}</p>
+      <p className={st.storageNotice}>{t("storageNotice")}</p>
     </section>
   );
 }

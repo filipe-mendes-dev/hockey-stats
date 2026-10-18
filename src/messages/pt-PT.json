@@ -12,7 +12,9 @@
     "rateLimited": "Demasiadas tentativas. Aguarde antes de tentar novamente.",
     "signOut": "Terminar sessão",
     "signingOut": "A terminar sessão…",
-    "signOutFailed": "Não foi possível terminar sessão. Tente novamente."
+    "signOutFailed": "Não foi possível terminar sessão. Tente novamente.",
+    "signOutCleanupFailed": "A sessão terminou, mas não foi possível eliminar os dados locais. Feche os outros separadores da aplicação e selecione Terminar sessão novamente para tentar eliminar os dados.",
+    "signOutCleanupTitle": "Concluir o fim de sessão"
   },
   "home": {
     "welcome": "Bem-vindo, {name}",
@@ -62,7 +64,7 @@
     "noMatchesTitle": "Nenhum jogador encontrado",
     "noMatchesDescription": "Experimente outro nome ou limpe a pesquisa.",
     "results": "{count, plural, one {# jogador} other {# jogadores}}",
-    "added": "Jogador adicionado para esta sessão.",
+    "added": "Jogador guardado neste dispositivo.",
     "back": "Voltar aos jogadores",
     "newTitle": "Novo jogador",
     "newDescription": "Adicione um jogador pelo nome. Pode associá-lo a uma equipa mais tarde.",
@@ -72,12 +74,17 @@
     "nameRequired": "Introduza o nome do jogador.",
     "create": "Criar jogador",
     "cancel": "Cancelar",
-    "previewNotice": "Pré-visualização da interface. Os jogadores adicionados aqui são temporários e desaparecem ao recarregar ou fechar esta página.",
     "detailsTitle": "Detalhes do jogador",
     "playerId": "ID do jogador",
     "unavailableTitle": "Jogador indisponível",
-    "unavailableDescription": "Este jogador não está disponível na pré-visualização atual. Os jogadores temporários desaparecem ao recarregar ou fechar a página.",
-    "backToMenu": "Voltar ao menu"
+    "unavailableDescription": "Este jogador não foi encontrado nos dados guardados neste dispositivo.",
+    "backToMenu": "Voltar ao menu",
+    "storageNotice": "Os jogadores são guardados neste dispositivo e sincronizados quando existe ligação e uma sessão iniciada. Terminar sessão elimina todos os dados locais, incluindo os jogadores que ainda não foram sincronizados.",
+    "loading": "A carregar jogadores…",
+    "loadFailed": "Não foi possível ler os dados dos jogadores. Tente novamente. Os registos existentes não foram eliminados.",
+    "retry": "Tentar novamente",
+    "saving": "A guardar jogador…",
+    "saveFailed": "Não foi possível guardar o jogador. O nome introduzido foi mantido. Tente criar o jogador novamente."
   },
   "appHome": {
     "title": "Início",
@@ -90,5 +97,37 @@
     "matches": "Jogos",
     "matchesDescription": "Crie jogos e acompanhe a ação.",
     "comingSoon": "Em breve"
+  },
+  "localAccount": {
+    "title": "Preparar este dispositivo",
+    "loading": "A verificar a conta local…",
+    "signInRequired": "Ligue-se à Internet e inicie sessão uma vez para utilizar este dispositivo. Após a configuração, pode criar e consultar jogadores sem ligação.",
+    "signIn": "Iniciar sessão",
+    "retry": "Tentar novamente",
+    "failed": "Não foi possível concluir a configuração. Verifique a ligação e o armazenamento local e tente novamente. Os jogadores existentes foram mantidos.",
+    "importDescription": "Este dispositivo tem {count, plural, one {# jogador de protótipo} other {# jogadores de protótipo}} sem proprietário. Pretende importá-los para {account}?",
+    "import": "Importar jogadores",
+    "importing": "A importar jogadores…",
+    "notNow": "Agora não",
+    "deferred": "Os jogadores foram mantidos. Importe-os para concluir a configuração e utilizar os Jogadores."
+  },
+  "sync": {
+    "title": "Sincronização",
+    "account": "Conta local: {name}",
+    "saved": "Guardado neste dispositivo",
+    "upToDate": "Atualizado",
+    "syncing": "A sincronizar…",
+    "offline": "Sem ligação. Os jogadores ficam neste dispositivo e serão sincronizados quando voltar a ligar-se.",
+    "signIn": "Inicie sessão para sincronizar. Pode continuar a utilizar os Jogadores sem ligação.",
+    "mismatch": "A conta com sessão iniciada não corresponde à conta local deste dispositivo. A sincronização está em pausa. Termine sessão para eliminar estes dados locais antes de utilizar outra conta.",
+    "unsupported": "A sincronização requer um navegador com Web Locks através de uma ligação segura. Os jogadores continuam guardados neste dispositivo.",
+    "failed": "Não foi possível concluir a sincronização. Os jogadores locais foram mantidos. Voltaremos a tentar, ou pode tentar agora.",
+    "blocked": "Alguns jogadores precisam de atenção antes de poderem ser sincronizados.",
+    "pending": "{count, plural, one {# jogador por sincronizar} other {# jogadores por sincronizar}}",
+    "blockedCount": "{count, plural, one {# jogador não pôde ser sincronizado} other {# jogadores não puderam ser sincronizados}}. As tentativas automáticas para estes jogadores estão em pausa. Continuam neste dispositivo e serão eliminados se terminar sessão.",
+    "retry": "Sincronizar agora",
+    "signInAction": "Iniciar sessão",
+    "playerBlocked": "Guardado neste dispositivo · Precisa de atenção",
+    "playerSynced": "Sincronizado"
   }
 }

@@ -4,7 +4,7 @@
   overflow-wrap: anywhere;
 }
 
-.preview {
+.storageNotice {
   margin: 1.75rem 0 0;
   padding-top: 1rem;
   border-top: 1px solid var(--color-border);
@@ -52,4 +52,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.notice {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+.error {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--color-error);
 }

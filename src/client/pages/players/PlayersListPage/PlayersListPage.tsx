@@ -6,7 +6,12 @@ import { useLanguage } from "../../../i18n/LanguageProvider";
 import { ButtonLink } from "../../../components/Button/Button";
 import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
 import { ListItem } from "../../../components/ListItem/ListItem";
-import { usePlayersPreview } from "../../../features/players/PlayersPreviewProvider";
+import {
+  usePlayers,
+  usePlayerDelivery,
+} from "../../../features/players/queries/players.queries";
+import { usePlayersListState } from "../../../features/players/usePlayersListState";
+import { PlayersDataStatus } from "../../../features/players/PlayersDataStatus/PlayersDataStatus";
 import st from "./PlayersListPage.module.css";
 
 function normalizeSearch(value: string, locale: string): string {
@@ -18,7 +23,14 @@ function normalizeSearch(value: string, locale: string): string {
 }
 
 export function PlayersListPage() {
-  const { players, search, added, setSearch } = usePlayersPreview();
+  const playersQuery = usePlayers();
+  const delivery = usePlayerDelivery();
+  const syncText = useTranslations("sync");
+  const pending = new Map(
+    delivery.data?.map((entry) => [entry.playerId, entry.status]),
+  );
+  const players = playersQuery.data ?? [];
+  const { search, added, setSearch } = usePlayersListState();
   const t = useTranslations("players");
   const { locale } = useLanguage();
   const query = normalizeSearch(search, locale);
@@ -51,7 +63,14 @@ export function PlayersListPage() {
           {t("added")}
         </p>
       )}
-      {players.length === 0 ? (
+      {playersQuery.isPending || playersQuery.isError ? (
+        <PlayersDataStatus
+          failed={playersQuery.isError}
+          onRetry={() => {
+            void playersQuery.refetch();
+          }}
+        />
+      ) : players.length === 0 ? (
         <div className={st.empty}>
           <h2>{t("emptyTitle")}</h2>
           <p>{t("emptyDescription")}</p>
@@ -73,13 +92,22 @@ export function PlayersListPage() {
                   key={player.id}
                   title={player.name}
                   href={`/app/players/${encodeURIComponent(player.id)}`}
-                />
+                >
+                  {delivery.data &&
+                    syncText(
+                      pending.get(player.id) === "blocked"
+                        ? "playerBlocked"
+                        : pending.has(player.id)
+                          ? "saved"
+                          : "playerSynced",
+                    )}
+                </ListItem>
               ))}
             </ul>
           )}
         </>
       )}
-      <p className={st.preview}>{t("previewNotice")}</p>
+      <p className={st.storageNotice}>{t("storageNotice")}</p>
     </section>
   );
 }
