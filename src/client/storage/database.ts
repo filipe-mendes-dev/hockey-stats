@@ -1,5 +1,6 @@
 import { Dexie } from "dexie";
 import { playerSchema } from "../../domain/players/player.schema";
+import { migrateLegacyOutboxOperation } from "../features/sync/outbox.schema";
 import { requestStoragePersistence } from "./persistence";
 import type { StoragePersistence } from "./persistence";
 
@@ -73,6 +74,19 @@ async function openDatabase(): Promise<Dexie> {
     metadata: "key",
     outbox: "++sequence, &operationId, playerId, status",
   });
+
+  connection
+    .version(5)
+    .stores({
+      teams: "id",
+      outbox: "++sequence, &operationId, entityId, status",
+    })
+    .upgrade(async (transaction) => {
+      const outbox = transaction.table<unknown, number>("outbox");
+      for (const record of await outbox.toArray()) {
+        await outbox.put(migrateLegacyOutboxOperation(record));
+      }
+    });
 
   connection.on("blocked", () => setStatus("blocked"));
   connection.on("versionchange", (event) => {

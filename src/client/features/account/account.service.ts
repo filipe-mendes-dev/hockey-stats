@@ -64,7 +64,7 @@ export async function setUpLocalAccount(
         });
         await insertOutboxOperation({
           operationId: command.operationId,
-          playerId: player.id,
+          entityId: player.id,
           status: "pending",
           command,
         });

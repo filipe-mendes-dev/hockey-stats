@@ -26,12 +26,12 @@ export async function createPlayer(input: CreatePlayerInput): Promise<Player> {
       await insertPlayer(player);
       await insertOutboxOperation({
         operationId,
-        playerId: player.id,
+        entityId: player.id,
         status: "pending",
         command: { version: 1, operationId, kind: "player.create", player },
       });
     },
   );
-  notifyLocalDataChanged();
+  notifyLocalDataChanged("write", "players");
   return player;
 }
