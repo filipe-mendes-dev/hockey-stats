@@ -34,3 +34,9 @@
   color: var(--color-text-muted);
   line-height: 1.6;
 }
+
+.content {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
+}

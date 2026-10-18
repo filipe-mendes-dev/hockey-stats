@@ -1,0 +1,27 @@
+.member {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.member h3,
+.member p {
+  margin: 0;
+}
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.status label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}

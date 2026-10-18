@@ -1,4 +1,5 @@
 "use client";
+import { getBlockingOperation } from "../dependencies";
 import { useTranslations } from "next-intl";
 import { useOutboxOperations } from "../queries/outbox.queries";
 import type { DeliveryStatusProps } from "./DeliveryStatus.interfaces";
@@ -8,7 +9,9 @@ export function DeliveryStatus({ kind, entityId }: DeliveryStatusProps) {
   if (delivery.isPending) return null;
   if (delivery.isError) return <span>{t("deliveryUnavailable")}</span>;
   const operation = delivery.data.find(
-    (entry) => entry.command.kind === kind && entry.entityId === entityId,
+    (entry) =>
+      entry.command.kind.split(".")[0] === kind.split(".")[0] &&
+      entry.entityId === entityId,
   );
   return (
     <span>
@@ -16,7 +19,9 @@ export function DeliveryStatus({ kind, entityId }: DeliveryStatusProps) {
         operation?.status === "blocked"
           ? "recordBlocked"
           : operation
-            ? "saved"
+            ? getBlockingOperation(operation, delivery.data)
+              ? "waiting"
+              : "saved"
             : "recordSynced",
       )}
     </span>
