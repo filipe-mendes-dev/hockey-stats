@@ -32,14 +32,3 @@ export const playersDownloadSchema = z.object({
   ownerUserId: z.string().min(1),
   players: z.array(playerSchema),
 });
-
-export const syncErrorSchema = z.object({
-  code: z.enum([
-    "authentication_required",
-    "account_mismatch",
-    "invalid_command",
-    "operation_conflict",
-    "player_conflict",
-    "unavailable",
-  ]),
-});

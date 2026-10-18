@@ -1,4 +1,4 @@
-import { syncErrorSchema } from "../../../contracts/players-sync.schema";
+import { syncErrorSchema } from "../../../contracts/sync.schema";
 
 export class SyncRequestError extends Error {
   constructor(
