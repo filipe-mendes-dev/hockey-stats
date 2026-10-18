@@ -1,34 +1,20 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { ButtonLink } from "../../../components/Button/Button";
 import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
 import { ListItem } from "../../../components/ListItem/ListItem";
-import {
-  usePlayers,
-  usePlayerDelivery,
-} from "../../../features/players/queries/players.queries";
+import { usePlayers } from "../../../features/players/queries/players.queries";
 import { usePlayersListState } from "../../../features/players/usePlayersListState";
-import { PlayersDataStatus } from "../../../features/players/PlayersDataStatus/PlayersDataStatus";
+import { EntityPage } from "../../../components/EntityPage/EntityPage";
+import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
+import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
+import { normalizeSearch } from "../../../utils/search";
 import st from "./PlayersListPage.module.css";
-
-function normalizeSearch(value: string, locale: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLocaleLowerCase(locale)
-    .trim();
-}
 
 export function PlayersListPage() {
   const playersQuery = usePlayers();
-  const delivery = usePlayerDelivery();
-  const syncText = useTranslations("sync");
-  const pending = new Map(
-    delivery.data?.map((entry) => [entry.playerId, entry.status]),
-  );
   const players = playersQuery.data ?? [];
   const { search, added, setSearch } = usePlayersListState();
   const t = useTranslations("players");
@@ -40,14 +26,13 @@ export function PlayersListPage() {
     .sort((first, second) => collator.compare(first.name, second.name));
 
   return (
-    <section className={st.page}>
-      <Link className={st.back} href="/app" prefetch={false}>
-        {t("backToMenu")}
-      </Link>
-      <header className={st.pageHeader}>
-        <h1>{t("title")}</h1>
-        <p>{t("description")}</p>
-      </header>
+    <EntityPage
+      backHref="/app"
+      backLabel={t("backToMenu")}
+      title={t("title")}
+      description={t("description")}
+      storageNotice={t("storageNotice")}
+    >
       <div className={st.toolbar}>
         <SearchInputField
           label={t("searchLabel")}
@@ -64,7 +49,10 @@ export function PlayersListPage() {
         </p>
       )}
       {playersQuery.isPending || playersQuery.isError ? (
-        <PlayersDataStatus
+        <EntityDataStatus
+          loadingLabel={t("loading")}
+          failedLabel={t("loadFailed")}
+          retryLabel={t("retry")}
           failed={playersQuery.isError}
           onRetry={() => {
             void playersQuery.refetch();
@@ -93,21 +81,13 @@ export function PlayersListPage() {
                   title={player.name}
                   href={`/app/players/${encodeURIComponent(player.id)}`}
                 >
-                  {delivery.data &&
-                    syncText(
-                      pending.get(player.id) === "blocked"
-                        ? "playerBlocked"
-                        : pending.has(player.id)
-                          ? "saved"
-                          : "playerSynced",
-                    )}
+                  <DeliveryStatus kind="player.create" entityId={player.id} />
                 </ListItem>
               ))}
             </ul>
           )}
         </>
       )}
-      <p className={st.storageNotice}>{t("storageNotice")}</p>
-    </section>
+    </EntityPage>
   );
 }

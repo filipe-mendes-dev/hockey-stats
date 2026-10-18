@@ -3,14 +3,13 @@
 import { useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCreatePlayer } from "../../../features/players/mutations/players.mutations";
 import { createPlayerInputSchema } from "../../../../domain/players/validation/createPlayer.schema";
 import type { CreatePlayerInput } from "../../../../domain/players/validation/createPlayer.schema";
-import { Button, ButtonLink } from "../../../components/Button/Button";
+import { EntityPage } from "../../../components/EntityPage/EntityPage";
+import { EntityForm } from "../../../components/EntityForm/EntityForm";
 import { TextInputField } from "../../../components/TextInputField/TextInputField";
-import st from "./NewPlayerPage.module.css";
 
 export function NewPlayerPage() {
   const creation = useCreatePlayer();
@@ -44,19 +43,21 @@ export function NewPlayerPage() {
   }
 
   return (
-    <section className={st.page}>
-      <Link prefetch={false} className={st.back} href="/app/players">
-        {t("back")}
-      </Link>
-      <header className={st.pageHeader}>
-        <h1>{t("newTitle")}</h1>
-        <p>{t("newDescription")}</p>
-      </header>
-      <form
-        className={st.form}
-        noValidate
+    <EntityPage
+      backHref="/app/players"
+      backLabel={t("back")}
+      title={t("newTitle")}
+      description={t("newDescription")}
+      storageNotice={t("storageNotice")}
+    >
+      <EntityForm
+        pending={creation.isPending}
+        failed={creation.isError}
+        failedLabel={t("saveFailed")}
+        submitLabel={t(creation.isPending ? "saving" : "create")}
+        cancelLabel={t("cancel")}
+        cancelHref="/app/players"
         onSubmit={submit}
-        aria-busy={creation.isPending}
       >
         <TextInputField
           inputRef={nameInput}
@@ -76,21 +77,7 @@ export function NewPlayerPage() {
             if (invalid && event.target.value.trim()) setInvalid(false);
           }}
         />
-        {creation.isError && (
-          <p className={st.error} role="alert">
-            {t("saveFailed")}
-          </p>
-        )}
-        <div className={st.formActions}>
-          <Button type="submit" disabled={creation.isPending}>
-            {t(creation.isPending ? "saving" : "create")}
-          </Button>
-          <ButtonLink variant="secondary" href="/app/players">
-            {t("cancel")}
-          </ButtonLink>
-        </div>
-      </form>
-      <p className={st.storageNotice}>{t("storageNotice")}</p>
-    </section>
+      </EntityForm>
+    </EntityPage>
   );
 }
