@@ -8,6 +8,13 @@
       "when": 1792004270132,
       "tag": "0000_auth_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792241545192,
+      "tag": "0001_players_sync",
+      "breakpoints": true
     }
   ]
 }
