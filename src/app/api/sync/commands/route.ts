@@ -1,9 +1,9 @@
 import { getAuthEnvironment } from "../../../../server/environment";
-import { createPlayerCommandSchema } from "../../../../contracts/players-sync.schema";
+import { syncCommandSchema } from "../../../../contracts/sync.schema";
 import {
-  acceptPlayerCreation,
+  acceptSyncCommand,
   SyncConflictError,
-} from "../../../../server/features/players/playerCommands.service";
+} from "../../../../server/features/sync/commands.service";
 import {
   authenticateSync,
   syncJson,
@@ -20,9 +20,9 @@ export async function POST(request: Request): Promise<Response> {
     const owner = await authenticateSync(request);
     if (owner instanceof Response) return owner;
     const body: unknown = await request.json().catch(() => null);
-    const command = createPlayerCommandSchema.safeParse(body);
+    const command = syncCommandSchema.safeParse(body);
     if (!command.success) return syncJson({ code: "invalid_command" }, 400);
-    return syncJson(await acceptPlayerCreation(owner, command.data));
+    return syncJson(await acceptSyncCommand(owner, command.data));
   } catch (error: unknown) {
     if (error instanceof SyncConflictError)
       return syncJson({ code: error.code }, 409);

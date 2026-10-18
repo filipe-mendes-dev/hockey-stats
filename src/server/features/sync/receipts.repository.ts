@@ -1,14 +1,14 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import type {
-  CreatePlayerCommand,
-  PlayerAcknowledgement,
-} from "../../../contracts/players-sync.schema";
-import { operationReceipts } from "../../db/players_schema.ts";
-import type { PlayerTransaction } from "../players/players.repository";
+  SyncCommand,
+  SyncAcknowledgement,
+} from "../../../contracts/sync.schema";
+import { operationReceipts } from "../../db/sync_schema.ts";
+import type { DatabaseTransaction } from "../../db/client.ts";
 
 export async function getOperationReceipt(
-  transaction: PlayerTransaction,
+  transaction: DatabaseTransaction,
   ownerUserId: string,
   operationId: string,
 ) {
@@ -25,10 +25,10 @@ export async function getOperationReceipt(
 }
 
 export async function insertOperationReceipt(
-  transaction: PlayerTransaction,
+  transaction: DatabaseTransaction,
   ownerUserId: string,
-  command: CreatePlayerCommand,
-  result: PlayerAcknowledgement,
+  command: SyncCommand,
+  result: SyncAcknowledgement,
 ): Promise<boolean> {
   const rows = await transaction
     .insert(operationReceipts)
