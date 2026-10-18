@@ -36,6 +36,20 @@
       "when": 1792352086268,
       "tag": "0004_remove_team_player_status",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792359040333,
+      "tag": "0005_matches",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792360177682,
+      "tag": "0006_match_start",
+      "breakpoints": true
     }
   ]
 }
