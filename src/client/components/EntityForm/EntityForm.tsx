@@ -9,6 +9,7 @@ export function EntityForm({
   submitLabel,
   cancelLabel,
   cancelHref,
+  onCancel,
   onSubmit,
   children,
 }: EntityFormProps) {
@@ -29,9 +30,20 @@ export function EntityForm({
         <Button type="submit" disabled={pending}>
           {submitLabel}
         </Button>
-        <ButtonLink variant="secondary" href={cancelHref}>
-          {cancelLabel}
-        </ButtonLink>
+        {onCancel ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={pending}
+            onClick={onCancel}
+          >
+            {cancelLabel}
+          </Button>
+        ) : (
+          <ButtonLink variant="secondary" href={cancelHref}>
+            {cancelLabel}
+          </ButtonLink>
+        )}
       </div>
     </form>
   );

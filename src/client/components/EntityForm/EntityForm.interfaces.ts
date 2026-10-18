@@ -6,6 +6,7 @@ export interface EntityFormProps {
   submitLabel: string;
   cancelLabel: string;
   cancelHref: string;
+  onCancel?(): void;
   onSubmit(event: SubmitEvent<HTMLFormElement>): void;
   children: ReactNode;
 }

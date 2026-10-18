@@ -1,0 +1,30 @@
+.item {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+.label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  min-height: 3rem;
+  cursor: pointer;
+}
+.label input {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-focus);
+}
+.label small {
+  display: block;
+  color: var(--color-text-muted);
+}
+.fields {
+  padding: 0 1rem 1rem;
+  display: grid;
+  gap: 1rem;
+}
