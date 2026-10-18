@@ -14,7 +14,12 @@ export function AppHomePage() {
       description: t("playersDescription"),
       href: "/app/players",
     },
-    { id: "teams", title: t("teams"), description: t("teamsDescription") },
+    {
+      id: "teams",
+      title: t("teams"),
+      description: t("teamsDescription"),
+      href: "/app/teams",
+    },
     {
       id: "matches",
       title: t("matches"),

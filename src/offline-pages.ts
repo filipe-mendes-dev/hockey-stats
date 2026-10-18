@@ -2,6 +2,8 @@ export const offlinePagePaths = [
   "/app",
   "/app/players",
   "/app/players/new",
+  "/app/teams",
+  "/app/teams/new",
 ] as const;
 
 export type OfflinePagePath = (typeof offlinePagePaths)[number];
