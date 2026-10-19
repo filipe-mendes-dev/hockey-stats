@@ -121,6 +121,11 @@ async function openDatabase(): Promise<Dexie> {
     matchPlayers: "id, matchId, &[matchId+playerId]",
   });
 
+  connection.version(9).stores({
+    matchEvents: "id, matchId, &[matchId+order]",
+    matchHistory: "id, matchId",
+  });
+
   connection.on("blocked", () => setStatus("blocked"));
   connection.on("versionchange", (event) => {
     opening = undefined;
