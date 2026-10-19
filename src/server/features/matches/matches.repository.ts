@@ -31,6 +31,8 @@ export async function listMatchSnapshotsForOwner(
           ...row.match,
           scheduledDate: row.match.scheduledDate ?? undefined,
           startedAt: row.match.startedAt ?? undefined,
+          clock: row.match.clock ?? undefined,
+          completedAt: row.match.completedAt ?? undefined,
           venueRole: row.match.venueRole ?? undefined,
         }),
         players: [],
@@ -101,6 +103,10 @@ export async function insertMatchSnapshot(
       scheduledDate: match.scheduledDate ?? null,
       venueRole: match.venueRole ?? null,
       startedAt: match.startedAt ?? null,
+      currentPeriod: match.currentPeriod,
+      clock: match.clock ?? null,
+      closedPeriods: match.closedPeriods,
+      completedAt: match.completedAt ?? null,
     })
     .onConflictDoNothing()
     .returning({ id: matches.id });
@@ -139,6 +145,8 @@ export async function getMatchSnapshotForOwner(
       scheduledDate: match.scheduledDate ?? undefined,
       venueRole: match.venueRole ?? undefined,
       startedAt: match.startedAt ?? undefined,
+      clock: match.clock ?? undefined,
+      completedAt: match.completedAt ?? undefined,
     },
     players: selected.map((player) => ({
       ...player,
@@ -162,6 +170,10 @@ export async function updateMatchSnapshot(
       status: match.status,
       periods: match.periods,
       startedAt: match.startedAt ?? null,
+      currentPeriod: match.currentPeriod,
+      clock: match.clock ?? null,
+      closedPeriods: match.closedPeriods,
+      completedAt: match.completedAt ?? null,
       revision: match.revision,
       updatedAt: match.updatedAt,
     })
@@ -194,4 +206,55 @@ export async function updateMatchSnapshot(
     .onConflictDoNothing()
     .returning({ id: matchPlayers.id });
   return inserted.length === snapshot.players.length;
+}
+
+export async function updateMatchControl(
+  transaction: DatabaseTransaction,
+  ownerUserId: string,
+  match: MatchSnapshot["match"],
+  expectedRevision: number,
+): Promise<boolean> {
+  const rows = await transaction
+    .update(matches)
+    .set({
+      status: match.status,
+      currentPeriod: match.currentPeriod,
+      clock: match.clock ?? null,
+      closedPeriods: match.closedPeriods,
+      completedAt: match.completedAt ?? null,
+      revision: match.revision,
+      updatedAt: match.updatedAt,
+    })
+    .where(
+      and(
+        eq(matches.id, match.id),
+        eq(matches.ownerUserId, ownerUserId),
+        eq(matches.revision, expectedRevision),
+        eq(matches.status, "live"),
+      ),
+    )
+    .returning({ id: matches.id });
+  return rows.length === 1;
+}
+
+export async function getOwnedMatchForUpdate(
+  transaction: DatabaseTransaction,
+  ownerUserId: string,
+  matchId: string,
+) {
+  const [row] = await transaction
+    .select()
+    .from(matches)
+    .where(and(eq(matches.id, matchId), eq(matches.ownerUserId, ownerUserId)))
+    .for("update");
+  return row
+    ? matchSchema.parse({
+        ...row,
+        scheduledDate: row.scheduledDate ?? undefined,
+        venueRole: row.venueRole ?? undefined,
+        startedAt: row.startedAt ?? undefined,
+        clock: row.clock ?? undefined,
+        completedAt: row.completedAt ?? undefined,
+      })
+    : null;
 }

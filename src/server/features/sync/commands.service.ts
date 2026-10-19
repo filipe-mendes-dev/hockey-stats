@@ -75,6 +75,7 @@ export async function acceptSyncCommand(
       case "match.create":
       case "match.updateSetup":
       case "match.start":
+      case "match.control":
         await applyMatchCommand(transaction, ownerUserId, command);
         break;
       case "player.create":

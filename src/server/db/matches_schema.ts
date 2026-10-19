@@ -31,6 +31,13 @@ export const matches = pgTable(
     venueRole: text("venue_role"),
     status: text("status").notNull(),
     periods: jsonb("periods").$type<Match["periods"]>().notNull().default([]),
+    currentPeriod: integer("current_period").notNull().default(1),
+    clock: jsonb("clock").$type<NonNullable<Match["clock"]>>(),
+    closedPeriods: jsonb("closed_periods")
+      .$type<Match["closedPeriods"]>()
+      .notNull()
+      .default([]),
+    completedAt: bigint("completed_at", { mode: "number" }),
     startedAt: bigint("started_at", { mode: "number" }),
     revision: integer("revision").notNull(),
     createdAt: bigint("created_at", { mode: "number" }).notNull(),

@@ -1,15 +1,19 @@
 import "server-only";
+import {
+  isValidEventForMatch,
+  projectMatch,
+} from "../../../domain/matches/matchProjection";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { db } from "../../db/client.ts";
 import type { MatchEventCommand } from "../../../contracts/match-events-sync.schema";
 import { matchRecordingSchema } from "../../../contracts/matches-sync.schema";
 import { matchEventSchema } from "../../../domain/matches/matchEvent.schema";
 import {
+  getOwnedMatchForUpdate,
   listMatchSnapshotsForOwner,
   getMatchSnapshotForOwner,
 } from "./matches.repository";
 import {
-  getOwnedMatchForUpdate,
   listMatchEvents,
   listOwnedMatchEvents,
   insertMatchEvent,
@@ -41,13 +45,18 @@ export async function applyMatchEventCommand(
   );
   if (
     !snapshot ||
-    !snapshot.players.some((player) => player.id === event.matchPlayerId) ||
+    !isValidEventForMatch(snapshot, event) ||
     !match.periods.some((period) => period.number === event.period) ||
     event.updatedAt < match.updatedAt
   )
     throw new SyncConflictError("reference_unavailable");
   const events = await listMatchEvents(transaction, match.id);
   if (command.kind === "matchEvent.create") {
+    if (
+      event.period !== match.currentPeriod ||
+      !projectMatch(snapshot, [...events, event]).valid
+    )
+      throw new SyncConflictError("event_conflict");
     if (
       event.order !== (events.at(-1)?.order ?? 0) + 1 ||
       !(await insertMatchEvent(transaction, event))
@@ -59,6 +68,10 @@ export async function applyMatchEventCommand(
       .at(-1);
     if (
       !current ||
+      !projectMatch(
+        snapshot,
+        events.map((entry) => (entry.id === event.id ? event : entry)),
+      ).valid ||
       current.id !== event.id ||
       event.updatedAt < current.updatedAt ||
       JSON.stringify(

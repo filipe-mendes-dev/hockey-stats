@@ -1,7 +1,6 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import type { DatabaseTransaction } from "../../db/client.ts";
-import { matchSchema } from "../../../domain/matches/match.schema";
 import { matchEventSchema } from "../../../domain/matches/matchEvent.schema";
 import type { MatchEvent } from "../../../domain/matches/matchEvent.schema";
 import { matchEvents } from "../../db/match_events_schema.ts";
@@ -10,45 +9,59 @@ import { matches } from "../../db/matches_schema.ts";
 export function mapMatchEvent(
   row: typeof matchEvents.$inferSelect,
 ): MatchEvent {
-  const { gameTimeMs, positionX, positionY, ...fields } = row;
+  const {
+    gameTimeMs,
+    positionX,
+    positionY,
+    matchPlayerId,
+    subtype,
+    reason,
+    outcome,
+    colour,
+    ownDelta,
+    opponentDelta,
+    deletedAt,
+    ...fields
+  } = row;
   return matchEventSchema.parse({
     ...fields,
-    gameTime: gameTimeMs === null ? undefined : { elapsedMs: gameTimeMs },
-    position:
-      positionX === null && positionY === null
-        ? undefined
-        : { x: positionX, y: positionY },
-    deletedAt: row.deletedAt ?? undefined,
+    ...(matchPlayerId === null ? {} : { matchPlayerId }),
+    ...(subtype === null ? {} : { subtype }),
+    ...(reason === null ? {} : { reason }),
+    ...(outcome === null ? {} : { outcome }),
+    ...(colour === null ? {} : { colour }),
+    ...(ownDelta === null ? {} : { ownDelta }),
+    ...(opponentDelta === null ? {} : { opponentDelta }),
+    ...(gameTimeMs === null ? {} : { gameTime: { elapsedMs: gameTimeMs } }),
+    ...(positionX === null && positionY === null
+      ? {}
+      : { position: { x: positionX, y: positionY } }),
+    deletedAt: deletedAt ?? undefined,
   });
 }
 function eventRow(event: MatchEvent): typeof matchEvents.$inferInsert {
-  const { gameTime, position, ...fields } = event;
   return {
-    ...fields,
-    gameTimeMs: gameTime?.elapsedMs ?? null,
-    positionX: position?.x ?? null,
-    positionY: position?.y ?? null,
+    id: event.id,
+    matchId: event.matchId,
+    kind: event.kind,
+    period: event.period,
+    order: event.order,
+    capturedAt: event.capturedAt,
+    revision: event.revision,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
     deletedAt: event.deletedAt ?? null,
+    matchPlayerId: "matchPlayerId" in event ? event.matchPlayerId : null,
+    subtype: "subtype" in event ? event.subtype : null,
+    reason: "reason" in event ? event.reason : null,
+    outcome: "outcome" in event ? event.outcome : null,
+    colour: "colour" in event ? event.colour : null,
+    ownDelta: "ownDelta" in event ? event.ownDelta : null,
+    opponentDelta: "opponentDelta" in event ? event.opponentDelta : null,
+    gameTimeMs: event.gameTime?.elapsedMs ?? null,
+    positionX: "position" in event ? (event.position?.x ?? null) : null,
+    positionY: "position" in event ? (event.position?.y ?? null) : null,
   };
-}
-export async function getOwnedMatchForUpdate(
-  transaction: DatabaseTransaction,
-  ownerUserId: string,
-  matchId: string,
-) {
-  const [row] = await transaction
-    .select()
-    .from(matches)
-    .where(and(eq(matches.id, matchId), eq(matches.ownerUserId, ownerUserId)))
-    .for("update");
-  return row
-    ? matchSchema.parse({
-        ...row,
-        scheduledDate: row.scheduledDate ?? undefined,
-        venueRole: row.venueRole ?? undefined,
-        startedAt: row.startedAt ?? undefined,
-      })
-    : null;
 }
 export async function listMatchEvents(
   transaction: DatabaseTransaction,

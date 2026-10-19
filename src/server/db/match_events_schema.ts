@@ -16,12 +16,17 @@ export const matchEvents = pgTable(
     matchId: uuid("match_id")
       .notNull()
       .references(() => matches.id, { onDelete: "cascade" }),
-    matchPlayerId: uuid("match_player_id")
-      .notNull()
-      .references(() => matchPlayers.id, { onDelete: "restrict" }),
+    matchPlayerId: uuid("match_player_id").references(() => matchPlayers.id, {
+      onDelete: "restrict",
+    }),
     order: integer("event_order").notNull(),
     kind: text("kind").notNull(),
-    subtype: text("subtype").notNull(),
+    subtype: text("subtype"),
+    reason: text("reason"),
+    outcome: text("outcome"),
+    colour: text("colour"),
+    ownDelta: integer("own_delta"),
+    opponentDelta: integer("opponent_delta"),
     period: integer("period").notNull(),
     gameTimeMs: bigint("game_time_ms", { mode: "number" }),
     positionX: doublePrecision("position_x"),

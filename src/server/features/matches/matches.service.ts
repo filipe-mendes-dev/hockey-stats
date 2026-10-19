@@ -1,13 +1,16 @@
 import "server-only";
+import { applyMatchControl } from "../../../domain/matches/matchControl";
 import type { MatchCommand } from "../../../contracts/matches-sync.schema";
-import type { MatchPlayer } from "../../../domain/matches/match.schema";
+import type { Match, MatchPlayer } from "../../../domain/matches/match.schema";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { SyncConflictError } from "../sync/sync.errors";
 import {
+  getOwnedMatchForUpdate,
   hasOwnedMatchReferences,
   insertMatchSnapshot,
   getMatchSnapshotForOwner,
   updateMatchSnapshot,
+  updateMatchControl,
 } from "./matches.repository";
 function samePlayerDetails(before: MatchPlayer, after: MatchPlayer): boolean {
   return (
@@ -29,6 +32,54 @@ export async function applyMatchCommand(
       throw new SyncConflictError("reference_unavailable");
     if (!(await insertMatchSnapshot(transaction, ownerUserId, command)))
       throw new SyncConflictError("match_conflict");
+    return;
+  }
+  if (command.kind === "match.control") {
+    const match = await getOwnedMatchForUpdate(
+      transaction,
+      ownerUserId,
+      command.match.id,
+    );
+    if (
+      !match ||
+      match.revision !== command.expectedRevision ||
+      match.status !== "live"
+    )
+      throw new SyncConflictError("revision_conflict");
+    const snapshot = await getMatchSnapshotForOwner(
+      transaction,
+      ownerUserId,
+      match.id,
+    );
+    if (!snapshot) throw new SyncConflictError("reference_unavailable");
+    let next: Match;
+    try {
+      next = applyMatchControl(match, command.action, command.match.updatedAt);
+    } catch {
+      throw new SyncConflictError("match_conflict");
+    }
+    if (
+      JSON.stringify(next) !== JSON.stringify(command.match) ||
+      JSON.stringify(snapshot.players.map((player) => player.id).sort()) !==
+        JSON.stringify(command.players.map((player) => player.id).sort()) ||
+      !command.players.every((player) =>
+        snapshot.players.some(
+          (before) =>
+            samePlayerDetails(before, player) &&
+            before.isStarter === player.isStarter,
+        ),
+      )
+    )
+      throw new SyncConflictError("match_conflict");
+    if (
+      !(await updateMatchControl(
+        transaction,
+        ownerUserId,
+        next,
+        command.expectedRevision,
+      ))
+    )
+      throw new SyncConflictError("revision_conflict");
     return;
   }
   const current = await getMatchSnapshotForOwner(
