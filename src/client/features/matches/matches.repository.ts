@@ -70,3 +70,8 @@ export async function replaceMatchSnapshot(
     .table<MatchPlayer, string>("matchPlayers")
     .bulkAdd(snapshot.players);
 }
+
+export async function updateMatch(match: Match): Promise<void> {
+  const database = await getDatabase();
+  await database.table<Match, string>("matches").put(match);
+}

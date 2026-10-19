@@ -223,6 +223,8 @@ export async function startMatch(
           ...current.match,
           revision: current.match.revision + 1,
           status: "live",
+          currentPeriod: 1,
+          clock: { elapsedMs: 0 },
           periods: fields.periods,
           startedAt: now,
           updatedAt: now,

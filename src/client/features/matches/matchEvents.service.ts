@@ -1,4 +1,8 @@
 import {
+  projectMatch,
+  isValidEventForMatch,
+} from "../../../domain/matches/matchProjection";
+import {
   addMatchEventInputSchema,
   eventMatchesInput,
   matchEventSchema,
@@ -7,13 +11,12 @@ import type {
   AddMatchEventInput,
   MatchEvent,
 } from "../../../domain/matches/matchEvent.schema";
-import type { Match } from "../../../domain/matches/match.schema";
 import { getDatabase } from "../../storage/database";
 import { notifyLocalDataChanged } from "../../storage/localDataEvents";
 import { getLocalIdentity } from "../account/account.repository";
 import { LocalAccountRequiredError } from "../account/account.service";
 import { insertOutboxOperation } from "../sync/outbox.repository";
-import { getMatchSnapshot } from "./matches.repository";
+import { getMatchSnapshot, updateMatch } from "./matches.repository";
 import {
   getMatchEvent,
   getLatestUndoEvent,
@@ -58,7 +61,7 @@ export async function addMatchEvent(
     if (
       !snapshot ||
       snapshot.match.status !== "live" ||
-      !snapshot.players.some((player) => player.id === fields.matchPlayerId) ||
+      snapshot.match.currentPeriod !== fields.period ||
       !snapshot.match.periods.some((period) => period.number === fields.period)
     )
       throw new MatchEventUnavailableError();
@@ -76,8 +79,13 @@ export async function addMatchEvent(
       createdAt: now,
       updatedAt: now,
     });
+    if (
+      !isValidEventForMatch(snapshot, event) ||
+      !projectMatch(snapshot, [...events, event]).valid
+    )
+      throw new MatchEventUnavailableError();
     await insertMatchEvent(event);
-    await database.table<Match, string>("matches").put({
+    await updateMatch({
       ...snapshot.match,
       revision: snapshot.match.revision + 1,
       updatedAt: now,
@@ -136,10 +144,18 @@ export async function undoMatchEvent(
       updatedAt: now,
       deletedAt: now,
     });
+    const events = await listMatchEvents(input.matchId);
+    if (
+      !projectMatch(
+        snapshot,
+        events.map((entry) => (entry.id === event.id ? event : entry)),
+      ).valid
+    )
+      throw new MatchEventUnavailableError();
     const operationId = crypto.randomUUID();
     await updateMatchEvent(event);
     await saveMatchHistoryEntry({ ...history, undoneAt: now });
-    await database.table<Match, string>("matches").put({
+    await updateMatch({
       ...snapshot.match,
       revision: snapshot.match.revision + 1,
       updatedAt: now,
