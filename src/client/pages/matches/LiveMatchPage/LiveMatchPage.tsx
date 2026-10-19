@@ -5,12 +5,10 @@ import { useMatch } from "../../../features/matches/queries/matches.queries";
 import { EntityPage } from "../../../components/EntityPage/EntityPage";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
 import { ButtonLink } from "../../../components/Button/Button";
-import { useLanguage } from "../../../i18n/LanguageProvider";
+import { EventRecorder } from "../../../features/matches/EventRecorder/EventRecorder";
 import st from "./LiveMatchPage.module.css";
 export function LiveMatchPage() {
   const t = useTranslations("matches");
-  const assignment = useTranslations("teamPlayers");
-  const { locale } = useLanguage();
   const params = useSearchParams();
   const query = useMatch(params.get("id") ?? undefined);
   const snapshot = query.data;
@@ -46,38 +44,10 @@ export function LiveMatchPage() {
             </ButtonLink>
           ) : (
             <div className={st.content}>
-              <p>{t("placeholder")}</p>
-              <p>
-                {t("startedAt")}:{" "}
-                {snapshot.match.startedAt
-                  ? new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(snapshot.match.startedAt)
-                  : ""}
-              </p>
-              {([true, false] as const).map((starting) => (
-                <section key={String(starting)}>
-                  <h2>{t(starting ? "starters" : "bench")}</h2>
-                  <ul className={st.list}>
-                    {snapshot.players
-                      .filter((player) => player.isStarter === starting)
-                      .map((player) => (
-                        <li key={player.id}>
-                          <strong>{player.playerNameAtMatch}</strong>
-                          <span>
-                            {assignment(player.role)}
-                            {player.jerseyNumber
-                              ? ` · #${player.jerseyNumber}`
-                              : ""}
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
-                </section>
-              ))}
+              <EventRecorder key={snapshot.match.id} snapshot={snapshot} />
               <section>
                 <h2>{t("periods")}</h2>
+
                 <ul className={st.list}>
                   {snapshot.match.periods.map((period) => (
                     <li key={period.number}>
