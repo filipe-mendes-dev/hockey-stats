@@ -3,7 +3,16 @@ import { useState } from "react";
 import { useStore } from "zustand";
 import { useTranslations } from "next-intl";
 import type { AddMatchEventInput } from "../../../../domain/matches/matchEvent.schema";
-import { recoverySubtypeSchema } from "../../../../domain/matches/matchEvent.schema";
+import {
+  playerEventKindSchema,
+  getEventDetail,
+} from "../../../../domain/matches/matchEvent.schema";
+import { projectMatch } from "../../../../domain/matches/matchProjection";
+import {
+  getClockElapsed,
+  formatMatchTime,
+} from "../../../../domain/matches/matchControl";
+import { MatchControls } from "../MatchControls/MatchControls";
 import { Button } from "../../../components/Button/Button";
 import { Modal } from "../../../components/Modal/Modal";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
@@ -17,23 +26,23 @@ import {
   useUndoMatchEvent,
 } from "../mutations/matchEvents.mutations";
 import { MatchEventUnavailableError } from "../matchEvents.service";
+import { EventDraftFields } from "./EventDraftFields";
 import { createEventDraftStore } from "./eventDraft.store";
 import { completeEventDraft } from "./eventDraft";
 import type { EventDraft, EventDraftAction } from "./eventDraft";
 import type { EventRecorderProps } from "./EventRecorder.interfaces";
 import st from "./EventRecorder.module.css";
-function formatElapsed(elapsedMs: number): string {
-  return `${String(Math.floor(elapsedMs / 60_000)).padStart(2, "0")}:${String(Math.floor(elapsedMs / 1000) % 60).padStart(2, "0")}`;
-}
 export function EventRecorder({ snapshot }: EventRecorderProps) {
   const t = useTranslations("recorder");
   const assignment = useTranslations("teamPlayers");
   const [store] = useState(createEventDraftStore);
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
   const state = useStore(store, (entry) => entry.state);
-  const [period, setPeriod] = useState(snapshot.match.periods[0]?.number ?? 1);
+  const [controlsBusy, setControlsBusy] = useState(false);
+  const readOnly = snapshot.match.status !== "live";
   const events = useMatchEvents(snapshot.match.id);
   const candidate = useLatestUndoEvent(snapshot.match.id);
+  const projection = projectMatch(snapshot, events.data ?? []);
   const add = useAddMatchEvent();
   const undo = useUndoMatchEvent();
   const locked = state.phase === "saving";
@@ -60,22 +69,35 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     store.getState().dispatch({ type: "saving", input });
     save(input);
   }
-  function open(initial: Pick<EventDraft, "matchPlayerId" | "kind">): void {
-    if (store.getState().state.phase !== "idle" || undo.isPending) return;
+  function openEvent(
+    initial: Pick<EventDraft, "matchPlayerId" | "kind">,
+    capturedAt: number,
+  ): void {
+    if (
+      store.getState().state.phase !== "idle" ||
+      undo.isPending ||
+      controlsBusy ||
+      !events.data ||
+      events.isError ||
+      readOnly
+    )
+      return;
     setReturnFocusTo(
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null,
     );
     add.reset();
+    const elapsedMs = getClockElapsed(snapshot.match, capturedAt);
     dispatch({
       type: "open",
       draft: {
         id: crypto.randomUUID(),
         operationId: crypto.randomUUID(),
         matchId: snapshot.match.id,
-        period,
-        capturedAt: Date.now(),
+        period: snapshot.match.currentPeriod,
+        capturedAt,
+        ...(elapsedMs === undefined ? {} : { gameTime: { elapsedMs } }),
         ...initial,
       },
     });
@@ -88,78 +110,137 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   }
   return (
     <div className={st.recorder}>
-      <div className={st.toolbar}>
-        <label className={st.period}>
-          {t("period")}
-          <select
-            value={period}
-            disabled={state.phase !== "idle"}
-            onChange={(event) => setPeriod(Number(event.target.value))}
-          >
-            {snapshot.match.periods.map((entry) => (
-              <option key={entry.number} value={entry.number}>
-                {t("periodNumber", { number: entry.number })}
-              </option>
-            ))}
-          </select>
-        </label>
-        <p>{t("clockUnavailable")}</p>
-      </div>
-      <div className={st.layout}>
-        <div className={st.controls}>
-          <section aria-labelledby="recorder-actions">
-            <h2 id="recorder-actions">{t("actions")}</h2>
+      <MatchControls
+        match={snapshot.match}
+        disabled={state.phase !== "idle" || undo.isPending}
+        onBusyChange={setControlsBusy}
+      />
+      <section aria-label={t("scoreTitle")} className={st.score}>
+        <strong>
+          {snapshot.match.teamNameAtMatch}:{" "}
+          {events.data && !events.isError ? projection.ownScore : "…"}
+        </strong>
+        <strong>
+          {snapshot.match.opponentName}:{" "}
+          {events.data && !events.isError ? projection.opponentScore : "…"}
+        </strong>
+        {!readOnly && (
+          <div className={st.choices}>
             <Button
-              disabled={state.phase !== "idle" || undo.isPending}
-              onClick={() => open({ kind: "ball-recovery" })}
+              disabled={
+                state.phase !== "idle" ||
+                controlsBusy ||
+                undo.isPending ||
+                !events.data ||
+                events.isError
+              }
+              onClick={() => openEvent({ kind: "opponent-goal" }, Date.now())}
             >
-              {t("ball-recovery")}
+              {t("opponent-goal")}
             </Button>
-          </section>
-          {([true, false] as const).map((starting) => (
-            <section key={String(starting)}>
-              <h2>{t(starting ? "onField" : "bench")}</h2>
-              <ul className={st.players}>
-                {snapshot.players
-                  .filter((player) => player.isStarter === starting)
-                  .map((player) => (
-                    <li key={player.id}>
-                      <Button
-                        variant="secondary"
-                        disabled={state.phase !== "idle" || undo.isPending}
-                        onClick={() => open({ matchPlayerId: player.id })}
-                      >
-                        <strong>
-                          {player.jerseyNumber
-                            ? `#${player.jerseyNumber} · `
-                            : ""}
-                          {player.playerNameAtMatch}
-                        </strong>
-                        <span>{assignment(player.role)}</span>
-                      </Button>
-                    </li>
-                  ))}
-              </ul>
+            <Button
+              variant="secondary"
+              disabled={
+                state.phase !== "idle" ||
+                controlsBusy ||
+                undo.isPending ||
+                !events.data ||
+                events.isError
+              }
+              onClick={() =>
+                openEvent({ kind: "score-adjustment" }, Date.now())
+              }
+            >
+              {t("score-adjustment")}
+            </Button>
+          </div>
+        )}
+      </section>
+      {readOnly && <p>{t("completedSummary")}</p>}
+      <div className={readOnly ? st.recorder : st.layout}>
+        {!readOnly && (
+          <div className={st.controls}>
+            <section aria-labelledby="recorder-actions">
+              <h2 id="recorder-actions">{t("actions")}</h2>
+              <div className={st.choices}>
+                {playerEventKindSchema.options.map((kind) => (
+                  <Button
+                    key={kind}
+                    disabled={
+                      state.phase !== "idle" ||
+                      undo.isPending ||
+                      controlsBusy ||
+                      !events.data ||
+                      events.isError
+                    }
+                    onClick={() => openEvent({ kind }, Date.now())}
+                  >
+                    {t(kind)}
+                  </Button>
+                ))}
+              </div>
             </section>
-          ))}
-        </div>
+            {([true, false] as const).map((starting) => (
+              <section key={String(starting)}>
+                <h2>{t(starting ? "onField" : "bench")}</h2>
+                <ul className={st.players}>
+                  {snapshot.players
+                    .filter(
+                      (player) =>
+                        projection.activePlayerIds.has(player.id) === starting,
+                    )
+                    .map((player) => (
+                      <li key={player.id}>
+                        <Button
+                          variant="secondary"
+                          disabled={
+                            state.phase !== "idle" ||
+                            undo.isPending ||
+                            controlsBusy ||
+                            readOnly
+                          }
+                          onClick={() =>
+                            openEvent({ matchPlayerId: player.id }, Date.now())
+                          }
+                        >
+                          <strong>
+                            {player.jerseyNumber
+                              ? `#${player.jerseyNumber} · `
+                              : ""}
+                            {player.playerNameAtMatch}
+                          </strong>
+                          <span>{assignment(player.role)}</span>
+                        </Button>
+                      </li>
+                    ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
         <section className={st.timeline} aria-labelledby="recorder-timeline">
           <h2 id="recorder-timeline">{t("timeline")}</h2>
-          <Button
-            variant="secondary"
-            disabled={
-              !candidate.data || undo.isPending || state.phase !== "idle"
-            }
-            onClick={() => {
-              if (candidate.data)
-                undo.mutate({
-                  matchId: snapshot.match.id,
-                  eventId: candidate.data.id,
-                });
-            }}
-          >
-            {t(undo.isPending ? "undoing" : "undo")}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="secondary"
+              disabled={
+                readOnly ||
+                controlsBusy ||
+                !candidate.data ||
+                undo.isPending ||
+                state.phase !== "idle"
+              }
+              onClick={() => {
+                if (candidate.data)
+                  undo.mutate({
+                    matchId: snapshot.match.id,
+                    eventId: candidate.data.id,
+                  });
+              }}
+            >
+              {t(undo.isPending ? "undoing" : "undo")}
+            </Button>
+          )}
           {undo.isError && (
             <p className={st.error} role="alert">
               {t("undoFailed")}
@@ -195,21 +276,30 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                     .map((event) => (
                       <li key={event.id}>
                         <strong>
-                          {snapshot.players.find(
-                            (player) => player.id === event.matchPlayerId,
-                          )?.playerNameAtMatch ?? t("playerUnavailable")}
+                          {"matchPlayerId" in event
+                            ? (snapshot.players.find(
+                                (player) => player.id === event.matchPlayerId,
+                              )?.playerNameAtMatch ?? t("playerUnavailable"))
+                            : t("matchLevelEvent")}
                         </strong>
                         <span>
                           {t("eventSummary", {
                             kind: t(event.kind),
-                            detail: t(event.subtype),
+                            detail: getEventDetail(event)
+                              ? t(getEventDetail(event)!)
+                              : event.kind === "score-adjustment"
+                                ? t("scoreChange", {
+                                    own: event.ownDelta,
+                                    opponent: event.opponentDelta,
+                                  })
+                                : "",
                           })}
                         </span>
                         <span>
                           {t("eventTime", {
                             period: event.period,
                             time: event.gameTime
-                              ? formatElapsed(event.gameTime.elapsedMs)
+                              ? formatMatchTime(event.gameTime.elapsedMs)
                               : t("untimed"),
                           })}
                         </span>
@@ -226,7 +316,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           )}
         </section>
       </div>
-      {draft && (
+      {draft && !readOnly && (
         <Modal
           title={t("newEvent")}
           locked={locked}
@@ -238,7 +328,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               {t("eventTime", {
                 period: draft.period,
                 time: draft.gameTime
-                  ? formatElapsed(draft.gameTime.elapsedMs)
+                  ? formatMatchTime(draft.gameTime.elapsedMs)
                   : t("untimed"),
               })}
             </p>
@@ -252,60 +342,19 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
             {draft.kind && <p>{t(draft.kind)}</p>}
             {draft.subtype && <p>{t(draft.subtype)}</p>}
             {state.phase === "collecting" && (
-              <>
-                {!draft.kind && (
-                  <section>
-                    <h3>{t("chooseAction")}</h3>
-                    <Button
-                      onClick={() =>
-                        dispatch({ type: "selectKind", kind: "ball-recovery" })
-                      }
-                    >
-                      {t("ball-recovery")}
-                    </Button>
-                  </section>
-                )}
-                {!draft.matchPlayerId && (
-                  <section>
-                    <h3>{t("choosePlayer")}</h3>
-                    <ul className={st.players}>
-                      {snapshot.players.map((player) => (
-                        <li key={player.id}>
-                          <Button
-                            variant="secondary"
-                            onClick={() =>
-                              dispatch({ type: "selectPlayer", id: player.id })
-                            }
-                          >
-                            {player.jerseyNumber
-                              ? `#${player.jerseyNumber} · `
-                              : ""}
-                            {player.playerNameAtMatch}
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-                {draft.kind === "ball-recovery" && !draft.subtype && (
-                  <section>
-                    <h3>{t("chooseSubtype")}</h3>
-                    <div className={st.choices}>
-                      {recoverySubtypeSchema.options.map((subtype) => (
-                        <Button
-                          key={subtype}
-                          variant="secondary"
-                          onClick={() =>
-                            dispatch({ type: "selectSubtype", subtype })
-                          }
-                        >
-                          {t(subtype)}
-                        </Button>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </>
+              <EventDraftFields
+                draft={draft}
+                players={snapshot.players}
+                activePlayerIds={projection.activePlayerIds}
+                ownScore={projection.ownScore}
+                opponentScore={projection.opponentScore}
+                durationMs={
+                  snapshot.match.periods.find(
+                    (period) => period.number === draft.period,
+                  )?.durationMs
+                }
+                onAction={dispatch}
+              />
             )}
             {state.phase === "saving" && <p role="status">{t("saving")}</p>}
             {state.phase === "failed" && (
