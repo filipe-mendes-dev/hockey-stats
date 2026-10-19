@@ -1,5 +1,7 @@
 import {
   bigint,
+  boolean,
+  foreignKey,
   doublePrecision,
   index,
   integer,
@@ -19,6 +21,26 @@ export const matchEvents = pgTable(
     matchPlayerId: uuid("match_player_id").references(() => matchPlayers.id, {
       onDelete: "restrict",
     }),
+    outgoingMatchPlayerId: uuid("outgoing_match_player_id").references(
+      () => matchPlayers.id,
+      { onDelete: "restrict" },
+    ),
+    incomingMatchPlayerId: uuid("incoming_match_player_id").references(
+      () => matchPlayers.id,
+      { onDelete: "restrict" },
+    ),
+    replacementMatchPlayerId: uuid("replacement_match_player_id").references(
+      () => matchPlayers.id,
+      { onDelete: "restrict" },
+    ),
+    lineupEffect: text("lineup_effect"),
+    startsPowerplay: boolean("starts_powerplay"),
+    removedMatchPlayerId: uuid("removed_match_player_id").references(
+      () => matchPlayers.id,
+      { onDelete: "restrict" },
+    ),
+    powerplayCardEventId: uuid("powerplay_card_event_id"),
+    entryReason: text("entry_reason"),
     order: integer("event_order").notNull(),
     kind: text("kind").notNull(),
     subtype: text("subtype"),
@@ -40,5 +62,10 @@ export const matchEvents = pgTable(
   (table) => [
     unique("match_event_order_unique").on(table.matchId, table.order),
     index("match_event_match_idx").on(table.matchId),
+    foreignKey({
+      name: "match_event_powerplay_card_fk",
+      columns: [table.powerplayCardEventId],
+      foreignColumns: [table.id],
+    }).onDelete("restrict"),
   ],
 );

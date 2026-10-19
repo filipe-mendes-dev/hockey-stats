@@ -1,9 +1,7 @@
+import { isValidEventForMatch } from "../domain/matches/matchRules";
 import { z } from "zod";
 import { matchControlActionSchema } from "../domain/matches/matchControl";
-import {
-  isValidEventForMatch,
-  projectMatch,
-} from "../domain/matches/matchProjection";
+import { deriveMatchState } from "../domain/matches/derivedMatchState";
 import { matchEventSchema } from "../domain/matches/matchEvent.schema";
 import { matchSnapshotSchema } from "../domain/matches/match.schema";
 export const createMatchCommandSchema = matchSnapshotSchema
@@ -27,7 +25,7 @@ export const matchRecordingSchema = matchSnapshotSchema
   .refine(
     (snapshot) =>
       (snapshot.match.status !== "setup" || snapshot.events.length === 0) &&
-      projectMatch(snapshot, snapshot.events).valid &&
+      deriveMatchState(snapshot, snapshot.events).valid &&
       new Set(snapshot.events.map((event) => event.id)).size ===
         snapshot.events.length &&
       [...snapshot.events]

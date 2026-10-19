@@ -12,11 +12,14 @@ export const playerEventKindSchema = z.enum([
   "shot",
   "team-foul",
   "card",
+  "substitution",
   "player-in",
-  "player-out",
 ]);
 export const matchEventKindSchema = z.enum([
   ...playerEventKindSchema.options,
+  "suspension-end",
+  "powerplay-end",
+  "player-out",
   "opponent-goal",
   "score-adjustment",
 ]);
@@ -65,20 +68,74 @@ const foul = z.strictObject({
   ...spatial,
   kind: playerEventKindSchema.extract(["team-foul"]),
 });
-const card = z.strictObject({
-  ...spatial,
-  kind: playerEventKindSchema.extract(["card"]),
-  colour: cardColourSchema,
+export const cardLineupEffectSchema = z.enum(["none", "remove", "replace"]);
+const card = z
+  .strictObject({
+    ...spatial,
+    kind: playerEventKindSchema.extract(["card"]),
+    colour: cardColourSchema,
+    lineupEffect: cardLineupEffectSchema.optional(),
+    startsPowerplay: z.boolean().optional(),
+    removedMatchPlayerId: z.uuidv4().optional(),
+    replacementMatchPlayerId: z.uuidv4().optional(),
+  })
+  .refine((event) => {
+    if (event.startsPowerplay !== undefined) {
+      if (event.startsPowerplay !== (event.colour !== "yellow")) return false;
+      if (event.startsPowerplay && !event.gameTime) return false;
+      if (
+        event.lineupEffect === "remove"
+          ? !event.removedMatchPlayerId
+          : event.removedMatchPlayerId !== undefined
+      )
+        return false;
+    } else if (event.removedMatchPlayerId !== undefined) return false;
+    if (event.lineupEffect === undefined)
+      return event.replacementMatchPlayerId === undefined;
+    if (event.colour === "yellow" && event.lineupEffect !== "none")
+      return false;
+    if (event.lineupEffect !== "none" && event.gameTime === undefined)
+      return false;
+    return event.lineupEffect === "replace"
+      ? event.replacementMatchPlayerId !== undefined &&
+          event.replacementMatchPlayerId !== event.matchPlayerId
+      : event.replacementMatchPlayerId === undefined;
+  });
+const currentCard = card.safeExtend({
+  lineupEffect: cardLineupEffectSchema,
+  startsPowerplay: z.boolean(),
 });
 const playerIn = z.strictObject({
   ...player,
-  kind: playerEventKindSchema.extract(["player-in"]),
+  kind: z.literal("player-in"),
   gameTime: matchTimeSchema,
+  entryReason: z.literal("powerplay-ended").optional(),
 });
 const playerOut = z.strictObject({
   ...player,
-  kind: playerEventKindSchema.extract(["player-out"]),
+  kind: z.literal("player-out"),
   gameTime: matchTimeSchema,
+});
+const substitution = z
+  .strictObject({
+    ...base,
+    kind: playerEventKindSchema.extract(["substitution"]),
+    outgoingMatchPlayerId: z.uuidv4(),
+    incomingMatchPlayerId: z.uuidv4(),
+    gameTime: matchTimeSchema,
+  })
+  .refine(
+    (event) => event.outgoingMatchPlayerId !== event.incomingMatchPlayerId,
+  );
+const suspensionEnd = z.strictObject({
+  ...player,
+  kind: z.literal("suspension-end"),
+});
+const powerplayEnd = z.strictObject({
+  ...base,
+  kind: z.literal("powerplay-end"),
+  gameTime: matchTimeSchema,
+  powerplayCardEventId: z.uuidv4(),
 });
 const opponentGoal = z.strictObject({
   ...base,
@@ -98,9 +155,13 @@ export const addMatchEventInputSchema = z.discriminatedUnion("kind", [
   loss.extend(identity),
   shot.extend(identity),
   foul.extend(identity),
-  card.extend(identity),
-  playerIn.extend(identity),
-  playerOut.extend(identity),
+  currentCard.safeExtend(identity),
+  substitution.safeExtend(identity),
+  playerIn.safeExtend({
+    ...identity,
+    entryReason: z.literal("powerplay-ended"),
+  }),
+  powerplayEnd.extend(identity),
   opponentGoal.extend(identity),
   scoreAdjustment.safeExtend(identity),
 ]);
@@ -119,7 +180,10 @@ export const matchEventSchema = z
     loss.extend(stored),
     shot.extend(stored),
     foul.extend(stored),
-    card.extend(stored),
+    card.safeExtend(stored),
+    substitution.safeExtend(stored),
+    suspensionEnd.extend(stored),
+    powerplayEnd.extend(stored),
     playerIn.extend(stored),
     playerOut.extend(stored),
     opponentGoal.extend(stored),
@@ -134,6 +198,8 @@ export const matchEventSchema = z
           event.deletedAt === event.updatedAt)),
   );
 export type MatchEvent = z.infer<typeof matchEventSchema>;
+export type PlayerEventKind = z.infer<typeof playerEventKindSchema>;
+export type CardLineupEffect = z.infer<typeof cardLineupEffectSchema>;
 export type MatchEventKind = z.infer<typeof matchEventKindSchema>;
 export type AddMatchEventInput = z.infer<typeof addMatchEventInputSchema>;
 export type RinkPosition = z.infer<typeof rinkPositionSchema>;
@@ -142,24 +208,30 @@ export type RecoverySubtype = z.infer<typeof recoverySubtypeSchema>;
 export type LossReason = z.infer<typeof lossReasonSchema>;
 export type ShotOutcome = z.infer<typeof shotOutcomeSchema>;
 export type CardColour = z.infer<typeof cardColourSchema>;
-export function eventMatchesInput(
+export function toMatchEventInput(
   event: MatchEvent,
-  input: AddMatchEventInput,
-): boolean {
+  operationId: string,
+): AddMatchEventInput {
   const { order, revision, createdAt, updatedAt, deletedAt, ...fields } = event;
   void order;
   void revision;
   void createdAt;
   void updatedAt;
   void deletedAt;
-  return (
-    JSON.stringify(
-      addMatchEventInputSchema.parse({
-        ...fields,
-        operationId: input.operationId,
-      }),
-    ) === JSON.stringify(input)
-  );
+  return addMatchEventInputSchema.parse({ ...fields, operationId });
+}
+export function eventMatchesInput(
+  event: MatchEvent,
+  input: AddMatchEventInput,
+): boolean {
+  try {
+    return (
+      JSON.stringify(toMatchEventInput(event, input.operationId)) ===
+      JSON.stringify(input)
+    );
+  } catch {
+    return false;
+  }
 }
 export function getEventDetail(event: MatchEvent) {
   switch (event.kind) {

@@ -1,7 +1,11 @@
 import { z } from "zod";
-import { matchEventSchema } from "../domain/matches/matchEvent.schema";
+import {
+  matchEventSchema,
+  toMatchEventInput,
+} from "../domain/matches/matchEvent.schema";
+import type { MatchEvent } from "../domain/matches/matchEvent.schema";
 const commandFields = {
-  version: z.literal(1),
+  version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   operationId: z.uuidv4(),
   expectedRevision: z.int().positive(),
   event: matchEventSchema,
@@ -10,13 +14,24 @@ export const createMatchEventCommandSchema = z
   .object({ ...commandFields, kind: z.literal("matchEvent.create") })
   .refine(
     (command) =>
-      command.event.revision === 1 && command.event.deletedAt === undefined,
+      command.event.revision === 1 &&
+      command.event.deletedAt === undefined &&
+      (command.version === 3
+        ? isCurrentEvent(command.event, command.operationId)
+        : command.version === 2
+          ? isVersionTwoEvent(command.event)
+          : isLegacyEvent(command.event)),
   );
 export const undoMatchEventCommandSchema = z
   .object({ ...commandFields, kind: z.literal("matchEvent.undo") })
   .refine(
     (command) =>
-      command.event.revision === 2 && command.event.deletedAt !== undefined,
+      command.event.revision === 2 &&
+      command.event.deletedAt !== undefined &&
+      (command.version === 3 ||
+        (command.version === 2
+          ? !usesPowerplayProtocol(command.event)
+          : isLegacyEvent(command.event))),
   );
 export const matchEventCommandSchema = z.discriminatedUnion("kind", [
   createMatchEventCommandSchema,
@@ -34,3 +49,36 @@ export const matchEventAcknowledgementSchema = z
     event: matchEventSchema,
   })
   .refine((result) => result.matchId === result.event.matchId);
+
+function isLegacyEvent(event: MatchEvent): boolean {
+  return (
+    !usesPowerplayProtocol(event) &&
+    event.kind !== "substitution" &&
+    event.kind !== "suspension-end" &&
+    (event.kind !== "card" || event.lineupEffect === undefined)
+  );
+}
+function isCurrentEvent(event: MatchEvent, operationId: string): boolean {
+  try {
+    toMatchEventInput(event, operationId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function usesPowerplayProtocol(event: MatchEvent): boolean {
+  return (
+    event.kind === "powerplay-end" ||
+    (event.kind === "card" && event.startsPowerplay !== undefined) ||
+    (event.kind === "player-in" && event.entryReason !== undefined)
+  );
+}
+function isVersionTwoEvent(event: MatchEvent): boolean {
+  return (
+    !usesPowerplayProtocol(event) &&
+    event.kind !== "player-in" &&
+    event.kind !== "player-out" &&
+    (event.kind !== "card" || event.lineupEffect !== undefined)
+  );
+}

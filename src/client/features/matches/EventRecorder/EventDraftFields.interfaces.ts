@@ -1,11 +1,8 @@
-import type { MatchPlayer } from "../../../../domain/matches/match.schema";
+import type { MatchRuleContext } from "../../../../domain/matches/matchRules";
 import type { EventDraft, EventDraftAction } from "./eventDraft";
 export interface EventDraftFieldsProps {
   draft: EventDraft;
-  players: readonly MatchPlayer[];
-  activePlayerIds: ReadonlySet<string>;
-  ownScore: number;
-  opponentScore: number;
+  context: MatchRuleContext;
   durationMs: number | undefined;
   onAction: (action: EventDraftAction) => void;
 }

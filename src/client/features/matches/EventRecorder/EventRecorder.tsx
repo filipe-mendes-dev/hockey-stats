@@ -3,15 +3,13 @@ import { useState } from "react";
 import { useStore } from "zustand";
 import { useTranslations } from "next-intl";
 import type { AddMatchEventInput } from "../../../../domain/matches/matchEvent.schema";
+import { getEventDetail } from "../../../../domain/matches/matchEvent.schema";
 import {
-  playerEventKindSchema,
-  getEventDetail,
-} from "../../../../domain/matches/matchEvent.schema";
-import { projectMatch } from "../../../../domain/matches/matchProjection";
-import {
-  getClockElapsed,
-  formatMatchTime,
-} from "../../../../domain/matches/matchControl";
+  getAvailableEventKinds,
+  MatchRuleError,
+} from "../../../../domain/matches/matchRules";
+import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
+import { formatMatchTime } from "../../../../domain/matches/matchControl";
 import { MatchControls } from "../MatchControls/MatchControls";
 import { Button } from "../../../components/Button/Button";
 import { Modal } from "../../../components/Modal/Modal";
@@ -28,7 +26,7 @@ import {
 import { MatchEventUnavailableError } from "../matchEvents.service";
 import { EventDraftFields } from "./EventDraftFields";
 import { createEventDraftStore } from "./eventDraft.store";
-import { completeEventDraft } from "./eventDraft";
+import { completeEventDraft, captureEventDraft } from "./eventDraft";
 import type { EventDraft, EventDraftAction } from "./eventDraft";
 import type { EventRecorderProps } from "./EventRecorder.interfaces";
 import st from "./EventRecorder.module.css";
@@ -42,7 +40,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const readOnly = snapshot.match.status !== "live";
   const events = useMatchEvents(snapshot.match.id);
   const candidate = useLatestUndoEvent(snapshot.match.id);
-  const projection = projectMatch(snapshot, events.data ?? []);
+  const derivedState = deriveMatchState(snapshot, events.data ?? []);
+  const context = { snapshot, state: derivedState };
   const add = useAddMatchEvent();
   const undo = useUndoMatchEvent();
   const locked = state.phase === "saving";
@@ -69,9 +68,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     store.getState().dispatch({ type: "saving", input });
     save(input);
   }
-  function openEvent(
+  function handleOpenEvent(
     initial: Pick<EventDraft, "matchPlayerId" | "kind">,
-    capturedAt: number,
   ): void {
     if (
       store.getState().state.phase !== "idle" ||
@@ -88,20 +86,16 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         : null,
     );
     add.reset();
-    const elapsedMs = getClockElapsed(snapshot.match, capturedAt);
     dispatch({
       type: "open",
-      draft: {
-        id: crypto.randomUUID(),
-        operationId: crypto.randomUUID(),
-        matchId: snapshot.match.id,
-        period: snapshot.match.currentPeriod,
-        capturedAt,
-        ...(elapsedMs === undefined ? {} : { gameTime: { elapsedMs } }),
-        ...initial,
-      },
+      draft: captureEventDraft(
+        snapshot.match,
+        initial,
+        derivedState.powerplayCardEventIds[0],
+      ),
     });
   }
+
   function retry(): void {
     const current = store.getState().state;
     if (current.phase !== "failed") return;
@@ -118,11 +112,11 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       <section aria-label={t("scoreTitle")} className={st.score}>
         <strong>
           {snapshot.match.teamNameAtMatch}:{" "}
-          {events.data && !events.isError ? projection.ownScore : "…"}
+          {events.data && !events.isError ? derivedState.ownScore : "…"}
         </strong>
         <strong>
           {snapshot.match.opponentName}:{" "}
-          {events.data && !events.isError ? projection.opponentScore : "…"}
+          {events.data && !events.isError ? derivedState.opponentScore : "…"}
         </strong>
         {!readOnly && (
           <div className={st.choices}>
@@ -134,7 +128,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                 !events.data ||
                 events.isError
               }
-              onClick={() => openEvent({ kind: "opponent-goal" }, Date.now())}
+              onClick={() => handleOpenEvent({ kind: "opponent-goal" })}
             >
               {t("opponent-goal")}
             </Button>
@@ -147,15 +141,45 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                 !events.data ||
                 events.isError
               }
-              onClick={() =>
-                openEvent({ kind: "score-adjustment" }, Date.now())
-              }
+              onClick={() => handleOpenEvent({ kind: "score-adjustment" })}
             >
               {t("score-adjustment")}
             </Button>
           </div>
         )}
       </section>
+      {events.data && !events.isError && (
+        <section aria-label={t("powerplayTitle")} className={st.score}>
+          <p>
+            {t(
+              derivedState.isPowerplay
+                ? "powerplayActive"
+                : "powerplayInactive",
+              {
+                maximum: String(derivedState.maxOnField),
+                queued: String(
+                  Math.max(0, derivedState.powerplayCardEventIds.length - 1),
+                ),
+              },
+            )}
+          </p>
+          {!readOnly && derivedState.isPowerplay && (
+            <Button
+              variant="secondary"
+              disabled={
+                state.phase !== "idle" ||
+                undo.isPending ||
+                controlsBusy ||
+                !events.data ||
+                events.isError
+              }
+              onClick={() => handleOpenEvent({ kind: "powerplay-end" })}
+            >
+              {t("powerplay-end")}
+            </Button>
+          )}
+        </section>
+      )}
       {readOnly && <p>{t("completedSummary")}</p>}
       <div className={readOnly ? st.recorder : st.layout}>
         {!readOnly && (
@@ -163,7 +187,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
             <section aria-labelledby="recorder-actions">
               <h2 id="recorder-actions">{t("actions")}</h2>
               <div className={st.choices}>
-                {playerEventKindSchema.options.map((kind) => (
+                {getAvailableEventKinds(context).map((kind) => (
                   <Button
                     key={kind}
                     disabled={
@@ -173,7 +197,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                       !events.data ||
                       events.isError
                     }
-                    onClick={() => openEvent({ kind }, Date.now())}
+                    onClick={() => handleOpenEvent({ kind })}
                   >
                     {t(kind)}
                   </Button>
@@ -187,7 +211,9 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                   {snapshot.players
                     .filter(
                       (player) =>
-                        projection.activePlayerIds.has(player.id) === starting,
+                        derivedState.activePlayerIds.has(player.id) ===
+                          starting &&
+                        getAvailableEventKinds(context, player.id).length > 0,
                     )
                     .map((player) => (
                       <li key={player.id}>
@@ -200,7 +226,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                             readOnly
                           }
                           onClick={() =>
-                            openEvent({ matchPlayerId: player.id }, Date.now())
+                            handleOpenEvent({ matchPlayerId: player.id })
                           }
                         >
                           <strong>
@@ -276,11 +302,26 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                     .map((event) => (
                       <li key={event.id}>
                         <strong>
-                          {"matchPlayerId" in event
-                            ? (snapshot.players.find(
-                                (player) => player.id === event.matchPlayerId,
-                              )?.playerNameAtMatch ?? t("playerUnavailable"))
-                            : t("matchLevelEvent")}
+                          {event.kind === "substitution"
+                            ? t("substitutionPlayers", {
+                                outgoing:
+                                  snapshot.players.find(
+                                    (player) =>
+                                      player.id === event.outgoingMatchPlayerId,
+                                  )?.playerNameAtMatch ??
+                                  t("playerUnavailable"),
+                                incoming:
+                                  snapshot.players.find(
+                                    (player) =>
+                                      player.id === event.incomingMatchPlayerId,
+                                  )?.playerNameAtMatch ??
+                                  t("playerUnavailable"),
+                              })
+                            : "matchPlayerId" in event
+                              ? (snapshot.players.find(
+                                  (player) => player.id === event.matchPlayerId,
+                                )?.playerNameAtMatch ?? t("playerUnavailable"))
+                              : t("matchLevelEvent")}
                         </strong>
                         <span>
                           {t("eventSummary", {
@@ -295,6 +336,43 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                                 : "",
                           })}
                         </span>
+                        {event.kind === "card" &&
+                          event.removedMatchPlayerId && (
+                            <span>
+                              {t("outgoingPlayer", {
+                                name:
+                                  snapshot.players.find(
+                                    (player) =>
+                                      player.id === event.removedMatchPlayerId,
+                                  )?.playerNameAtMatch ??
+                                  t("playerUnavailable"),
+                              })}
+                            </span>
+                          )}
+                        {event.kind === "card" &&
+                          event.colour === "blue" &&
+                          event.startsPowerplay &&
+                          (deriveMatchState(
+                            snapshot,
+                            events.data.filter(
+                              (entry) => entry.order <= event.order,
+                            ),
+                          ).blueCardCounts.get(event.matchPlayerId) ?? 0) >=
+                            3 && <span>{t("thirdBlueRed")}</span>}
+                        {event.kind === "card" &&
+                          event.lineupEffect === "replace" && (
+                            <span>
+                              {t("incomingPlayer", {
+                                name:
+                                  snapshot.players.find(
+                                    (player) =>
+                                      player.id ===
+                                      event.replacementMatchPlayerId,
+                                  )?.playerNameAtMatch ??
+                                  t("playerUnavailable"),
+                              })}
+                            </span>
+                          )}
                         <span>
                           {t("eventTime", {
                             period: event.period,
@@ -341,13 +419,11 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
             )}
             {draft.kind && <p>{t(draft.kind)}</p>}
             {draft.subtype && <p>{t(draft.subtype)}</p>}
+            {draft.colour && <p>{t(draft.colour)}</p>}
             {state.phase === "collecting" && (
               <EventDraftFields
                 draft={draft}
-                players={snapshot.players}
-                activePlayerIds={projection.activePlayerIds}
-                ownScore={projection.ownScore}
-                opponentScore={projection.opponentScore}
+                context={context}
                 durationMs={
                   snapshot.match.periods.find(
                     (period) => period.number === draft.period,
@@ -361,9 +437,11 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               <>
                 <p className={st.error} role="alert">
                   {t(
-                    add.error instanceof MatchEventUnavailableError
-                      ? "changed"
-                      : "saveFailed",
+                    add.error instanceof MatchRuleError
+                      ? `rules.${add.error.reason}`
+                      : add.error instanceof MatchEventUnavailableError
+                        ? "changed"
+                        : "saveFailed",
                   )}
                 </p>
                 <Button onClick={retry}>{t("retry")}</Button>

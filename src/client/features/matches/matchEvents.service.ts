@@ -1,7 +1,10 @@
 import {
-  projectMatch,
   isValidEventForMatch,
-} from "../../../domain/matches/matchProjection";
+  validateMatchEvent,
+  validateEventHistory,
+  MatchRuleError,
+} from "../../../domain/matches/matchRules";
+import { deriveMatchState } from "../../../domain/matches/derivedMatchState";
 import {
   addMatchEventInputSchema,
   eventMatchesInput,
@@ -72,6 +75,11 @@ export async function addMatchEvent(
       snapshot.match.updatedAt,
     );
     const { operationId, ...eventFields } = fields;
+    const eligibility = validateMatchEvent(
+      { snapshot, state: deriveMatchState(snapshot, events) },
+      fields,
+    );
+    if (!eligibility.allowed) throw new MatchRuleError(eligibility.reason);
     const event = matchEventSchema.parse({
       ...eventFields,
       order: (events.at(-1)?.order ?? 0) + 1,
@@ -81,7 +89,7 @@ export async function addMatchEvent(
     });
     if (
       !isValidEventForMatch(snapshot, event) ||
-      !projectMatch(snapshot, [...events, event]).valid
+      !deriveMatchState(snapshot, [...events, event]).valid
     )
       throw new MatchEventUnavailableError();
     await insertMatchEvent(event);
@@ -100,7 +108,7 @@ export async function addMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 1,
+        version: 3,
         operationId,
         kind: "matchEvent.create",
         expectedRevision: snapshot.match.revision,
@@ -145,13 +153,12 @@ export async function undoMatchEvent(
       deletedAt: now,
     });
     const events = await listMatchEvents(input.matchId);
-    if (
-      !projectMatch(
-        snapshot,
-        events.map((entry) => (entry.id === event.id ? event : entry)),
-      ).valid
-    )
-      throw new MatchEventUnavailableError();
+    const historyDecision = validateEventHistory(
+      snapshot,
+      events.map((entry) => (entry.id === event.id ? event : entry)),
+    );
+    if (!historyDecision.allowed)
+      throw new MatchRuleError(historyDecision.reason);
     const operationId = crypto.randomUUID();
     await updateMatchEvent(event);
     await saveMatchHistoryEntry({ ...history, undoneAt: now });
@@ -165,7 +172,7 @@ export async function undoMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 1,
+        version: 3,
         operationId,
         kind: "matchEvent.undo",
         expectedRevision: snapshot.match.revision,

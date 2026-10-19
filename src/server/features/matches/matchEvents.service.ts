@@ -1,13 +1,19 @@
-import "server-only";
 import {
   isValidEventForMatch,
-  projectMatch,
-} from "../../../domain/matches/matchProjection";
+  validateMatchEvent,
+  validateEventHistory,
+} from "../../../domain/matches/matchRules";
+import "server-only";
+import { deriveMatchState } from "../../../domain/matches/derivedMatchState";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { db } from "../../db/client.ts";
 import type { MatchEventCommand } from "../../../contracts/match-events-sync.schema";
+import { usesPowerplayProtocol } from "../../../contracts/match-events-sync.schema";
 import { matchRecordingSchema } from "../../../contracts/matches-sync.schema";
-import { matchEventSchema } from "../../../domain/matches/matchEvent.schema";
+import {
+  matchEventSchema,
+  toMatchEventInput,
+} from "../../../domain/matches/matchEvent.schema";
 import {
   getOwnedMatchForUpdate,
   listMatchSnapshotsForOwner,
@@ -51,10 +57,19 @@ export async function applyMatchEventCommand(
   )
     throw new SyncConflictError("reference_unavailable");
   const events = await listMatchEvents(transaction, match.id);
+  if (command.version < 3 && events.some(usesPowerplayProtocol))
+    throw new SyncConflictError("event_conflict");
   if (command.kind === "matchEvent.create") {
+    if (command.version === 3) {
+      const decision = validateMatchEvent(
+        { snapshot, state: deriveMatchState(snapshot, events) },
+        toMatchEventInput(event, command.operationId),
+      );
+      if (!decision.allowed) throw new SyncConflictError("event_conflict");
+    }
     if (
       event.period !== match.currentPeriod ||
-      !projectMatch(snapshot, [...events, event]).valid
+      !deriveMatchState(snapshot, [...events, event]).valid
     )
       throw new SyncConflictError("event_conflict");
     if (
@@ -68,7 +83,12 @@ export async function applyMatchEventCommand(
       .at(-1);
     if (
       !current ||
-      !projectMatch(
+      (command.version === 3 &&
+        !validateEventHistory(
+          snapshot,
+          events.map((entry) => (entry.id === event.id ? event : entry)),
+        ).allowed) ||
+      !deriveMatchState(
         snapshot,
         events.map((entry) => (entry.id === event.id ? event : entry)),
       ).valid ||

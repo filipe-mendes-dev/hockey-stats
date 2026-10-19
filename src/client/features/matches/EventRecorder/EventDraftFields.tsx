@@ -6,18 +6,22 @@ import {
   lossReasonSchema,
   shotOutcomeSchema,
   cardColourSchema,
-  playerEventKindSchema,
 } from "../../../../domain/matches/matchEvent.schema";
-import type { MatchEventKind } from "../../../../domain/matches/matchEvent.schema";
+import {
+  getAvailableEventKinds,
+  getEligiblePlayers,
+  getSubstitutionDecision,
+  getCardReplacementPlayers,
+  getCardLineupEffect,
+  getCardRemovalPlayers,
+} from "../../../../domain/matches/matchRules";
+import type { MatchPlayer } from "../../../../domain/matches/match.schema";
 import { Button } from "../../../components/Button/Button";
 import type { EventDraftFieldsProps } from "./EventDraftFields.interfaces";
 import st from "./EventDraftFields.module.css";
 export function EventDraftFields({
   draft,
-  players,
-  activePlayerIds,
-  ownScore,
-  opponentScore,
+  context,
   durationMs,
   onAction,
 }: EventDraftFieldsProps) {
@@ -25,55 +29,88 @@ export function EventDraftFields({
   const [error, setError] = useState<
     "scoreNoChange" | "timeOutsidePeriod" | null
   >(null);
-  function isAvailable(kind: MatchEventKind, playerId?: string): boolean {
-    if (kind === "player-in" && playerId) return !activePlayerIds.has(playerId);
-    if (kind === "player-out" && playerId) return activePlayerIds.has(playerId);
-    return true;
+  const { snapshot, state } = context;
+  const { ownScore, opponentScore, activePlayerIds } = state;
+  function playerLabel(player: MatchPlayer): string {
+    return `${player.jerseyNumber ? `#${player.jerseyNumber} · ` : ""}${player.playerNameAtMatch}`;
   }
+  const needsTime =
+    draft.kind === "substitution" ||
+    draft.kind === "player-in" ||
+    draft.kind === "powerplay-end" ||
+    (draft.kind === "card" &&
+      draft.colour !== undefined &&
+      draft.colour !== "yellow");
+  const cardReplacements = draft.matchPlayerId
+    ? getCardReplacementPlayers(context, draft.matchPlayerId)
+    : [];
   return (
     <div className={st.fields}>
       {!draft.kind && (
         <section>
           <h3>{t("chooseAction")}</h3>
           <div className={st.choices}>
-            {playerEventKindSchema.options.map((kind) => (
-              <Button
-                key={kind}
-                disabled={!isAvailable(kind, draft.matchPlayerId)}
-                onClick={() => onAction({ type: "selectKind", kind })}
-              >
-                {t(kind)}
-              </Button>
-            ))}
+            {getAvailableEventKinds(context, draft.matchPlayerId).map(
+              (kind) => (
+                <Button
+                  key={kind}
+                  onClick={() =>
+                    onAction({
+                      type: "selectKind",
+                      kind,
+                      selectedPlayerIsActive:
+                        draft.matchPlayerId !== undefined &&
+                        activePlayerIds.has(draft.matchPlayerId),
+                    })
+                  }
+                >
+                  {t(
+                    kind === "substitution" && draft.matchPlayerId
+                      ? activePlayerIds.has(draft.matchPlayerId)
+                        ? "player-out"
+                        : "substitution"
+                      : kind,
+                  )}
+                </Button>
+              ),
+            )}
           </div>
         </section>
       )}
       {!draft.matchPlayerId &&
         draft.kind !== "opponent-goal" &&
-        draft.kind !== "score-adjustment" && (
+        draft.kind !== "score-adjustment" &&
+        draft.kind !== "substitution" &&
+        draft.kind !== "powerplay-end" && (
           <section>
             <h3>{t("choosePlayer")}</h3>
             <ul className={st.players}>
-              {players.map((player) => (
-                <li key={player.id}>
-                  <Button
-                    variant="secondary"
-                    disabled={
-                      draft.kind !== undefined &&
-                      !isAvailable(draft.kind, player.id)
-                    }
-                    onClick={() =>
-                      onAction({
-                        type: "selectPlayer",
-                        id: player.id,
-                      })
-                    }
-                  >
-                    {player.jerseyNumber ? `#${player.jerseyNumber} · ` : ""}
-                    {player.playerNameAtMatch}
-                  </Button>
-                </li>
-              ))}
+              {(draft.kind
+                ? getEligiblePlayers(context, draft.kind)
+                : snapshot.players
+              )
+                .filter(
+                  (player) =>
+                    draft.kind !== "card" ||
+                    !draft.colour ||
+                    getCardLineupEffect(context, player.id, draft.colour) !==
+                      null,
+                )
+                .map((player) => (
+                  <li key={player.id}>
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        onAction({
+                          type: "selectPlayer",
+                          id: player.id,
+                        })
+                      }
+                    >
+                      {playerLabel(player)}
+                    </Button>
+                  </li>
+                ))}
             </ul>
           </section>
         )}
@@ -129,65 +166,247 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseColour")}</h3>
           <div className={st.choices}>
-            {cardColourSchema.options.map((colour) => (
-              <Button
-                key={colour}
-                variant="secondary"
-                onClick={() => onAction({ type: "selectColour", colour })}
-              >
-                {t(colour)}
-              </Button>
-            ))}
+            {cardColourSchema.options
+              .filter((colour) =>
+                draft.matchPlayerId
+                  ? getCardLineupEffect(
+                      context,
+                      draft.matchPlayerId,
+                      colour,
+                    ) !== null
+                  : getEligiblePlayers(context, "card").some(
+                      (player) =>
+                        getCardLineupEffect(context, player.id, colour) !==
+                        null,
+                    ),
+              )
+              .map((colour) => (
+                <Button
+                  key={colour}
+                  variant="secondary"
+                  onClick={() => onAction({ type: "selectColour", colour })}
+                >
+                  {t(colour)}
+                </Button>
+              ))}
           </div>
         </section>
       )}
-      {(draft.kind === "player-in" || draft.kind === "player-out") &&
-        !draft.gameTime && (
-          <form
-            className={st.fields}
-            action={(data) => {
-              const minutes = Number(data.get("minutes"));
-              const seconds = Number(data.get("seconds"));
-              setError(null);
-              if (
-                durationMs !== undefined &&
-                minutes * 60_000 + seconds * 1000 > durationMs
-              ) {
-                setError("timeOutsidePeriod");
-                return;
-              }
-              if (
-                Number.isInteger(minutes) &&
-                minutes >= 0 &&
-                Number.isInteger(seconds) &&
-                seconds >= 0 &&
-                seconds < 60
-              )
-                onAction({
-                  type: "setTime",
-                  elapsedMs: minutes * 60_000 + seconds * 1000,
-                });
+      {draft.kind === "substitution" &&
+        (["outgoing", "incoming"] as const).map((side) => {
+          const selected =
+            side === "outgoing"
+              ? draft.outgoingMatchPlayerId
+              : draft.incomingMatchPlayerId;
+          if (selected)
+            return (
+              <p key={side}>
+                {t(side === "outgoing" ? "outgoingPlayer" : "incomingPlayer", {
+                  name:
+                    snapshot.players.find((player) => player.id === selected)
+                      ?.playerNameAtMatch ?? t("playerUnavailable"),
+                })}
+              </p>
+            );
+          const options = snapshot.players.filter((player) =>
+            side === "outgoing"
+              ? activePlayerIds.has(player.id) &&
+                (draft.incomingMatchPlayerId
+                  ? getSubstitutionDecision(
+                      context,
+                      player.id,
+                      draft.incomingMatchPlayerId,
+                    ).allowed
+                  : getEligiblePlayers(context, "substitution").some(
+                      (entry) => entry.id === player.id,
+                    ))
+              : !activePlayerIds.has(player.id) &&
+                (draft.outgoingMatchPlayerId
+                  ? getSubstitutionDecision(
+                      context,
+                      draft.outgoingMatchPlayerId,
+                      player.id,
+                    ).allowed
+                  : getEligiblePlayers(context, "substitution").some(
+                      (entry) => entry.id === player.id,
+                    )),
+          );
+          return (
+            <section key={side}>
+              <h3>
+                {t(side === "outgoing" ? "chooseOutgoing" : "chooseIncoming")}
+              </h3>
+              <div className={st.choices}>
+                {options.map((player) => (
+                  <Button
+                    key={player.id}
+                    variant="secondary"
+                    onClick={() =>
+                      onAction({
+                        type: "selectSubstitute",
+                        side,
+                        id: player.id,
+                      })
+                    }
+                  >
+                    {playerLabel(player)}
+                  </Button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      {draft.kind === "card" &&
+        draft.colour &&
+        draft.matchPlayerId &&
+        draft.lineupEffect === undefined && (
+          <section>
+            {draft.colour === "blue" &&
+              (state.blueCardCounts.get(draft.matchPlayerId) ?? 0) >= 2 && (
+                <p>{t("thirdBlueRed")}</p>
+              )}
+            {getCardLineupEffect(context, draft.matchPlayerId, draft.colour) ===
+            "none" ? (
+              <>
+                <p>
+                  {t(
+                    draft.colour === "yellow"
+                      ? "cardNoLineupChange"
+                      : "cardQueuesPowerplay",
+                  )}
+                </p>
+                <Button
+                  onClick={() =>
+                    onAction({ type: "confirmCard", effect: "none" })
+                  }
+                >
+                  {t("confirmCard")}
+                </Button>
+              </>
+            ) : getCardLineupEffect(
+                context,
+                draft.matchPlayerId,
+                draft.colour,
+              ) === "remove" ? (
+              <>
+                <p>
+                  {t(
+                    activePlayerIds.has(draft.matchPlayerId)
+                      ? "cardRemovesPlayer"
+                      : "choosePowerplayRemoval",
+                  )}
+                </p>
+                <div className={st.choices}>
+                  {getCardRemovalPlayers(context, draft.matchPlayerId).map(
+                    (player) => (
+                      <Button
+                        key={player.id}
+                        onClick={() =>
+                          onAction({
+                            type: "confirmCard",
+                            effect: "remove",
+                            removedId: player.id,
+                          })
+                        }
+                      >
+                        {activePlayerIds.has(draft.matchPlayerId!)
+                          ? t("confirmCard")
+                          : playerLabel(player)}
+                      </Button>
+                    ),
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <p>{t("cardNeedsReplacement")}</p>
+                <p>{t("cardQueuesPowerplay")}</p>
+                <div className={st.choices}>
+                  {cardReplacements.map((player) => (
+                    <Button
+                      key={player.id}
+                      onClick={() =>
+                        onAction({
+                          type: "confirmCard",
+                          effect: "replace",
+                          replacementId: player.id,
+                        })
+                      }
+                    >
+                      {playerLabel(player)}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        )}
+      {draft.kind === "powerplay-end" && !draft.powerplayConfirmed && (
+        <section>
+          <p>
+            {t(
+              state.powerplayCardEventIds.length > 1
+                ? "powerplayContinues"
+                : "powerplayEnds",
+            )}
+          </p>
+          <Button
+            onClick={() => {
+              const cardEventId = draft.powerplayCardEventId;
+              if (cardEventId)
+                onAction({ type: "confirmPowerplayEnd", cardEventId });
             }}
           >
-            <p>{t("movementTimeRequired")}</p>
-            <label>
-              {t("minutes")}
-              <input name="minutes" type="number" min="0" step="1" required />
-            </label>
-            <label>
-              {t("seconds")}
-              <input
-                name="seconds"
-                type="number"
-                min="0"
-                max="59"
-                step="1"
-                required
-              />
-            </label>
-            <Button type="submit">{t("useTime")}</Button>
-          </form>
-        )}
+            {t("confirmPowerplayEnd")}
+          </Button>
+        </section>
+      )}
+      {needsTime && !draft.gameTime && (
+        <form
+          className={st.fields}
+          action={(data) => {
+            const minutes = Number(data.get("minutes"));
+            const seconds = Number(data.get("seconds"));
+            setError(null);
+            if (
+              durationMs !== undefined &&
+              minutes * 60_000 + seconds * 1000 > durationMs
+            ) {
+              setError("timeOutsidePeriod");
+              return;
+            }
+            if (
+              Number.isInteger(minutes) &&
+              minutes >= 0 &&
+              Number.isInteger(seconds) &&
+              seconds >= 0 &&
+              seconds < 60
+            )
+              onAction({
+                type: "setTime",
+                elapsedMs: minutes * 60_000 + seconds * 1000,
+              });
+          }}
+        >
+          <p>{t("eventTimeRequired")}</p>
+          <label>
+            {t("minutes")}
+            <input name="minutes" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            {t("seconds")}
+            <input
+              name="seconds"
+              type="number"
+              min="0"
+              max="59"
+              step="1"
+              required
+            />
+          </label>
+          <Button type="submit">{t("useTime")}</Button>
+        </form>
+      )}
       {draft.kind === "score-adjustment" && (
         <form
           className={st.fields}

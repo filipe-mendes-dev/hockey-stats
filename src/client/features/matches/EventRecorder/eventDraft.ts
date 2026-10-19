@@ -1,6 +1,8 @@
+import type { Match } from "../../../../domain/matches/match.schema";
+import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import type {
   AddMatchEventInput,
-  MatchEvent,
+  CardLineupEffect,
   MatchTime,
   RecoverySubtype,
   LossReason,
@@ -19,7 +21,14 @@ export interface EventDraft {
   gameTime?: MatchTime;
   position?: RinkPosition;
   matchPlayerId?: string;
-  kind?: MatchEvent["kind"];
+  kind?: AddMatchEventInput["kind"];
+  outgoingMatchPlayerId?: string;
+  incomingMatchPlayerId?: string;
+  replacementMatchPlayerId?: string;
+  removedMatchPlayerId?: string;
+  powerplayCardEventId?: string;
+  powerplayConfirmed?: true;
+  lineupEffect?: CardLineupEffect;
   subtype?: RecoverySubtype;
   reason?: LossReason;
   outcome?: ShotOutcome;
@@ -38,7 +47,19 @@ export type EventDraftState =
 export type EventDraftAction =
   | { type: "open"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
-  | { type: "selectKind"; kind: MatchEvent["kind"] }
+  | {
+      type: "selectKind";
+      kind: AddMatchEventInput["kind"];
+      selectedPlayerIsActive?: boolean;
+    }
+  | { type: "selectSubstitute"; side: "outgoing" | "incoming"; id: string }
+  | {
+      type: "confirmCard";
+      effect: CardLineupEffect;
+      replacementId?: string;
+      removedId?: string;
+    }
+  | { type: "confirmPowerplayEnd"; cardEventId: string }
   | { type: "selectSubtype"; subtype: RecoverySubtype }
   | { type: "selectReason"; reason: LossReason }
   | { type: "selectOutcome"; outcome: ShotOutcome }
@@ -79,18 +100,74 @@ export function transitionEventDraft(
         delete draft.colour;
         delete draft.ownDelta;
         delete draft.opponentDelta;
+        delete draft.lineupEffect;
+        delete draft.replacementMatchPlayerId;
+        delete draft.removedMatchPlayerId;
+        delete draft.powerplayCardEventId;
+        delete draft.powerplayConfirmed;
+        delete draft.outgoingMatchPlayerId;
+        delete draft.incomingMatchPlayerId;
       }
-      if (action.kind === "player-in" || action.kind === "player-out")
+      if (action.kind === "substitution") {
+        if (draft.matchPlayerId) {
+          if (action.selectedPlayerIsActive)
+            draft.outgoingMatchPlayerId = draft.matchPlayerId;
+          else draft.incomingMatchPlayerId = draft.matchPlayerId;
+        }
+        delete draft.matchPlayerId;
+      }
+      if (action.kind === "substitution" || action.kind === "player-in")
         delete draft.position;
       if (
         action.kind === "opponent-goal" ||
-        action.kind === "score-adjustment"
+        action.kind === "score-adjustment" ||
+        action.kind === "powerplay-end"
       ) {
         delete draft.matchPlayerId;
         delete draft.position;
       }
       return { ...state, draft };
     }
+    case "selectSubstitute":
+      return state.draft.kind === "substitution"
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              [action.side === "outgoing"
+                ? "outgoingMatchPlayerId"
+                : "incomingMatchPlayerId"]: action.id,
+            },
+          }
+        : state;
+    case "confirmPowerplayEnd":
+      return state.draft.kind === "powerplay-end"
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              powerplayCardEventId:
+                state.draft.powerplayCardEventId ?? action.cardEventId,
+              powerplayConfirmed: true,
+            },
+          }
+        : state;
+    case "confirmCard":
+      return state.draft.kind === "card"
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              lineupEffect: action.effect,
+              ...(action.removedId
+                ? { removedMatchPlayerId: action.removedId }
+                : {}),
+              ...(action.replacementId
+                ? { replacementMatchPlayerId: action.replacementId }
+                : {}),
+            },
+          }
+        : state;
     case "selectSubtype":
       return state.draft.kind === "ball-recovery"
         ? { ...state, draft: { ...state.draft, subtype: action.subtype } }
@@ -132,6 +209,36 @@ export function transitionEventDraft(
 export function completeEventDraft(
   draft: EventDraft,
 ): AddMatchEventInput | null {
-  const result = addMatchEventInputSchema.safeParse(draft);
+  if (draft.kind === "powerplay-end" && !draft.powerplayConfirmed) return null;
+  const { powerplayConfirmed, ...fields } = draft;
+  void powerplayConfirmed;
+  const result = addMatchEventInputSchema.safeParse({
+    ...fields,
+    ...(draft.kind === "card"
+      ? { startsPowerplay: draft.colour !== "yellow" }
+      : {}),
+    ...(draft.kind === "player-in" ? { entryReason: "powerplay-ended" } : {}),
+  });
   return result.success ? result.data : null;
+}
+
+export function captureEventDraft(
+  match: Match,
+  initial: Pick<EventDraft, "matchPlayerId" | "kind">,
+  powerplayCardEventId?: string,
+): EventDraft {
+  const capturedAt = Date.now();
+  const elapsedMs = getClockElapsed(match, capturedAt);
+  return {
+    id: crypto.randomUUID(),
+    operationId: crypto.randomUUID(),
+    matchId: match.id,
+    period: match.currentPeriod,
+    capturedAt,
+    ...(elapsedMs === undefined ? {} : { gameTime: { elapsedMs } }),
+    ...initial,
+    ...(initial.kind === "powerplay-end" && powerplayCardEventId !== undefined
+      ? { powerplayCardEventId }
+      : {}),
+  };
 }
