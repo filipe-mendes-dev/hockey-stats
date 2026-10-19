@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { matchControlActionSchema } from "../domain/matches/matchControl";
+import {
+  isValidEventForMatch,
+  projectMatch,
+} from "../domain/matches/matchProjection";
 import { matchEventSchema } from "../domain/matches/matchEvent.schema";
 import { matchSnapshotSchema } from "../domain/matches/match.schema";
 export const createMatchCommandSchema = matchSnapshotSchema
@@ -21,7 +26,8 @@ export const matchRecordingSchema = matchSnapshotSchema
   .safeExtend({ events: z.array(matchEventSchema) })
   .refine(
     (snapshot) =>
-      (snapshot.match.status === "live" || snapshot.events.length === 0) &&
+      (snapshot.match.status !== "setup" || snapshot.events.length === 0) &&
+      projectMatch(snapshot, snapshot.events).valid &&
       new Set(snapshot.events.map((event) => event.id)).size ===
         snapshot.events.length &&
       [...snapshot.events]
@@ -30,9 +36,7 @@ export const matchRecordingSchema = matchSnapshotSchema
       snapshot.events.every(
         (event) =>
           event.matchId === snapshot.match.id &&
-          snapshot.players.some(
-            (player) => player.id === event.matchPlayerId,
-          ) &&
+          isValidEventForMatch(snapshot, event) &&
           snapshot.match.periods.some(
             (period) => period.number === event.period,
           ),
@@ -73,11 +77,29 @@ export const startMatchCommandSchema = matchSnapshotSchema
   .refine(
     (command) =>
       command.match.revision === command.expectedRevision + 1 &&
-      command.match.status === "live",
+      command.match.status === "live" &&
+      command.match.currentPeriod === 1 &&
+      command.match.closedPeriods.length === 0 &&
+      command.match.clock?.runningSince === undefined &&
+      (command.match.clock?.elapsedMs ?? 0) === 0,
+  );
+export const controlMatchCommandSchema = matchSnapshotSchema
+  .safeExtend({
+    version: z.literal(1),
+    operationId: z.uuidv4(),
+    kind: z.literal("match.control"),
+    expectedRevision: z.int().positive(),
+    action: matchControlActionSchema,
+  })
+  .refine(
+    (command) =>
+      command.match.revision === command.expectedRevision + 1 &&
+      command.match.status !== "setup",
   );
 export const matchCommandSchema = z.discriminatedUnion("kind", [
   createMatchCommandSchema,
   updateMatchSetupCommandSchema,
   startMatchCommandSchema,
+  controlMatchCommandSchema,
 ]);
 export type MatchCommand = z.infer<typeof matchCommandSchema>;

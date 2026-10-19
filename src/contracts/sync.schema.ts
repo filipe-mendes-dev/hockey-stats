@@ -7,6 +7,7 @@ import {
   createMatchCommandSchema,
   updateMatchSetupCommandSchema,
   startMatchCommandSchema,
+  controlMatchCommandSchema,
   matchAcknowledgementSchema,
   matchesDownloadSchema,
 } from "./matches-sync.schema";
@@ -36,6 +37,7 @@ export const syncCommandSchema = z.discriminatedUnion("kind", [
   createMatchCommandSchema,
   updateMatchSetupCommandSchema,
   startMatchCommandSchema,
+  controlMatchCommandSchema,
   createMatchEventCommandSchema,
   undoMatchEventCommandSchema,
 ]);
@@ -62,6 +64,7 @@ export function getCommandEntity(command: SyncCommand) {
     case "match.create":
     case "match.updateSetup":
     case "match.start":
+    case "match.control":
       return command.match;
     case "player.create":
       return command.player;
@@ -139,6 +142,7 @@ export function getCommandFeature(
     case "match.create":
     case "match.updateSetup":
     case "match.start":
+    case "match.control":
       return "matches";
     case "player.create":
       return "players";

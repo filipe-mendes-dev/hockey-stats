@@ -19,6 +19,15 @@ export const matchPeriodsSchema = z
   .refine((periods) =>
     periods.every((period, index) => period.number === index + 1),
   );
+export const matchStatusSchema = z.enum(["setup", "live", "completed"]);
+export const matchClockSchema = z.strictObject({
+  elapsedMs: z.int().nonnegative(),
+  runningSince: z.int().positive().optional(),
+});
+export const closedPeriodSchema = z.strictObject({
+  number: z.int().positive(),
+  elapsedMs: z.int().nonnegative().optional(),
+});
 export const matchSchema = z
   .object({
     id: z.uuidv4(),
@@ -36,14 +45,65 @@ export const matchSchema = z
       .refine((date) => !date.startsWith("0000-"))
       .optional(),
     venueRole: z.enum(["home", "away", "neutral"]).optional(),
-    status: z.enum(["setup", "live"]),
+    status: matchStatusSchema,
+    currentPeriod: z.int().positive().default(1),
+    clock: matchClockSchema.optional(),
+    closedPeriods: z.array(closedPeriodSchema).default([]),
+    completedAt: z.int().positive().optional(),
     periods: matchPeriodsSchema.default([]),
     startedAt: z.int().positive().optional(),
     revision: z.int().positive(),
     createdAt: z.int().positive(),
     updatedAt: z.int().positive(),
   })
-  .refine((match) => match.updatedAt >= match.createdAt);
+  .refine((match) => match.updatedAt >= match.createdAt)
+  .refine((match) => {
+    if (match.status === "setup")
+      return (
+        match.currentPeriod === 1 &&
+        !match.clock &&
+        !match.completedAt &&
+        match.closedPeriods.length === 0
+      );
+    const period = match.periods.find(
+      (entry) => entry.number === match.currentPeriod,
+    );
+    if (
+      !period ||
+      (match.clock &&
+        period.durationMs !== undefined &&
+        match.clock.elapsedMs > period.durationMs)
+    )
+      return false;
+    if (
+      match.clock?.runningSince !== undefined &&
+      (period.durationMs === undefined ||
+        match.clock.elapsedMs >= period.durationMs ||
+        match.clock.runningSince > match.updatedAt)
+    )
+      return false;
+    const closedCount =
+      match.status === "completed"
+        ? match.currentPeriod
+        : match.currentPeriod - 1;
+    if (
+      match.closedPeriods.length !== closedCount ||
+      !match.closedPeriods.every(
+        (entry, index) =>
+          entry.number === index + 1 &&
+          (entry.elapsedMs === undefined ||
+            entry.elapsedMs <= (match.periods[index]?.durationMs ?? Infinity)),
+      )
+    )
+      return false;
+    return match.status === "completed"
+      ? match.currentPeriod === match.periods.length &&
+          match.completedAt !== undefined &&
+          match.completedAt >= (match.startedAt ?? match.createdAt) &&
+          match.completedAt === match.updatedAt &&
+          match.clock?.runningSince === undefined
+      : match.completedAt === undefined;
+  });
 export type Match = z.infer<typeof matchSchema>;
 export const matchPlayerSchema = z.object({
   id: z.uuidv4(),
