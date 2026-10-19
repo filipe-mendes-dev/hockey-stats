@@ -1,3 +1,4 @@
+import { applyMatchEventCommand } from "../matches/matchEvents.service";
 import "server-only";
 import {
   parseAcknowledgement,
@@ -36,13 +37,20 @@ export async function acceptSyncCommand(
       acceptedAt: Date.now(),
     };
     const result: SyncAcknowledgement =
-      "match" in command
-        ? { ...base, match: command.match, players: command.players }
-        : command.kind === "player.create"
-          ? { ...base, player: command.player }
-          : "team" in command
-            ? { ...base, team: command.team }
-            : { ...base, teamPlayer: command.teamPlayer };
+      "event" in command
+        ? {
+            ...base,
+            matchId: command.event.matchId,
+            matchRevision: command.expectedRevision + 1,
+            event: command.event,
+          }
+        : "match" in command
+          ? { ...base, match: command.match, players: command.players }
+          : command.kind === "player.create"
+            ? { ...base, player: command.player }
+            : "team" in command
+              ? { ...base, team: command.team }
+              : { ...base, teamPlayer: command.teamPlayer };
     // The unique receipt reservation serializes concurrent deliveries before the entity insert.
     if (
       !(await insertOperationReceipt(transaction, ownerUserId, command, result))
@@ -60,6 +68,10 @@ export async function acceptSyncCommand(
       return parseAcknowledgement(command, receipt.result);
     }
     switch (command.kind) {
+      case "matchEvent.create":
+      case "matchEvent.undo":
+        await applyMatchEventCommand(transaction, ownerUserId, command);
+        break;
       case "match.create":
       case "match.updateSetup":
       case "match.start":

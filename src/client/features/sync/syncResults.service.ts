@@ -1,3 +1,8 @@
+import { matchEventSchema } from "../../../domain/matches/matchEvent.schema";
+import {
+  updateMatchEvent,
+  replaceMatchEvents,
+} from "../matches/matchEvents.repository";
 import { matchSchema } from "../../../domain/matches/match.schema";
 import { replaceMatchSnapshot } from "../matches/matches.repository";
 import type {
@@ -37,6 +42,49 @@ export async function acknowledgeOperation(
   signal.throwIfAborted();
   if (acknowledgement.ownerUserId !== expectedOwner)
     throw new AccountMismatchError();
+  if ("event" in acknowledgement) {
+    const database = await getDatabase();
+    await database.transaction(
+      "rw",
+      ["metadata", "matches", "matchEvents", "outbox"],
+      async () => {
+        await requireOwner(expectedOwner, signal);
+        const operation = await getOutboxOperation(acknowledgement.operationId);
+        if (!operation) return;
+        if (
+          !("event" in operation.command) ||
+          operation.entityId !== acknowledgement.matchId ||
+          operation.command.event.id !== acknowledgement.event.id
+        )
+          throw new Error("Acknowledgement refers to another event.");
+        const row = await database
+          .table<unknown, string>("matches")
+          .get(acknowledgement.matchId);
+        const match = row === undefined ? null : matchSchema.parse(row);
+        if (!match) throw new Error("The event Match is unavailable.");
+        const stored = await database
+          .table<unknown, string>("matchEvents")
+          .get(acknowledgement.event.id);
+        const current =
+          stored === undefined ? null : matchEventSchema.parse(stored);
+        if (!current || current.revision <= acknowledgement.event.revision)
+          await updateMatchEvent(acknowledgement.event);
+        if (match.revision <= acknowledgement.matchRevision)
+          await database.table("matches").put({
+            ...match,
+            revision: acknowledgement.matchRevision,
+            updatedAt: Math.max(
+              match.updatedAt,
+              acknowledgement.event.updatedAt,
+            ),
+          });
+        signal.throwIfAborted();
+        await deleteOutboxOperation(operation.operationId);
+      },
+    );
+    notifyLocalDataChanged("sync", "matches");
+    return;
+  }
   if ("match" in acknowledgement) {
     const database = await getDatabase();
     await database.transaction(
@@ -117,7 +165,7 @@ export async function mergeDownloadedEntities(
     const database = await getDatabase();
     await database.transaction(
       "rw",
-      ["metadata", "matches", "matchPlayers", "outbox"],
+      ["metadata", "matches", "matchPlayers", "matchEvents", "outbox"],
       async () => {
         await requireOwner(expectedOwner, signal);
         const pending = new Set(
@@ -132,8 +180,10 @@ export async function mergeDownloadedEntities(
             .table<unknown, string>("matches")
             .get(snapshot.match.id);
           const current = row === undefined ? null : matchSchema.parse(row);
-          if (!current || current.revision <= snapshot.match.revision)
+          if (!current || current.revision <= snapshot.match.revision) {
             await replaceMatchSnapshot(snapshot);
+            await replaceMatchEvents(snapshot.match.id, snapshot.events);
+          }
         }
         signal.throwIfAborted();
       },

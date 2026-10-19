@@ -1,4 +1,9 @@
 import {
+  createMatchEventCommandSchema,
+  undoMatchEventCommandSchema,
+  matchEventAcknowledgementSchema,
+} from "./match-events-sync.schema";
+import {
   createMatchCommandSchema,
   updateMatchSetupCommandSchema,
   startMatchCommandSchema,
@@ -31,6 +36,8 @@ export const syncCommandSchema = z.discriminatedUnion("kind", [
   createMatchCommandSchema,
   updateMatchSetupCommandSchema,
   startMatchCommandSchema,
+  createMatchEventCommandSchema,
+  undoMatchEventCommandSchema,
 ]);
 export type SyncCommand = z.infer<typeof syncCommandSchema>;
 export const syncAcknowledgementSchema = z.union([
@@ -38,6 +45,7 @@ export const syncAcknowledgementSchema = z.union([
   teamAcknowledgementSchema,
   teamPlayerAcknowledgementSchema,
   matchAcknowledgementSchema,
+  matchEventAcknowledgementSchema,
 ]);
 export type SyncAcknowledgement = z.infer<typeof syncAcknowledgementSchema>;
 export type SyncDownload =
@@ -48,6 +56,9 @@ export type SyncDownload =
 
 export function getCommandEntity(command: SyncCommand) {
   switch (command.kind) {
+    case "matchEvent.create":
+    case "matchEvent.undo":
+      return { id: command.event.matchId };
     case "match.create":
     case "match.updateSetup":
     case "match.start":
@@ -67,6 +78,17 @@ export function parseAcknowledgement(
   command: SyncCommand,
   value: unknown,
 ): SyncAcknowledgement {
+  if ("event" in command) {
+    const result = matchEventAcknowledgementSchema.parse(value);
+    if (
+      result.operationId !== command.operationId ||
+      result.matchId !== command.event.matchId ||
+      result.matchRevision !== command.expectedRevision + 1 ||
+      JSON.stringify(result.event) !== JSON.stringify(command.event)
+    )
+      throw new Error("Unexpected event acknowledgement.");
+    return result;
+  }
   const result =
     "match" in command
       ? matchAcknowledgementSchema.parse(value)
@@ -100,6 +122,7 @@ export const syncErrorSchema = z.object({
     "player_conflict",
     "team_conflict",
     "match_conflict",
+    "event_conflict",
     "revision_conflict",
     "membership_conflict",
     "reference_unavailable",
@@ -111,6 +134,8 @@ export function getCommandFeature(
   command: SyncCommand,
 ): "players" | "teams" | "teamPlayers" | "matches" {
   switch (command.kind) {
+    case "matchEvent.create":
+    case "matchEvent.undo":
     case "match.create":
     case "match.updateSetup":
     case "match.start":

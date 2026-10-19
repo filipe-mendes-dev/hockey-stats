@@ -1,5 +1,5 @@
 import { matchesDownloadSchema } from "../../../../contracts/matches-sync.schema";
-import { listMatchSnapshotsForOwner } from "../../../../server/features/matches/matches.repository";
+import { listMatchRecordingsForOwner } from "../../../../server/features/matches/matchEvents.service";
 import {
   authenticateSync,
   noStoreJson,
@@ -12,7 +12,7 @@ export async function GET(request: Request): Promise<Response> {
       matchesDownloadSchema.parse({
         version: 1,
         ownerUserId: owner,
-        matches: await listMatchSnapshotsForOwner(owner),
+        matches: await listMatchRecordingsForOwner(owner),
       }),
     );
   } catch {

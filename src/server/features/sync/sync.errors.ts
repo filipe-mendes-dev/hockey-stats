@@ -5,6 +5,7 @@ export class SyncConflictError extends Error {
       | "player_conflict"
       | "team_conflict"
       | "match_conflict"
+      | "event_conflict"
       | "membership_conflict"
       | "revision_conflict"
       | "reference_unavailable",

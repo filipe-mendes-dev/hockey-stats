@@ -15,8 +15,9 @@ import { teamPlayers } from "../../db/team_players_schema.ts";
 
 export async function listMatchSnapshotsForOwner(
   ownerUserId: string,
+  transaction: DatabaseTransaction | typeof db = db,
 ): Promise<MatchSnapshot[]> {
-  const rows = await db
+  const rows = await transaction
     .select({ match: matches, player: matchPlayers })
     .from(matches)
     .leftJoin(matchPlayers, eq(matchPlayers.matchId, matches.id))

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { matchEventSchema } from "../domain/matches/matchEvent.schema";
 import { matchSnapshotSchema } from "../domain/matches/match.schema";
 export const createMatchCommandSchema = matchSnapshotSchema
   .safeExtend({
@@ -16,11 +17,33 @@ export const matchAcknowledgementSchema = matchSnapshotSchema.safeExtend({
   operationId: z.uuidv4(),
   acceptedAt: z.int().positive(),
 });
+export const matchRecordingSchema = matchSnapshotSchema
+  .safeExtend({ events: z.array(matchEventSchema) })
+  .refine(
+    (snapshot) =>
+      (snapshot.match.status === "live" || snapshot.events.length === 0) &&
+      new Set(snapshot.events.map((event) => event.id)).size ===
+        snapshot.events.length &&
+      [...snapshot.events]
+        .sort((a, b) => a.order - b.order)
+        .every((event, index) => event.order === index + 1) &&
+      snapshot.events.every(
+        (event) =>
+          event.matchId === snapshot.match.id &&
+          snapshot.players.some(
+            (player) => player.id === event.matchPlayerId,
+          ) &&
+          snapshot.match.periods.some(
+            (period) => period.number === event.period,
+          ),
+      ),
+  );
+export type MatchRecording = z.infer<typeof matchRecordingSchema>;
 export const matchesDownloadSchema = z.object({
   version: z.literal(1),
   ownerUserId: z.string().min(1),
   matches: z
-    .array(matchSnapshotSchema)
+    .array(matchRecordingSchema)
     .refine(
       (snapshots) =>
         new Set(snapshots.map((snapshot) => snapshot.match.id)).size ===
