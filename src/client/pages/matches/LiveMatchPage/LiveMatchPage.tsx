@@ -18,7 +18,9 @@ export function LiveMatchPage() {
         snapshot ? `/app/matches/view?id=${snapshot.match.id}` : "/app/matches"
       }
       backLabel={t("backToDetails")}
-      title={t("liveTitle")}
+      title={t(
+        snapshot?.match.status === "completed" ? "summaryTitle" : "liveTitle",
+      )}
       storageNotice={t("storageNotice")}
     >
       {query.isPending || query.isError ? (

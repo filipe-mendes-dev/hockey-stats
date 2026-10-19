@@ -1,4 +1,5 @@
 "use client";
+import { EventRecorder } from "../../../features/matches/EventRecorder/EventRecorder";
 import { useState } from "react";
 import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
 import { MatchForm } from "../../../features/matches/MatchForm/MatchForm";
@@ -32,7 +33,11 @@ export function MatchDetailsPage() {
     <EntityPage
       backHref="/app/matches"
       backLabel={t("back")}
-      title={t("detailsTitle")}
+      title={t(
+        snapshot?.match.status === "completed"
+          ? "summaryTitle"
+          : "detailsTitle",
+      )}
       storageNotice={t("storageNotice")}
     >
       {query.isPending || query.isError ? (
@@ -159,6 +164,8 @@ export function MatchDetailsPage() {
                 </ButtonLink>
               </div>
             )
+          ) : snapshot.match.status === "completed" ? (
+            <EventRecorder key={snapshot.match.id} snapshot={snapshot} />
           ) : (
             <ButtonLink href={`/app/matches/live?id=${snapshot.match.id}`}>
               {t("resume")}

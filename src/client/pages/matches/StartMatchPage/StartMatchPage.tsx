@@ -37,7 +37,11 @@ export function StartMatchPage() {
           <h2>
             {snapshot.match.teamNameAtMatch} · {snapshot.match.opponentName}
           </h2>
-          {snapshot.match.status === "live" ? (
+          {snapshot.match.status === "completed" ? (
+            <ButtonLink href={`/app/matches/view?id=${snapshot.match.id}`}>
+              {t("summaryTitle")}
+            </ButtonLink>
+          ) : snapshot.match.status === "live" ? (
             <ButtonLink href={`/app/matches/live?id=${snapshot.match.id}`}>
               {t("resume")}
             </ButtonLink>
