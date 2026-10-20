@@ -6,6 +6,7 @@ import { AppShell } from "../client/components/AppShell/AppShell";
 import { ThemeProvider } from "../client/components/ThemeProvider/ThemeProvider";
 import { defaultLocale } from "../i18n/locales";
 import "@mantine/core/styles.layer.css";
+import "@mantine/dates/styles.layer.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

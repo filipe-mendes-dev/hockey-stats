@@ -2,6 +2,8 @@
 
 import {
   ActionIcon,
+  Autocomplete,
+  Popover,
   Button,
   createTheme,
   Input,
@@ -14,6 +16,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
+import { YearPickerInput } from "@mantine/dates";
 import type { CSSVariablesResolver } from "@mantine/core";
 import type { ThemeProviderProps } from "./ThemeProvider.interfaces";
 import st from "./ThemeProvider.module.css";
@@ -101,6 +104,12 @@ const theme = createTheme({
       },
       classNames: { visibilityToggle: st.visibilityToggle },
     }),
+    Autocomplete: Autocomplete.extend({
+      defaultProps: { size: "md" },
+      classNames: { dropdown: st.dropdown, option: st.option },
+    }),
+    YearPickerInput: YearPickerInput.extend({ defaultProps: { size: "md" } }),
+    Popover: Popover.extend({ classNames: { dropdown: st.dropdown } }),
     NativeSelect: NativeSelect.extend({ defaultProps: { size: "md" } }),
     SegmentedControl: SegmentedControl.extend({
       defaultProps: {

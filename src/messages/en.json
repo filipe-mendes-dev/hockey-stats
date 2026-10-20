@@ -206,8 +206,10 @@
     "namePlaceholder": "Team name",
     "nameRequired": "Enter a team name.",
     "category": "Category",
+    "categoryOptional": "Category (optional)",
     "categoryPlaceholder": "For example, U19",
     "season": "Season",
+    "seasonOptional": "Season (optional)",
     "seasonPlaceholder": "For example, 2026/27",
     "create": "Create team",
     "cancel": "Cancel",
@@ -224,7 +226,15 @@
     "saveFailed": "Could not save. Your entries are still here. Try again.",
     "edit": "Edit team",
     "save": "Save changes",
-    "changed": "This record changed. Cancel and reopen the form to load the latest version."
+    "changed": "This record changed. Cancel and reopen the form to load the latest version.",
+    "categoryChoicePlaceholder": "Choose or enter a category",
+    "clearCategory": "Clear category",
+    "chooseSeason": "Choose season",
+    "clearSeason": "Clear season",
+    "previousYears": "Previous years",
+    "nextYears": "Next years",
+    "selectSeason": "Choose season {season}",
+    "customSeasonHint": "Custom season. Clear it to use the year picker."
   },
   "teamPlayers": {
     "title": "Team players",

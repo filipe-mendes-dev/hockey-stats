@@ -206,8 +206,10 @@
     "namePlaceholder": "Nome da equipa",
     "nameRequired": "Introduza o nome da equipa.",
     "category": "Escalão",
+    "categoryOptional": "Escalão (opcional)",
     "categoryPlaceholder": "Por exemplo, Sub-19",
     "season": "Época",
+    "seasonOptional": "Época (opcional)",
     "seasonPlaceholder": "Por exemplo, 2026/27",
     "create": "Criar equipa",
     "cancel": "Cancelar",
@@ -224,7 +226,15 @@
     "saveFailed": "Não foi possível guardar. Os dados introduzidos foram mantidos. Tente novamente.",
     "edit": "Editar equipa",
     "save": "Guardar alterações",
-    "changed": "Este registo foi alterado. Cancele e reabra o formulário para carregar a versão mais recente."
+    "changed": "Este registo foi alterado. Cancele e reabra o formulário para carregar a versão mais recente.",
+    "categoryChoicePlaceholder": "Escolha ou introduza um escalão",
+    "clearCategory": "Limpar escalão",
+    "chooseSeason": "Escolher época",
+    "clearSeason": "Limpar época",
+    "previousYears": "Anos anteriores",
+    "nextYears": "Anos seguintes",
+    "selectSeason": "Escolher época {season}",
+    "customSeasonHint": "Época personalizada. Limpe-a para escolher um ano."
   },
   "teamPlayers": {
     "title": "Jogadores da equipa",

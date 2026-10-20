@@ -180,3 +180,15 @@
     --sc-transition-duration: 0ms;
   }
 }
+
+.option {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-control);
+}
+.option[data-combobox-selected],
+.option[data-combobox-active] {
+  color: var(--color-action);
+  background: var(--color-surface-action);
+}

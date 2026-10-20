@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Team } from "../../../../domain/teams/team.schema";
-import { TeamForm } from "../../../features/teams/TeamForm/TeamForm";
+import { EditTeamDialog } from "../../../features/teams/EditTeamDialog/EditTeamDialog";
 import { TeamPlayers } from "../../../features/teams/TeamPlayers/TeamPlayers";
-import { useUpdateTeam } from "../../../features/teams/mutations/teams.mutations";
-import { LocalRevisionConflictError } from "../../../features/teams/teams.errors";
 import {
   ActionIcon,
   Alert,
@@ -32,9 +30,16 @@ export function TeamDetailsPage() {
     searchParams.get("id") ??
     (typeof params.id === "string" ? params.id : undefined);
   const teamQuery = useTeam(teamId);
-  const update = useUpdateTeam();
   const [editing, setEditing] = useState<Team | null>(null);
+  const editButton = useRef<HTMLButtonElement>(null);
   const team = teamQuery.isError ? null : teamQuery.data;
+
+  function closeEditor(): void {
+    setEditing(null);
+    requestAnimationFrame(() =>
+      editButton.current?.focus({ preventScroll: true }),
+    );
+  }
 
   return (
     <section className={st.page}>
@@ -49,23 +54,24 @@ export function TeamDetailsPage() {
           team ? (
             <>
               <DeliveryStatus compact kind="team.create" entityId={team.id} />
-              {editing?.id !== team.id && (
-                <Tooltip label={t("edit")}>
-                  <ActionIcon
-                    aria-label={t("edit")}
-                    onClick={() => {
-                      setEditing(team);
-                      update.reset();
-                    }}
-                  >
-                    <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
-                  </ActionIcon>
-                </Tooltip>
-              )}
+              <Tooltip label={t("edit")}>
+                <ActionIcon
+                  ref={editButton}
+                  aria-label={t("edit")}
+                  aria-haspopup="dialog"
+                  aria-expanded={editing?.id === team.id}
+                  onClick={() => setEditing(team)}
+                >
+                  <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
+                </ActionIcon>
+              </Tooltip>
             </>
           ) : null
         }
       />
+      {editing && editing.id === team?.id && (
+        <EditTeamDialog team={editing} onClose={closeEditor} />
+      )}
       {teamQuery.isPending ? (
         <div className={st.loading} role="status">
           <Loader size="sm" />
@@ -85,31 +91,6 @@ export function TeamDetailsPage() {
         </Alert>
       ) : team ? (
         <div className={st.content}>
-          {editing && editing.id === team.id ? (
-            <TeamForm
-              initial={editing}
-              pending={update.isPending}
-              failed={update.isError}
-              failedLabel={
-                update.error instanceof LocalRevisionConflictError
-                  ? t("changed")
-                  : t("saveFailed")
-              }
-              submitLabel={t("save")}
-              onCancel={() => {
-                setEditing(null);
-                update.reset();
-              }}
-              onSave={async (fields) => {
-                await update.mutateAsync({
-                  ...fields,
-                  id: editing.id,
-                  expectedRevision: editing.revision,
-                });
-                setEditing(null);
-              }}
-            />
-          ) : null}
           <TeamPlayers key={team.id} teamId={team.id} />
         </div>
       ) : (
