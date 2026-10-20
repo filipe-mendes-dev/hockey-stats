@@ -114,7 +114,14 @@
     "actionsFor": "Ações para {name}",
     "actionsUnavailable": "As ações ainda não estão disponíveis",
     "edit": "Editar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "membershipsTitle": "Equipas",
+    "membershipsLoading": "A carregar equipas…",
+    "membershipsFailed": "Não foi possível carregar as equipas do jogador.",
+    "membershipsEmpty": "Este jogador ainda não pertence a nenhuma equipa.",
+    "membershipTeamUnavailable": "Equipa indisponível",
+    "membershipTeamMissing": "Os dados da equipa não estão guardados neste dispositivo.",
+    "membershipNumber": "N.º {number}"
   },
   "appHome": {
     "title": "Início",

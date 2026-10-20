@@ -114,7 +114,14 @@
     "actionsFor": "Actions for {name}",
     "actionsUnavailable": "Actions are not available yet",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "membershipsTitle": "Teams",
+    "membershipsLoading": "Loading teams…",
+    "membershipsFailed": "Could not load team memberships.",
+    "membershipsEmpty": "This player does not belong to any teams yet.",
+    "membershipTeamUnavailable": "Team unavailable",
+    "membershipTeamMissing": "Team details are not stored on this device.",
+    "membershipNumber": "No. {number}"
   },
   "appHome": {
     "title": "Home",

@@ -4,7 +4,7 @@
   border: 1px solid var(--color-border-action);
   font-size: 0.8125rem;
 }
-.avatarPlaceholder {
+.placeholder {
   background: transparent;
   color: inherit;
 }

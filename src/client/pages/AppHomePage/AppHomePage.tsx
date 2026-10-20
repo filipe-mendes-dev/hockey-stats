@@ -1,48 +1,39 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Text, Title } from "@mantine/core";
-import { Play, Shield, Trophy, UsersRound } from "lucide-react";
+import { Title } from "@mantine/core";
+import { Play } from "lucide-react";
 import { AppMenu } from "../../components/AppMenu/AppMenu";
 import { NavigationCard } from "../../components/NavigationCard/NavigationCard";
 import type { AppMenuItem } from "../../components/AppMenu/AppMenu.interfaces";
+import { PageHeader } from "../../components/PageHeader/PageHeader";
+import { navigationDestinations } from "../../components/AppNavigation/navigation";
 import st from "./AppHomePage.module.css";
 
 export function AppHomePage() {
   const t = useTranslations("appHome");
-  const items: AppMenuItem[] = [
-    {
-      id: "matches",
-      title: t("matches"),
-      description: t("matchesDescription"),
-      href: "/app/matches",
-      icon: <Trophy size={24} strokeWidth={1.6} />,
+  const items: AppMenuItem[] = navigationDestinations.flatMap(
+    ({ id, href, icon: Icon }) => {
+      if (id === "home") return [];
+      return [
+        {
+          id,
+          href,
+          title: t(id),
+          description: t(`${id}Description`),
+          icon: <Icon size={24} strokeWidth={1.6} />,
+        },
+      ];
     },
-    {
-      id: "teams",
-      title: t("teams"),
-      description: t("teamsDescription"),
-      href: "/app/teams",
-      icon: <Shield size={24} strokeWidth={1.6} />,
-    },
-    {
-      id: "players",
-      title: t("players"),
-      description: t("playersDescription"),
-      href: "/app/players",
-      icon: <UsersRound size={24} strokeWidth={1.6} />,
-    },
-  ];
+  );
 
   return (
     <section className={st.page}>
-      <header className={st.header}>
-        <Text className={st.eyebrow}>{t("title")}</Text>
-        <Title order={1} className={st.title}>
-          {t("welcome")}
-        </Title>
-        <Text className={st.description}>{t("description")}</Text>
-      </header>
+      <PageHeader
+        eyebrow={t("title")}
+        title={t("welcome")}
+        description={t("description")}
+      />
       <NavigationCard
         featured
         title={t("recordMatch")}

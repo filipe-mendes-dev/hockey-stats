@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { listTeamPlayersByPlayer } from "../../teams/teamPlayers.repository";
 import { listPlayers, getPlayerById } from "../players.repository";
 
 export function playerDetailsKey(id: string | undefined) {
@@ -22,6 +23,15 @@ export function usePlayer(id: string | undefined) {
   return useQuery({
     queryKey: playerDetailsKey(id),
     queryFn: () => (id ? getPlayerById(id) : Promise.resolve(null)),
+    networkMode: "always",
+    retry: false,
+  });
+}
+
+export function usePlayerMemberships(playerId: string) {
+  return useQuery({
+    queryKey: ["teamPlayers", "player", playerId],
+    queryFn: () => listTeamPlayersByPlayer(playerId),
     networkMode: "always",
     retry: false,
   });
