@@ -1,109 +1,68 @@
 # Recorder UX
 
-## Creation draft lifetime
+The current layout is a working prototype. A larger visual/interaction redesign is deferred. Keep existing reusable controls, long-text wrapping, keyboard access and touch targets while preserving these data rules.
 
-A creation draft exists only while the add-event UI is visible. Starting any entry path opens that UI, including a compact contextual panel. No draft lives behind a closed panel or survives reload.
+## Setup and navigation
 
-Zustand stores the selected player, action, optional position and chosen details within the mounted recorder provider. Closing/cancelling, switching game/account or completing local save clears the draft. Edit-form state likewise exists only while its edit UI is open.
+The `/app` menu links Players, Teams and Matches. Lists provide search, a New action and reusable list items. Creation uses separate pages with labeled inputs, validation and retained input on failure.
 
-Completed events waiting for API acknowledgement are durable local operations, not drafts. Closing the add-event UI after a local commit must not discard those operations.
+Team details support multi-selection of existing Players, optional jersey numbers and roles. Existing membership fields are editable. Match creation chooses a Team and called-up Players, with optional date/venue. Pre-start editing preserves existing snapshot identities. Start selects four field starters and one goalkeeper, periods/durations and optional initial attack direction.
 
-## State transitions
+Fixed query-based details/Start/live pages work offline for available records. Setup Matches offer editing and Start; live Matches offer Resume; completed Matches show a read-only summary with score and timeline.
 
-| State | Input | Result |
-| --- | --- | --- |
-| Idle | Select player, action or rink position. | Open add-event UI with that context. |
-| Collecting | Select a compatible missing value. | Retain compatible choices and evaluate requirements. |
-| Collecting | Select a different action. | Clear incompatible details and show its requirements. |
-| Collecting | All required values supplied. | Freeze one command ID and enter local saving. |
-| Collecting | Back. | Return to the previous step without a write. |
-| Collecting | Cancel/close. | Clear creation state and close. |
-| Saving locally | Repeated submission gesture. | Ignore it for that command. |
-| Saving locally | Transaction commits. | Clear creation state, close UI, display event as saved locally. |
-| Saving locally | Transaction fails. | Keep the UI open with the same selections and retry ID. |
-| Saved locally | Server acknowledgement persists. | Display synced status. |
-| Saved locally | Network/auth/conflict failure. | Keep the event and show pending/action-required status. |
+## Draft lifetime and state
 
-Do not offer cancellation as if it can reverse an in-flight local commit. Finish or abort the transaction before dismissing; after success use undo. Every transition that closes the UI also clears its memory draft.
+Player-first and action-first entry open the same native modal and use one scoped Zustand store. The first tap captures event/operation IDs, wall-clock time, current period and any known match time. End-powerplay entry also freezes the targeted card ID. Later choices, language changes and failed-save retries retain that snapshot.
 
-Do not carry a previous event's player, action, coordinates or timestamp into a new event automatically.
+| State      | Behavior                                                                              |
+| ---------- | ------------------------------------------------------------------------------------- |
+| Idle       | Selecting a Player or action opens a fresh draft.                                     |
+| Collecting | Each compatible choice fills missing details; completing the input starts local save. |
+| Saving     | Ignore duplicate submission; prevent dismissal until the local transaction completes. |
+| Failed     | Retain the exact input/IDs/time. Offer Retry or Cancel.                               |
+| Saved      | Close and clear the draft after local commit; upload remains durable in the outbox.   |
 
-## Required details
+Cancel, Escape and an outside-modal pointer gesture discard unfinished selection. Inside clicks do not dismiss. Close restores trigger focus. Navigation/reload drops unfinished drafts; committed events survive. No hidden draft persists behind a closed modal.
 
-| Event | Required values beyond game/period | Optional context |
-| --- | --- | --- |
-| Shot | Player and outcome. | Position and game time. |
-| Ball loss | Player and reason. | Position and game time. |
-| Ball recovery | Player and subtype. | Position and game time. |
-| Team foul | Player. | Position and game time. |
-| Card | Player and colour. | Position and game time. |
-| Player in/out | Player, period, game time and valid live transition. | None. |
+## Selection and required details
 
-No team-only foul path exists in V1. Recovery subtype cannot be skipped. `other` is an explicit valid reason/subtype, not an automatic fallback.
+Both entry orders use the same [eligibility matrix](domain-model.md#eligibility-and-lineup). Hide incompatible actions and players. Recovery/loss/shot exclude bench players and goalkeepers; foul requires an active player; cards include eligible bench players. Card colour, recovery subtype, loss reason and shot outcome are explicit choices.
 
-Player-in/out capture established clock time automatically. If unavailable, keep add-event UI open and require manual period/time before saving. A running clock is unnecessary, but a known time is mandatory. Historical edits cannot clear movement time.
+Ordinary substitution selects outgoing and incoming Players, from either participant-first direction or action-first. Save the pair as one event. Do not expose standalone player-out entry.
 
-## Entry paths and tap counts
+Known game time is captured automatically, including while paused. Substitution, Player in, blue/red card and powerplay completion require elapsed period time. When unknown, keep the modal open with manual minutes/seconds inputs. Optional position creates no extra mandatory step. No rink click means position stays absent; rink interaction is not yet implemented.
 
-All paths use the same canonical domain command. Only context supplied by the observer differs.
+## Card and powerplay flow
 
-| Event | Player-first | Action-first | Field-first |
-| --- | --- | --- | --- |
-| Shot | Player, shot, outcome: 3. | Shot, player, outcome: 3. | Position, shot, player, outcome: 4. |
-| Loss | Player, loss, reason: 3. | Loss, player, reason: 3. | Position, loss, player, reason: 4. |
-| Recovery | Player, recovery, subtype: 3. | Recovery, player, subtype: 3. | Position, recovery, player, subtype: 4. |
-| Foul | Player, foul: 2. | Foul, player: 2. | Position, foul, player: 3. |
-| Card | Player, card, colour: 3. | Card, player, colour: 3. | Position, card, player, colour: 4. |
-| Player in/out | Player, movement: 2. | Movement, player: 2 if exposed. | Not applicable. |
+- Yellow confirmation records the card and leaves lineup/powerplay unchanged.
+- Blue/red at five removes an active recipient or asks which active Player should leave for a bench recipient.
+- Blue/red at four requires a replacement for an active recipient, or queues the penalty without lineup changes for a bench recipient.
+- The third blue warns of red exclusion before confirmation and shows that consequence in the timeline.
+- Display current powerplay capacity and the number of queued penalties.
+- End current penalty requires explicit confirmation. A stale target fails rather than ending a different penalty.
+- When the final penalty ends, show Player in while capacity is available. Select an eligible bench Player without an outgoing Player.
+- There is no temporary individual suspension control or automatic penalty timer.
 
-Counts assume visible controls. Opening a collapsed panel adds taps. Measure actual speed and error rate on target devices before adding shortcuts that omit required detail.
+Each card saves its required effects atomically. Undo reverses those effects together. See [Card rules](domain-model.md#cards-and-powerplay).
 
-Movement tap counts assume a known clock value. Entering missing period/time manually adds interactions; do not avoid those steps by recording an untimed movement.
+## Clock, score and lifecycle
 
-## Timeline and correction
+Display countdown when the period has a duration; otherwise show known elapsed time or Untimed. A positive duration is required to run the clock. Support Start/resume, Pause and manual adjustment. Render from the stored anchor rather than accumulating UI ticks. Pause at zero; do not advance periods automatically.
 
-- Show deterministic event order, player, kind, details and optional period/time.
-- Distinguish saving locally, saved locally/pending, synced and action-required states with text as well as visual indicators.
-- Open older events in an explicit edit UI with Save and Cancel.
-- Allow player/details/time/position correction and position removal.
-- Offer explicit historical placement when entering a missed event; changing time alone does not reorder it.
-- Confirm deletion clearly and retain durable undo.
-- Preview downstream lineup contradictions as described in `domain-model.md`.
-- Keep undo available after reload. Serialize its inverse through the same durable command path.
+Clock adjustment uses remaining time when duration exists, otherwise elapsed time. Existing event timestamps never change with the clock. End period advances explicitly; End match confirms completion in the final period. These controls persist through the shared queue rather than uploading every display tick.
 
-Score is omitted until opponent-score input is specified. Foul regulation thresholds and resets remain unimplemented; any simple live count must be labelled as recorded events rather than an official penalty count.
+Our goal shots and opponent-goal entry update the derived score. Score correction accepts signed changes and cannot produce a negative score. No regulation foul threshold, powerplay duration or goal-driven penalty expiry is automated.
 
-## Simple first clock
+## Timeline and feedback
 
-Default display: countdown. Require a positive configured period duration to run the clock. Other events may remain untimed; player-in/out require captured or manually entered time even if the clock is not running. Manual countdown entry uses a known period duration for conversion to elapsed time; otherwise ask explicitly for elapsed time.
+Show explicit event order, participant or substitution pair, details, period/time and delivery status. A card can additionally show the removed/replacement Player and third-blue red consequence.
 
-The first clock implementation needs only:
+Undo is available for the latest eligible local event, including after upload/reload. Downloading from another browser does not transfer that browser's local Undo journal. Errors retain data and describe retry or stale state. Distinguish saved locally from server acceptance, including pending event/Undo operations on Match list/details status.
 
-- Period selection, start, pause, resume and manual correction.
-- Persisted running/paused state, elapsed milliseconds at anchor and anchor wall-clock time.
-- Elapsed calculation from the anchor, not from how often the UI timer runs.
-- Future-only effect for current clock corrections.
-- Event capture at completed selection, before the local transaction.
-- Explicit pause at zero and an explicit next-period action.
+Completed summaries expose no recorder mutations. Historical edits/deletes, redo, period correction and reopening completed Matches remain deferred.
 
-Persist controls immediately. A running clock continues across backgrounding and reload using the saved anchor. Device wall-clock changes may affect it; manual correction handles this in the first version. Do not add a monotonic/wall-clock reconciliation engine, drift diagnostics or cross-device clock handoff now.
+## Responsive and language behavior
 
-Store event elapsed time without source provenance. The countdown UI converts it using the period duration. Never retroactively retime old events when correcting the current clock.
+Support narrow screens, long/unbroken names, enlarged text, visible keyboard focus and touch access. Use text in addition to colour for state. Both catalogs are bundled. Language selection updates the visible UI without navigation, server refresh or losing draft/clock/pending data.
 
-## Field and responsive layout
-
-- Use a stable labelled SVG rink frame, with `x = 0` at the left end and `y = 0` at the top.
-- Convert through the SVG transform; test scaling, rotation and letterboxing.
-- Ignore outside-rink taps. Position remains optional.
-- Shot position describes where the shot was taken.
-- Choose attack direction per period explicitly. Unknown direction still permits coordinates.
-- Tablet uses adjacent rink, lineup/action and timeline panels.
-- Phone prioritizes player/action controls and uses compact rink/timeline sheets.
-- Support long names, 360 CSS-pixel viewports, increased text size and touch targets of at least 44 CSS pixels.
-- Keep keyboard focus, full accessible names and non-colour feedback for selected/active/pending states.
-
-## Offline and language
-
-The normal application supports team/player management, new-game setup, roster selection, recording, timeline, corrections and locally retained game history without connectivity. No match must be prepared online in advance. Account management and server synchronization require connectivity. Selecting an existing game requires its saved data; an unknown ID does not create one implicitly.
-
-Use both message catalogs for controls, details, validation and accessibility labels. English/Portuguese switching in the local application must preserve the current draft and recording state. See [Localization](localization.md).
+Browser checks have covered 320px layouts with enlarged text. Physical-device ergonomics and a full browser-family pass are still outstanding; see [Development plan](development-plan.md).

@@ -1,124 +1,87 @@
 # Architecture
 
-Status: PostgreSQL, Better Auth username/password authentication, Drizzle migrations and the minimal protected shell are implemented. Phase 2 adds the manifest/icons, public `/app` shell, Serwist asset caching and Dexie/workspace initialization. Local placeholder navigation, product workflows and synchronization remain unimplemented.
+One strict-TypeScript Next.js App Router application contains the browser UI and authenticated sync API. Keep the current direct functions and feature folders. Repositories own database operations; services own business workflows and transaction boundaries.
 
-## Stack
+## Stack and responsibilities
 
-| Area | Decision | Reason |
-| --- | --- | --- |
-| Web framework | Next.js App Router with TypeScript and React. | Serve a generic client application for local workflows and retain Route Handlers for authenticated account/sync operations. |
-| API | Next.js Route Handlers with separate server services and repositories. | One application deployment with explicit HTTP, workflow and storage boundaries. |
-| Authentication | Better Auth with username/password, `username`/`admin` plugins and database-backed sessions. | Admin-created users, normal/admin permissions and cookie-based browser login without email infrastructure. |
-| SQL access and migrations | Drizzle ORM, `pg` and Drizzle Kit. | TypeScript schema, server connection pool and one versioned SQL migration history. |
-| Shared database | PostgreSQL 18; official `postgres:18-trixie` image for local development. | Five-year major support; named-volume persistence. Application access and account isolation follow in Phase 1. |
-| Local database | IndexedDB through Dexie 4.4.6. | Initialize local workspace metadata now; add teams, players, games, recording and retained history in their feature phases. |
-| Temporary UI state | Zustand. | Explicit recorder state shared across player, action, rink and detail controls. |
-| Translation | next-intl with English and European Portuguese (`pt-PT`). | App Router/server/client localization from Phase 0, including cached offline messages. |
-| Repository | One Next.js project at the repository root. | Keep setup focused on the translated shell; introduce feature folders only when needed. |
-| Styling | Adjacent CSS modules imported as `st`; Grid and Flexbox. | Responsive layouts without requiring a styling framework. |
-| Rink | SVG. | Simple geometry, scaling and pointer coordinate conversion. |
-| PWA | Serwist/Turbopack 9.5.13, native esbuild 0.28.2, explicit asset precaching and waiting updates. | Cache the public `/app` shell independently of account pages. Keep updates waiting until app tabs/windows close. |
-| Clock | Countdown display, configurable periods and persisted anchors. | Match time calculated independently of timer callbacks. |
+| Area                            | Implementation                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| Routing and server delivery     | Next.js App Router with thin route entries and Route Handlers.                  |
+| Browser views                   | React client components with adjacent CSS modules and interfaces.               |
+| Domain and transport validation | Shared Zod schemas and pure Match rules.                                        |
+| Local durability                | Dexie/IndexedDB with one dataset, metadata and one shared outbox.               |
+| UI query state                  | TanStack Query reading IndexedDB; no durable Query mutation queue.              |
+| Recorder selection              | One temporary Zustand draft store per mounted recorder.                         |
+| Shared persistence              | PostgreSQL through Drizzle ORM and `pg`.                                        |
+| Authentication                  | Better Auth username/password, database sessions and restricted admin creation. |
+| Offline delivery                | Serwist production worker with explicit generic HTML/RSC precaching.            |
+| Localization                    | next-intl with bundled English/pt-PT catalogs.                                  |
 
-Authentication and SQL libraries are implemented as described in [Account schema and flow](account-auth.md). Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1 are pinned. No email delivery, verification or email reset workflow is included. Serwist's Turbopack integration is verified against Next.js 16.4.0; see the [Phase 2 handoff](phase-2-handoff.md).
+Installed versions belong in `package.json` and the lockfile. Setup and commands are in the [README](../README.md).
 
-The root `compose.yaml` runs PostgreSQL only. It binds the configured host port to loopback and stores data in a named volume at `/var/lib/postgresql`. The root `.env` supplies server-only database and auth settings; `.env.example` documents local defaults. No database or auth secret uses a `NEXT_PUBLIC_` prefix. See [local setup](../README.md#local-postgresql).
-
-## Current structure
-
-Create folders only when the current phase uses them.
+## Source layout
 
 ```text
 src/
-  app/
+  app/                 Route entries, layouts, auth/sync handlers and manifest
   client/
-    auth/
-    shell/
-    i18n/
-    pwa/
-    storage/
-  i18n/
-  messages/
-    en.json
-    pt-PT.json
+    components/        Reusable controls and layouts
+    pages/             Complete named page views
+    features/          Account, Players, Teams, Matches and shared synchronization
+    storage/           Lazy Dexie connection, migrations, status and notifications
+    query/             TanStack Query provider
+    pwa/               Worker/cache readiness and update feedback
+    i18n/              Client locale provider
+  domain/              Entity schemas, form inputs and pure Match logic
+  contracts/           Shared versioned sync contracts
   server/
-    auth/
-    db/
-scripts/
-drizzle/
-docs/
+    auth/              Better Auth configuration and session checks
+    db/                SQL schema modules, pool and transaction type
+    features/          Account-scoped repositories and transactional workflows
+  worker/              Service worker and full offline route-payload handling
+  i18n/                Supported locales, catalogs and saved preference
+  messages/            English and Portuguese JSON catalogs
+  offline-pages.ts     Explicit generic offline route allowlist
+scripts/               Interactive account creation helpers
+drizzle/               SQL migrations and generated metadata
 ```
 
-Route groups organize layouts without becoming URL segments. Keep a single root layout so moving between account and recorder groups does not introduce avoidable full reloads. API handlers live outside UI route groups.
+App Router entries compose named pages directly. Do not re-export other route entries or select views through a central pathname switch. Reusable controls belong in `client/components`; feature-specific forms/state stay in their feature. Queries and mutations retain separate folders.
 
-React Client Components live under `src/client`; route files in `src/app` compose them. Keep each component's CSS module beside it. Translation catalogs live in `src/messages`, and shared localization configuration lives in `src/i18n`.
+## Workflow boundaries
 
-No test suite or runner is included in the setup. Add tests only on explicit user request after a functioning version exists, targeting specific important behavior. Any authorized future tests belong in a root `tests` directory that mirrors `src`.
+1. A page/form collects input and uses shared validation for feedback.
+2. A query reads the local repository. A mutation calls the local service with `networkMode: always`.
+3. The service validates current account/domain state and commits records, history if needed, and outbox commands in one IndexedDB transaction.
+4. `localDataEvents` notifies this tab and other tabs to invalidate appropriate queries.
+5. One foreground coordinator pushes the shared queue, applies durable acknowledgements, then downloads accepted collections.
+6. A Route Handler authenticates the request and validates its expected owner and transport payload.
+7. The server command service reserves a receipt and calls the feature workflow within one PostgreSQL transaction.
 
-Use npm, one package manifest, one lockfile and one TypeScript configuration. Domain implementation, transport contracts, server folders and feature routes are deferred until an authorized feature needs them. The responsibilities below describe planned boundaries, not existing implementation. Separate packages require a concrete need and discussion with the user.
+There is no transaction spanning IndexedDB and PostgreSQL. Retry-safe receipts bridge delivery failures. [Offline and sync](offline-sync.md) describes the concrete protocol.
 
-## Layer responsibilities
+## Shared and feature-owned logic
 
-| Layer | Owns | Does not own |
-| --- | --- | --- |
-| App Router | Pages, layouts, route params and composition. | Domain rules or raw database access. |
-| Route Handlers | HTTP parsing, session/account context and result mapping. | Business transactions and recorder state. |
-| Client UI/Zustand | Visible creation/edit state, selection and display preferences. | Durable event records, credentials or pending-write persistence. |
-| Client application | Local commands, replay validation and IndexedDB transaction boundaries. | HTTP retry implementation or PostgreSQL writes. |
-| Local repositories | IndexedDB reads/writes and schema details. | User-facing workflows. |
-| Sync coordinator | Ordered delivery, acknowledgement, reconciliation and errors. | Inventing domain corrections. |
-| Server services | Authorization, business rules and PostgreSQL transactions. | React state or IndexedDB transactions. |
-| Server repositories | Explicit account-scoped database queries and mutations. | Session discovery or workflow decisions. |
-| Shared domain | Entity contracts, validation and deterministic derivation. | Frameworks, database clients or transport. |
-| Shared contracts | Versioned commands, responses and transport validation. | SQL rows, browser state or credentials. |
+`domain/matches/matchRules.ts` owns eligibility, lineup and powerplay guards. `derivedMatchState.ts` derives score, availability and penalties. `matchControl.ts` calculates clock/lifecycle transitions. These functions have no React/database dependencies and are shared by UI selectors and transactional services.
 
-Use focused repository interfaces where they enable workflow testing or composition. Do not force HTTP and database repositories into an identical interface or hide the distinction between local commit and remote acknowledgement.
+Repositories query and map stored rows. Services coordinate meaningful actions such as starting a Match, adding an event or undoing it. Keep explicit insert/update methods. Do not introduce repository factories, database providers, per-table queues, generic CRUD registries or a general sports engine without a concrete requirement.
 
-## Account routing and ownership
+Zod validates form inputs, unknown stored data and transport boundaries. TypeScript contracts, runtime validation and Dexie keys/indexes serve different purposes; `stores()` does not validate every property.
 
-Local hockey data belongs to a device-local workspace with a client-generated identity. It exists before sign-in. Server synchronization explicitly binds it to an authorized personal account; do not infer ownership from whichever user happens to sign in. Working server default is one personal account per user. Authentication `user` and `admin` roles do not bypass product-data ownership. Multiple members, invitations, organizations, billing and additional roles remain deferred.
+## Runtime state
 
-The current authentication increment uses only Better Auth's generated schema and a minimal login/protected shell. Defer `app_account`, its provisioning flow and account-specific UI until product data needs ownership. See [account schema and flow](account-auth.md). The workspace model remains separate from Better Auth's credential `auth_account`.
+- IndexedDB owns working entities, local undo history and durable operations.
+- TanStack Query owns temporary read/mutation UI state and is invalidated after writes and synchronization.
+- Zustand owns only the open recorder draft. It never holds the only copy of a committed event.
+- `useSyncExternalStore` subscribes React to database, sync and locale modules whose state also changes outside React.
+- A DOM event refreshes this tab. BroadcastChannel notifies other tabs on the same origin. These notifications carry invalidation hints, not authoritative records or credentials.
 
-The implemented Phase 1 routes are public `/sign-in` and protected `/`, with a shared header/main shell and authenticated sign-out. Phase 2 adds public `/app`, which is also the PWA launch target and does not call the session API to boot. The shared layout registers the production worker on all pages so initial visits can download the public app files. Existing login, protected-home and sign-out logic remains unchanged. Account settings and admin UI remain backlog items.
+Web Locks serialize synchronization across tabs. IndexedDB transactions and server expected revisions enforce data consistency. Recorder-tab exclusivity and automatic multi-device conflict merging are not implemented.
 
-Scope local reads/writes to the local workspace. Scope server operations, receipts and queues to an explicitly bound authorized account. Online account pages and synchronization require a valid server session. Team/player management, game creation, roster selection and recording use IndexedDB without a server request. Local IDs do not wait for server provisioning.
+## Account and offline boundaries
 
-Server session expiry or revocation pauses uploads without preventing local use. All later uploads recheck authorization. A game can exist locally before any server record or confirmed server revision exists; synchronization must support creating its prerequisites before accepting recording commands.
+One metadata record binds the local dataset to its authenticated owner. There are no workspaces or per-player local owner fields. PostgreSQL entities and receipts are scoped to the authenticated user; metadata never authorizes an API request.
 
-Explicit sign-out removes the associated private local dataset, with unsynced-work handling resolved before implementing cleanup. Retain the generic cached app so signed-out local use can start again. Connecting a different account must never automatically reassign or upload another account's records. See [offline access and sign-out](offline-sync.md#authentication-and-account-isolation).
+The public static `/app` pages contain generic UI only. Local account setup gates hockey features after initial online sign-in. Session expiry does not prevent local use. Server-dependent account pages and APIs are outside offline caching.
 
-## Offline application entry
-
-Do not assume that prefetching an App Router page makes it reloadable offline. Navigation can require server component responses, and a server-authenticated layout can block initial access.
-
-Provide one generic precached client application entry for all local hockey workflows. Online and offline operation use the same components and local save path. Team/player management and new-match setup belong here as later features, alongside recording and retained history. There is no prepared-games-only offline mode.
-
-Start with a single cached document and browser-side navigation within it; do not introduce a second router package or a deep-link fallback framework without a concrete feature need. Product view changes must not depend on React Server Component responses. If deep links are added later, validate selection and map only local application document routes to the generic shell. Never return HTML fallbacks for APIs or RSC requests.
-
-Precache the entry and the complete required feature asset graph, including lazy chunks for unvisited local views, CSS, fonts/icons and both catalogs. Do not cache account pages, personalized HTML, auth redirects or API responses. Keep boot independent of server authentication and locale reads. Defer updates during recording or saving. [Offline and sync](offline-sync.md) defines installation readiness, local persistence and failure handling.
-
-The first increment caches generated JavaScript/CSS/font assets, public install icons and only the explicit public documents `/app`, `/manifest.webmanifest`, `/icon.svg` and `/favicon.ico`. The worker bypasses RSC/prefetch requests and does not provide generic HTML fallbacks. Document revisions include asset fingerprints and the entry/metadata source so uncommitted builds also invalidate changed documents. The client verifies the active worker's actual precache before reporting that application files are available offline. Registration is disabled during development. New workers wait for all controlled windows/tabs to close; the UI never forces activation or reload.
-
-The storage increment initializes Dexie only while `/app` is mounted. `src/client/storage/database.ts` defines version 1 of `benchline-stats`, with a `metadata` store keyed by `key`. One `workspace` row contains a non-secret client-generated UUID and creation time, separate from server accounts. A read/write transaction creates it once or validates and rewrites the existing identity to verify write access. Concurrent tabs serialize initialization through that transaction. Runtime validation rejects malformed stored metadata without replacing it.
-
-`use-local-storage.ts` owns the mounted connection and exposes initialization, blocked, failed, unsupported and closed states. It closes on unmount or an external version change, with no automatic reload or database reset. `/app` reports offline-ready only after both cached-file verification and the workspace transaction succeed. The persistent-storage request runs outside the transaction; denial or unavailable APIs produce a retention notice rather than disabling working IndexedDB. No domain repositories, generic storage framework, account binding or hockey tables are introduced. See [storage verification](phase-2-storage-handoff.md).
-
-## Zustand rules
-
-Use a store factory and provider scoped to the recorder/account lifecycle. Subscribe to focused selectors. Keep explicit draft transitions testable, whether expressed as a pure transition function or store actions.
-
-No process-global mutable store shared across server requests. Server Components do not read or mutate Zustand. Initial server and browser rendering must agree; load IndexedDB-dependent state after the browser initializes.
-
-The add-event draft is memory-only and exists only while its UI is open. Preferences may be persisted separately if required. Events, undo history and the outbox remain in IndexedDB.
-
-## Localization
-
-Use next-intl from Phase 0 with English and `pt-PT` catalogs. Keep the local application URL independent of locale. Store canonical domain values and API error codes; translate their presentation in the UI. Offline language switching uses local messages without a server refresh. See [Localization](localization.md).
-
-## Sources
-
-- [Next.js backend-for-frontend guidance](https://nextjs.org/docs/app/guides/backend-for-frontend).
-- [Next.js PWA guide](https://nextjs.org/docs/app/guides/progressive-web-apps).
-- [Zustand Next.js guidance](https://github.com/pmndrs/zustand/blob/main/docs/learn/guides/nextjs.md).
-- [next-intl App Router setup](https://next-intl.dev/docs/getting-started/app-router).
+See [Account authentication](account-auth.md), [Domain model](domain-model.md), [Recorder UX](recorder-ux.md) and [Localization](localization.md) for their respective decisions.

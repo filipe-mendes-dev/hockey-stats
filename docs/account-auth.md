@@ -1,63 +1,40 @@
-# Account schema and authentication flow
+# Account authentication
 
-Status: implemented on 2026-10-14. This increment provides username/password authentication, admin-created users and a minimal protected shell. Workspace provisioning and account settings remain deferred. See the [implementation handoff](phase-1-handoff.md#authentication-increment) for verification.
+Better Auth handles username/password login, PostgreSQL sessions and admin-created users. There is no separate product account/workspace provisioning flow. Initial online sign-in establishes the local dataset owner; later session expiry affects synchronization rather than offline hockey workflows.
 
-## Sessions and identities
+## Identity and authorization
 
-A session records a login on the server. The browser sends an opaque session identifier in an HttpOnly cookie; Better Auth validates the corresponding PostgreSQL session and its expiry. Use database-backed sessions without cookie caching for this increment. JWT is a token format, not a synonym for authentication. No JWT plugin or separate bearer-token flow is needed for this browser application. [Better Auth sessions](https://better-auth.com/docs/concepts/session-management).
+| SQL table           | Purpose                                                      |
+| ------------------- | ------------------------------------------------------------ |
+| `auth_user`         | Login identity, normalized unique username and role.         |
+| `auth_account`      | Better Auth-managed credential/provider record.              |
+| `auth_session`      | Database session and expiry.                                 |
+| `auth_verification` | Generated core auth structure; no email workflow is enabled. |
 
-`auth_user` identifies the person who logs in. `auth_account` holds that person's password credential or provider identity. The proposed `app_account` is a future workspace owning teams, players and games. Defer its table, provisioning requests and `/accounts/[accountId]` UI until product data needs ownership. Keep that future domain model separate from authentication roles.
+The browser uses an HttpOnly session cookie. Cookie session caching is disabled. Do not put passwords or session tokens in IndexedDB, localStorage, Zustand or domain records. Metadata ownerUserId only prevents local account mixing; every API request independently authenticates and checks ownership.
 
-## Better Auth and database schema
+Roles are user and admin. An admin can create normal users, with no role-assignment or other management permission. Admin status does not grant access to another user's hockey records.
 
-Use Better Auth with the `username` and `admin` plugins and its PostgreSQL Drizzle adapter. Generate the complete auth schema from the actual configuration, including required plugin fields. Preserve its foreign keys and indexes; do not build separate password, session, role or permission tables.
+The username plugin requires Better Auth's core email field internally. Creation generates an immutable random address at users.benchline.invalid. Users do not provide email and no messages are sent. Public signup, email login/reset/verification and unused profile routes are disabled.
 
-| SQL table           | Purpose                                                                            |
-| ------------------- | ---------------------------------------------------------------------------------- |
-| `auth_user`         | Identity, unique normalized username, generated core fields and admin role fields. |
-| `auth_account`      | Better Auth-managed password credential.                                           |
-| `auth_session`      | Database-backed login session, expiry and generated plugin fields.                 |
-| `auth_verification` | Required core verification structure; no email flow is enabled.                    |
+## Routes and local ownership
 
-Use only `user` and `admin`. Default new users to `user`. An admin can create users through Better Auth's permission checks; a normal user cannot manage other users or assign their own role. Use the plugin's access-control configuration for the required creation permission. Add management permissions when their workflows are introduced. Being an authentication admin does not automatically grant access to another user's future hockey data. [Better Auth admin plugin](https://better-auth.com/docs/plugins/admin).
+- `/sign-in` renders the login form; an existing authenticated session redirects to `/app`.
+- `/` is the server-protected home and redirects unauthenticated visitors to sign-in.
+- `/app` pages are generic static shells. LocalAccountSetup gates access using established local ownership and initial online sign-in.
+- `/api/auth/[...all]` delegates to Better Auth. Sync handlers authorize the current user and expected local owner.
 
-Better Auth's username plugin still requires the core email field for user creation. Generate a unique internal value such as a random UUID at `users.benchline.invalid`. Treat it as an immutable compatibility field, never a contact address. Do not derive it from a mutable username. No user enters an email, and no mail service, verification callback or email reset flow is configured. Keep the library's password authenticator enabled internally; expose username/password login. Disable public signup and unused email flows. [Username plugin](https://better-auth.com/docs/plugins/username).
+A different authenticated account cannot adopt or synchronize an existing owner's local data. The application reports mismatch and retains that dataset. Offline use trusts the unlocked personal device and cannot check fresh revocation.
 
-Drizzle ORM with a server-only `pg` pool handles database access. Drizzle Kit generates and applies checked-in SQL migrations for all auth tables. Use one migration history and explicit migration commands before serving dependent code, not migrations during requests or `drizzle-kit push`. Select compatible stable package versions during implementation. [Drizzle migrations](https://orm.drizzle.team/docs/migrations), [Better Auth Drizzle adapter](https://better-auth.com/docs/adapters/drizzle).
+Explicit sign-out requires a successful server request, then deletes the complete application IndexedDB, including unsynced work. Cleanup failures offer retry and late sync responses cannot recreate deleted data. Failed network sign-out retains data and reports failure. See [Offline cleanup policy](offline-sync.md#failure-and-cleanup-policy).
 
-## User creation
+## Account creation and setup
 
-Create the first admin through a trusted terminal bootstrap using Better Auth's user-creation API. Prompt for credentials rather than putting passwords in command arguments or committed files. Do not expose an unauthenticated admin-creation endpoint or silently promote an existing user.
+The [README](../README.md#authentication-and-migrations) documents environment, migrations and the interactive terminal commands:
 
-Until the admin screen exists, provide a small terminal helper for creating normal users. It authenticates with the administrator's username/password and calls Better Auth's admin creation API with the session, the new username/password and the internal email value. Validate and normalize usernames consistently, reject duplicates and let Better Auth hash passwords. The supplied initial password is communicated outside the application. The helper does not sign the browser in as the newly created user.
+- `auth:bootstrap-admin` creates the first admin and refuses to promote/replace an existing user or create another admin.
+- `auth:create-user` prompts for admin credentials and the new user's details, delegates to Better Auth and revokes its temporary helper session.
 
-## Login and layout
+Usernames are 3–30 letters, numbers, underscores or dots and normalized to lowercase. Passwords are 8–128 characters. Prompts mask passwords; never put them in command arguments or committed files. The initial password is communicated outside the application. Password changes/recovery and admin UI remain deferred.
 
-| Route                | Behavior                                                                           |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `/sign-in`           | Public username/password form. An already authenticated user redirects to `/`.     |
-| `/`                  | Protected home. A visitor without a valid server session redirects to `/sign-in`.  |
-| `/api/auth/[...all]` | Better Auth Route Handler; protected operations enforce session/permission checks. |
-
-Login validates credentials through Better Auth, establishes the session cookie and navigates to `/`. Refreshing the protected page checks the session again. Sign-out invalidates the session and returns to `/sign-in`; report a failed request instead of claiming success. Public registration and forgot-password links are absent.
-
-Use one shared shell with a small header and a `main` region. Put the product name on the left and sign-out on the right for authenticated users. Retain the existing language choice. The login content is one narrow form with username, password, submit, pending state and an inline error. Authenticated content is a simple placeholder. No sidebar, tabs, dashboard cards or account selector are needed.
-
-Keep one root App Router layout. Route files compose client components under `src/client`; each component uses adjacent `styles.module.css` imported as `st`. Keep Better Auth configuration, the session helper and Drizzle code under `src/server`. Use labeled inputs, password-manager autocomplete, visible keyboard focus and flexible layouts for narrow screens and long Portuguese labels. Add all UI messages to both catalogs.
-
-Validate sessions in protected server pages and independently in protected handlers. Role visibility in the browser does not authorize an operation. Do not store credentials or session tokens in localStorage, Zustand or IndexedDB. [Next.js integration](https://better-auth.com/docs/integrations/next).
-
-## Backlog and limits
-
-- Account settings, including changing password while signed in with the current password and revoking other sessions through Better Auth. No email is needed for this operation. [Password change](https://better-auth.com/docs/authentication/email-password#update-password).
-- Admin navigation button and user-management screen, visible only to users with the relevant admin permission. Keep server permission enforcement even when the button is hidden.
-- Administrator-assisted password recovery and any initial-password-change requirement. Do not claim forced rotation or password recovery in this increment.
-- Personal workspace provisioning, account-scoped product persistence and command receipts belong to Phase 3's first synchronized recording slice.
-
-Phase 1 is complete for its implemented authentication/database scope. The later offline-first requirements supersede its protected-home pattern for the local product entry: local hockey workflows require no login, and accounts provide synchronization and account management. The existing auth routes are not changed by this planning update. Explicit sign-out is planned to remove private local data with unsynced-work safeguards, while retaining generic installed app files. See [offline policy](offline-sync.md#authentication-and-account-isolation). Workspace binding and receipt acceptance belong to Phase 3.
-
-## Implementation order and checks
-
-Implement in small increments: Drizzle connection/schema/migrations; Better Auth plugins and user-creation helpers; login/protected shell and sign-out. Check migrations against the running PostgreSQL database, manually verify login/redirect/reload/sign-out and admin-versus-user creation permissions, then run formatting, lint, typecheck and a production build. Test files or test runs require explicit user instruction.
-
-Implementation uses Better Auth/adapter/CLI 1.7.8, Drizzle ORM 0.45.4, Drizzle Kit 0.31.11 and `pg` 8.23.1. The generated schema and initial migration are checked in. Bootstrap and user creation use the commands documented in the [README](../README.md#authentication-and-migrations). Admin permission is limited to creating normal users; assigning roles and other management actions remain disabled by the access-control policy. Credentials and profile validation run before auth user creation.
+Generate auth schema only when configuration/plugins change. Drizzle uses one checked-in SQL migration history; apply migrations explicitly before serving dependent code. Never migrate during a request or rewrite applied migration files.
