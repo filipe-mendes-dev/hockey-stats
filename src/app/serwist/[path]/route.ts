@@ -14,6 +14,7 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     globPatterns: [
       ".next/static/**/*.{js,css,woff,woff2}",
       "public/icons/*.png",
+      "public/flags/*.svg",
     ],
     manifestTransforms: [
       async (entries) => {
