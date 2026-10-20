@@ -8,6 +8,83 @@
       "when": 1792004270132,
       "tag": "0000_auth_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792241545192,
+      "tag": "0001_players_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792294925679,
+      "tag": "0002_teams",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792348882375,
+      "tag": "0003_team_players",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792352086268,
+      "tag": "0004_remove_team_player_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792359040333,
+      "tag": "0005_matches",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792360177682,
+      "tag": "0006_match_start",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792371821758,
+      "tag": "0007_match_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792414594866,
+      "tag": "0008_match_clock_and_completion",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792414672905,
+      "tag": "0009_match_event_variants",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792427244176,
+      "tag": "0010_paired_substitutions",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792430507036,
+      "tag": "0011_powerplay_events",
+      "breakpoints": true
     }
   ]
 }

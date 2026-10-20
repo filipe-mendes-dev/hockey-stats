@@ -1,24 +1,27 @@
 # Benchline Stats
 
-Offline-first roller-hockey application. Local team/player management, new-match setup, recording and retained match history are planned. Accounts and a PostgreSQL-backed API provide optional synchronization.
+An offline-capable rink-hockey prototype for Players, Teams and live Matches. Require one successful online sign-in, then use the same IndexedDB write path online and offline. One durable outbox synchronizes accepted data with user-scoped PostgreSQL records.
 
 ## Current state
 
-The application provides Better Auth username/password login, PostgreSQL-backed sessions, admin-created users, Drizzle migrations and a minimal authenticated shell. Phase 2 adds a public `/app` placeholder, installation metadata/icons, Serwist asset caching and Dexie local-storage initialization. English and European Portuguese work offline. There is no public registration or email service. Local placeholder navigation, hockey features, synchronization, account settings and admin UI remain unimplemented.
+Players support create/search/list/details. Teams add editing and multi-select Player assignments with optional jersey numbers and roles. Matches support incomplete setup, pre-start editing, starter/period configuration, clock controls, recovery/loss/shot/foul/cards, paired substitutions, manual powerplay completion and fifth-player entry, score, timeline, latest-event Undo and completed read-only summaries.
 
-## PWA increment
+English and European Portuguese are bundled. Fixed query-based detail/Start/live routes work offline for locally available data. The dark layout is a prototype. Rink interaction, historical edits/deletes, automatic penalty timing, conflict-resolution UI, analytics and account-management UI are deferred. See [Product requirements](docs/product-requirements.md) and [Backlog](docs/backlog.md).
 
-Build with `npm run build`, then run `BETTER_AUTH_URL=http://localhost:3001 npm run start -- --port 3001` and open [the local app](http://localhost:3001/app). The command overrides the default auth origin for this preview process. `/` retains the authenticated Phase 1 shell. The worker registers only in production mode; `npm run dev` displays that offline installation is disabled. Use a separate production-check port so a previously installed worker does not interfere with your development origin.
+## Production offline preview
 
-The browser URL and `BETTER_AUTH_URL` must match, including hostname and port. Running on port 3001 with the default `http://localhost:3000` auth origin causes authenticated mutations such as sign-out to fail with `403 INVALID_ORIGIN`. When changing preview ports or using `127.0.0.1`, set the matching origin and restart the server.
+```sh
+npm run build
+BETTER_AUTH_URL=http://127.0.0.1:3001 npm run start -- --hostname 127.0.0.1 --port 3001
+```
 
-Wait for the offline-ready status on `/app` before disconnecting. It requires verified cached files and a committed local-storage initialization transaction. Installation itself does not create teams or games. Chromium installation and Safari's Add to Home Screen depend on the device/browser; native installation has not yet been verified on physical devices.
+Open `http://127.0.0.1:3001/app`. The browser URL and BETTER_AUTH_URL must match hostname and port. Use HTTPS outside loopback. Use a separate origin from development so an installed worker does not serve an older production document during `npm run dev`.
 
-Dexie 4.4.6 opens the `benchline-stats` IndexedDB database with schema version 1 and one `metadata` store. A non-secret workspace UUID and creation time survive ordinary reloads without login or an API call. Initialization validates the stored identity and verifies write access. Invalid data and failed transactions do not reset the database. Blocked upgrades explain which tabs to close; external upgrades close the old connection without forcing a reload.
+Wait for offline readiness before disconnecting. It requires verified generic app files and successful IndexedDB initialization. First-time ownership setup still requires online sign-in. Installation alone does not download Team/Player data or guarantee permanent storage.
 
-The storage status reports the browser's persistent-storage decision. Refusal or an unsupported API allows local use with a browser-managed retention notice. Even persistent storage can be lost through clearing site data or device loss. Account binding, private-data cleanup and hockey tables remain deferred. See [storage verification and limits](docs/phase-2-storage-handoff.md).
+Updates wait until all tabs/app windows for that origin close. Reopen to activate the new build; do not force reload during tracking. Worker registration is disabled in development. See [Offline and sync](docs/offline-sync.md).
 
-Serve deployed environments over HTTPS. Localhost/loopback works for local worker verification, but a plain HTTP LAN address is not an equivalent phone/tablet setup. An update stays waiting until all Benchline Stats tabs and app windows close. Reopening activates it without an unexpected reload during use. See [Phase 2 checks and limitations](docs/phase-2-handoff.md).
+Explicit sign-out removes the complete application IndexedDB, including unsynced records, after server sign-out succeeds. Generic cached files remain. Browser storage loss/device failure can also lose local work; export/backup is not implemented.
 
 ## Setup
 
@@ -90,7 +93,7 @@ npm run auth:create-user
 
 The command prompts for your admin credentials, then the new user's username, display name and initial password. It authenticates the administrator, delegates creation to Better Auth and revokes its temporary admin session afterward. A normal user cannot create users or assign roles. The admin currently has only the user-creation permission. Share the initial password outside the application; password-change UI and recovery remain backlog items.
 
-Usernames contain 3 to 30 letters, numbers, underscores or dots and are normalized to lowercase. Passwords contain 8 to 128 characters. Better Auth generates a hidden internal email value for compatibility; users never provide an email and no messages are sent. Authentication tables and password hashes remain server-only. Workspace ownership is not implemented yet.
+Usernames contain 3 to 30 letters, numbers, underscores or dots and are normalized to lowercase. Passwords contain 8 to 128 characters. Better Auth generates a hidden internal email value for compatibility; users never provide an email and no messages are sent. Authentication tables and password hashes remain server-only. All sync endpoints authorize every request against the session and expected local owner.
 
 For schema changes:
 
@@ -100,47 +103,28 @@ npm run db:generate -- --name describe_change
 npm run db:migrate
 ```
 
-Regenerate the auth schema only when its configuration/plugins change. The generator writes to `src/server/db/auth_schema.ts`; `src/server/db/schema.ts` re-exports schema modules for Drizzle and existing consumers. Add future schema modules to that central file. Review the generated schema, SQL and metadata and commit them together. Keep applied migrations intact. Run migrations explicitly before serving dependent code. The current migration is `drizzle/0000_auth_foundation.sql`.
+Regenerate the auth schema only when its configuration/plugins change. The generator writes to `src/server/db/auth_schema.ts`; `src/server/db/schema.ts` re-exports schema modules for Drizzle and existing consumers. Add future schema modules to that central file. Review the generated schema, SQL and metadata and commit them together. Keep applied migrations intact. Run migrations explicitly before serving dependent code. The migration journal currently runs through `0011_powerplay_events.sql`. Apply the complete checked-in history.
 
 ## Project structure
 
-The repository root is the application root. Run npm commands here. One `package.json`, lockfile and TypeScript configuration cover the application and terminal helpers.
+One package at the repository root contains the app and terminal helpers. Named client pages/components, feature-owned queries/mutations/services, shared domain/contracts and server repositories/services are described in [Architecture](docs/architecture.md).
 
-```text
-src/
-  app/                # Route pages and layouts
-  client/
-    auth/             # Login form and browser auth client
-    shell/            # Shared header, home content and adjacent CSS
-    i18n/             # Client language provider
-    pwa/              # Cached-file and local-storage readiness feedback
-    storage/          # Dexie initialization and local workspace identity
-  i18n/               # Locale configuration and preference logic
-  messages/           # English and pt-PT catalogs
-  server/             # Environment, Better Auth and PostgreSQL code
-scripts/              # Interactive admin bootstrap and user creation
-drizzle/              # Versioned SQL migrations and metadata
-```
+Client components use PascalCase files with adjacent ComponentName.module.css imported as st and interfaces where needed. Current local storage is Dexie schema version 9. SQL migrations, wire versions and worker caches are versioned separately.
 
-Add domain and transport code only when an authorized feature needs it. Tests require explicit user instruction after a functioning version exists and should target specific important behavior. Separate packages and workspace scripts are unnecessary for the current prototype; discuss additional structure only when a concrete requirement needs it.
+## Documentation
 
-`next typegen` runs before typecheck and generates route and exact translation declarations. These generated files do not need to be committed. Typed translation keys and arguments remain available without a test suite.
+Read [AGENTS.md](AGENTS.md) before changing the repository. The docs folder contains current reference material; superseded proposals, file inventories and historical handoffs have been consolidated here.
 
-See the [Phase 1 handoff](docs/phase-1-handoff.md) for authentication verification and the file report. The [Phase 0 handoff](docs/phase-0-handoff.md#setup-only-cleanup) retains earlier setup evidence.
+| Document                                             | Purpose                                                                |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| [Product requirements](docs/product-requirements.md) | Current prototype scope and acceptance scenarios.                      |
+| [Architecture](docs/architecture.md)                 | Source organization, shared state and transaction boundaries.          |
+| [Domain model](docs/domain-model.md)                 | Entities, events, eligibility, powerplay, clock and Undo.              |
+| [Recorder UX](docs/recorder-ux.md)                   | Entry flow, draft lifetime, feedback and completed summaries.          |
+| [Offline and sync](docs/offline-sync.md)             | Ownership, storage, command delivery, routing and failure policy.      |
+| [Account authentication](docs/account-auth.md)       | Sessions, permissions, account setup and sign-out.                     |
+| [Localization](docs/localization.md)                 | Catalogs, language preference, formatting and offline behavior.        |
+| [Development plan](docs/development-plan.md)         | Implemented scope, verification evidence and remaining release checks. |
+| [Backlog](docs/backlog.md)                           | Deferred work and decisions for later increments.                      |
 
-## Development context
-
-Read [AGENTS.md](AGENTS.md) before changing the repository.
-
-| Document                                             | Purpose                                                                             |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [Product requirements](docs/product-requirements.md) | Product scope and acceptance scenarios.                                             |
-| [Architecture](docs/architecture.md)                 | Stack, account routing, ownership boundaries and repository structure.              |
-| [Domain model](docs/domain-model.md)                 | Entity contracts, event variants, ordering and lineup corrections.                  |
-| [Recorder UX](docs/recorder-ux.md)                   | Draft lifetime, interaction paths, required details and clock behavior.             |
-| [Offline and sync](docs/offline-sync.md)             | Local persistence, API protocol, account isolation and failures.                    |
-| [Localization](docs/localization.md)                 | English/Portuguese catalogs, locale preference, formatting and offline translation. |
-| [Development plan](docs/development-plan.md)         | Incremental phases, tests, acceptance criteria and first implementation prompt.     |
-| [Backlog](docs/backlog.md)                           | Deferred work and decisions required before dependent phases.                       |
-
-Phase 1 is complete for the agreed authentication/database foundation. Workspace-scoped product persistence and command receipts belong to Phase 3's synchronized recording slice. Account settings and admin UI remain in the backlog.
+Automated tests require explicit authorization under AGENTS.md. Current non-test checks do not establish physical-device or full browser-family readiness.

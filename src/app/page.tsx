@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { AppShell } from "../client/shell/app-shell";
-import { HomeContent } from "../client/shell/home-content";
+import { AppShell } from "../client/components/AppShell/AppShell";
+import { HomePage as HomePageView } from "../client/pages/HomePage/HomePage";
 import { getSession } from "../server/auth/session";
 
 export default async function HomePage() {
@@ -8,7 +8,7 @@ export default async function HomePage() {
   if (!session) redirect("/sign-in");
   return (
     <AppShell authenticated>
-      <HomeContent name={session.user.name} />
+      <HomePageView name={session.user.name} />
     </AppShell>
   );
 }

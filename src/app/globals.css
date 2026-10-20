@@ -1,8 +1,22 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --color-background: #141518;
+  --color-surface: #1d1f23;
+  --color-surface-hover: #2a2d33;
+  --color-text: #eceef1;
+  --color-text-muted: #b0b5bf;
+  --color-border: #35383d;
+  --color-border-control: #757b85;
+  --color-action: #b8d8ce;
+  --color-action-hover: #cce5dd;
+  --color-action-pressed: #a3c4b9;
+  --color-on-action: #182421;
+  --color-focus: #97d0ed;
+  --color-error: #ffaaa5;
+  --color-success: #a8d8b5;
   font-family: system-ui, sans-serif;
-  color: #172f36;
-  background: #f4f7f6;
+  color: var(--color-text);
+  background: var(--color-background);
 }
 
 * {
@@ -16,7 +30,14 @@ input,
 select {
   font: inherit;
 }
+a {
+  color: var(--color-action);
+}
+input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
 :focus-visible {
-  outline: 3px solid #146b60;
+  outline: 3px solid var(--color-focus);
   outline-offset: 4px;
 }

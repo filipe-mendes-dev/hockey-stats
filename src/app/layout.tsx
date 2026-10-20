@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { LanguageProvider } from "../client/i18n/provider";
-import { PwaStatus } from "../client/pwa/pwa-status";
+import { LanguageProvider } from "../client/i18n/LanguageProvider";
+import { PwaStatus } from "../client/pwa/PwaStatus";
 import { defaultLocale } from "../i18n/locales";
 import "./globals.css";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
-export const viewport: Viewport = { themeColor: "#172f36" };
+export const viewport: Viewport = { themeColor: "#141518" };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

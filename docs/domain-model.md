@@ -1,250 +1,100 @@
 # Domain model
 
-Status: proposed TypeScript contracts for incremental implementation. These examples are documentation, not generated application code. Implement only the variants required by the active phase.
+This document describes the current prototype. Executable contracts live in `src/domain` and `src/contracts`; do not maintain duplicate TypeScript interfaces in documentation.
 
-## Ownership and relationships
+## Entities and relationships
 
-- A local workspace owns teams, players, memberships and games before any server account exists. Synchronization explicitly associates it with an authorized server account.
-- A player is independent of teams within that workspace and may belong to several squads or age categories.
-- A game tracks one team's perspective and an opponent name.
-- A game player snapshots participation, name, jersey number and starting status.
-- Every event references a game player, including a team foul.
-- Current membership cannot rewrite a historical game roster.
-- Working account default: one personal account per user. Shared accounts and invitations are deferred.
+| Entity            | Current meaning                                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Player            | Reusable identity with name, stable client UUID, revision and creation/update timestamps. Duplicate names are valid.       |
+| Team              | Name and optional category/season, with revision and timestamps.                                                           |
+| TeamPlayer        | Unique Team/Player membership with optional jersey number and field-player/goalkeeper role. No membership status.          |
+| Match             | Team snapshot name, opponent, optional date/venue, setup/live/completed status, periods, clock and one aggregate revision. |
+| MatchPlayer       | Match-specific Player identity/name/number/role/starter snapshot. Events reference this ID.                                |
+| MatchEvent        | Strict event variant with Match, period, capture time, explicit order, revision and persistence timestamps.                |
+| Local identity    | One metadata ownerUserId and display name. No credentials or workspace.                                                    |
+| Outbox operation  | Stable operation ID, immutable command, entity scope, local sequence and pending/blocked status.                           |
+| Match history     | Local event/creation-operation association that retains latest-event Undo eligibility after upload.                        |
+| Operation receipt | PostgreSQL record of the accepted request/result, unique by authenticated owner and operation ID.                          |
 
-The future domain `Account` maps to a personal `app_account` workspace, with a unique owner reference to Better Auth's `auth_user`. Its table and provisioning are deferred beyond the minimal authentication increment. Better Auth's `auth_account` stores authentication methods and is not a domain account. Authentication `user`/`admin` roles do not replace workspace ownership. See [account schema and flow](account-auth.md).
+A Player may belong to multiple Teams with different numbers/roles. MatchPlayer snapshots intentionally survive later Team/Player/membership changes. A Match contains a Player at most once. Jersey numbers are strings; duplicates warn rather than block.
 
-## Entity contracts
+SQL records use authenticated ownership and relational constraints. Local entities share one owner-bound dataset. UUIDs and capture/creation timestamps originate on the client; server receipt acceptance time is separate.
 
-```ts
-interface StoredEntity {
-  id: string;
-  revision: number;
-  createdAt: number;
-  updatedAt: number;
-}
+## Match setup and lifecycle
 
-interface OwnedEntity extends StoredEntity {
-  workspaceId: string;
-}
+Call-ups allow at most eight field players and two goalkeepers, ten total. Setup may be incomplete. Only setup Matches can edit metadata/call-up. Existing selected MatchPlayer IDs and historical names are retained through pre-start edits.
 
-interface LocalWorkspace extends StoredEntity {
-  name: string;
-}
+Start requires exactly four field starters and one goalkeeper, plus at least one configured period. Periods are sequential positive numbers. Duration is optional, but must be positive when supplied. Starting establishes elapsed time zero. The live lineup can later contain four or five players and at most one goalkeeper; zero goalkeepers is valid.
 
-interface Account extends StoredEntity {
-  ownerUserId: string;
-  name: string;
-}
+End period closes the current period and advances to the next with a paused zero clock. End match is available in the final configured period and marks the Match completed. Completed data is read-only. Reopening or correcting lifecycle transitions is deferred.
 
-interface Team extends OwnedEntity {
-  name: string;
-  category?: string;
-  season?: string;
-  archivedAt?: number;
-}
+## Event contracts
 
-interface Player extends OwnedEntity {
-  name: string;
-  archivedAt?: number;
-}
+All events require Match ID, configured period and capturedAt. Stored rows add stable ID, explicit per-Match order, revision, createdAt and updatedAt. Undo retains a tombstone with deletedAt. Never reuse an order after Undo.
 
-interface TeamPlayer extends OwnedEntity {
-  teamId: string;
-  playerId: string;
-  jerseyNumber?: string;
-  status: "active" | "inactive";
-}
+| Kind               | Required details                                                                                                                                                           | Optional context                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `ball-recovery`    | MatchPlayer and subtype: interception, duel, loose-ball or other.                                                                                                          | Game time, position.                 |
+| `ball-loss`        | MatchPlayer and reason: intercepted-pass, failed-individual-action or other.                                                                                               | Game time, position.                 |
+| `shot`             | MatchPlayer and outcome: goal, on-target, off-target or blocked.                                                                                                           | Game time, position.                 |
+| `team-foul`        | MatchPlayer.                                                                                                                                                               | Game time, position.                 |
+| `card`             | Recipient MatchPlayer, yellow/blue/red, explicit lineup effect and current powerplay semantics. Non-yellow requires game time and any required removed/replacement Player. | Position; yellow may omit game time. |
+| `substitution`     | Distinct outgoing/incoming MatchPlayers and game time.                                                                                                                     | None.                                |
+| `powerplay-end`    | Current penalty's card-event ID and game time.                                                                                                                             | None.                                |
+| `player-in`        | Eligible bench MatchPlayer, powerplay-ended entry reason and game time.                                                                                                    | None.                                |
+| `opponent-goal`    | Match-level event without a Player.                                                                                                                                        | Game time.                           |
+| `score-adjustment` | Signed ownDelta/opponentDelta; at least one nonzero.                                                                                                                       | Game time.                           |
 
-interface PeriodSettings {
-  number: number;
-  label: string;
-  durationMs?: number;
-  attackDirection: "toward-x0" | "toward-x1" | "unknown";
-}
+Strict discriminated schemas reject missing or incompatible fields. `colour` is the displayed card colour. Score deltas change the relevant score by the signed amount; they are not replacement totals. Goal shots add to our score; opponent goals add to the opponent score. Score history must remain nonnegative and within safe integers.
 
-interface Game extends OwnedEntity {
-  teamId: string;
-  teamNameAtGame: string;
-  opponentName: string;
-  title?: string;
-  scheduledAt?: string;
-  competition?: string;
-  venueRole?: "home" | "away" | "neutral";
-  status: "setup" | "live" | "completed";
-  clockDisplay: "count-down" | "count-up";
-  periods: PeriodSettings[];
-  nextEventOrder: number;
-}
+Shot outcomes are exclusive. `on-target` means a non-goal, unblocked attempt directed at goal. A future inclusive shots-on-target statistic would include both goal and on-target outcomes. Statistics are deferred.
 
-interface GamePlayer extends OwnedEntity {
-  gameId: string;
-  playerId: string;
-  playerNameAtGame: string;
-  jerseyNumberAtGame?: string;
-  startingOnField: boolean;
-  availableForRecording: boolean;
-}
+## Eligibility and lineup
 
-interface Position {
-  x: number;
-  y: number;
-}
+| Action               | Eligible players                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| Recovery, loss, shot | Active field players.                                                                               |
+| Foul                 | Active players, including goalkeeper.                                                               |
+| Card                 | Called-up players who are not permanently ejected, including bench/goalkeeper.                      |
+| Substitution         | Active outgoing and eligible bench incoming player yielding a valid lineup.                         |
+| Player in            | Eligible bench player when four are active and no powerplay remains; preserve the goalkeeper limit. |
 
-interface GameTime {
-  elapsedMs: number;
-}
+Hide unavailable options in either selection order. Recheck the same pure guards transactionally before writing. Ordinary substitutions always exchange two players in one event and one Undo action. Independent player-out creation is not part of the current flow.
 
-interface EventBase extends OwnedEntity {
-  gameId: string;
-  gamePlayerId: string;
-  order: number;
-  period: number;
-  gameTime?: GameTime;
-  deletedAt?: number;
-}
+## Cards and powerplay
 
-interface SpatialEventBase extends EventBase {
-  position?: Position;
-}
+Yellow records the card without changing lineup or powerplay. No automatic yellow-card accumulation rule is implemented.
 
-interface ShotEvent extends SpatialEventBase {
-  kind: "shot";
-  outcome: "goal" | "on-target" | "off-target" | "blocked";
-}
+Every new blue/red card creates one team penalty. Derived state keeps its card-event IDs in order. The first is current and the rest are queued. While any remains, the maximum lineup is four. Further penalties extend the queue instead of reducing the team below four.
 
-interface BallLossEvent extends SpatialEventBase {
-  kind: "ball-loss";
-  reason: "intercepted-pass" | "failed-individual-action" | "other";
-}
+| Before card                     | Required effect                              |
+| ------------------------------- | -------------------------------------------- |
+| Five active, recipient active   | Remove the recipient.                        |
+| Five active, recipient on bench | Observer chooses an active player to remove. |
+| Four active, recipient active   | Choose an eligible replacement; keep four.   |
+| Four active, recipient on bench | Keep lineup unchanged; queue the penalty.    |
 
-interface BallRecoveryEvent extends SpatialEventBase {
-  kind: "ball-recovery";
-  subtype: "interception" | "duel" | "loose-ball" | "other";
-}
+The recipient and removed player can be different people. Persist the required lineup change and penalty with the card atomically. Reject a transition without a valid replacement at the minimum.
 
-interface TeamFoulEvent extends SpatialEventBase {
-  kind: "team-foul";
-}
+The observer manually ends the current penalty. If another remains, capacity stays four. Otherwise capacity returns to five and a separate timed Player in event records the actual entry, without an outgoing player. Neither penalty completion nor a goal automatically inserts a player or expires a penalty.
 
-interface CardEvent extends SpatialEventBase {
-  kind: "card";
-  colour: "yellow" | "blue" | "red";
-}
+Count non-deleted blue cards per Player. A new third blue produces permanent red exclusion within that same card action. Preserve the blue history and display the red consequence; do not create a second synthetic command or team penalty. Direct red also excludes the Player permanently.
 
-interface PlayerInEvent extends EventBase {
-  kind: "player-in";
-  gameTime: GameTime;
-  position?: never;
-}
+By explicit prototype scope, temporary individual suspension restrictions are not enforced. A previously blue-carded bench player can substitute during powerplay. Game-clock-linked penalties, personal expiry and automatic return prompts are backlog work.
 
-interface PlayerOutEvent extends EventBase {
-  kind: "player-out";
-  gameTime: GameTime;
-  position?: never;
-}
+## Time, position and derived state
 
-type GameEvent =
-  | ShotEvent
-  | BallLossEvent
-  | BallRecoveryEvent
-  | TeamFoulEvent
-  | CardEvent
-  | PlayerInEvent
-  | PlayerOutEvent;
-```
+Capture period and any known game time on the first entry tap. Known paused time is valid; no running clock is required. Required timed actions request manual elapsed time when unknown. Missing time is never replaced with wall time or an invented zero. Store elapsed milliseconds per period; show countdown when duration exists. Corrections affect future captures only.
 
-The type alias expresses a discriminated union, which an interface cannot replace. Runtime validation must reject incompatible fields as well as missing required fields.
+Optional position always contains finite x and y in `[0, 1]`. Looking toward the opponent goal, x runs left to right and y from our defensive end zero to attack one. Position is supplied only by a field click. Period attackDirection remains historical setup metadata, not the coordinate frame. Rink UI is deferred.
 
-In these local entity examples, `revision` describes the local stored version. Confirmed server revisions and account binding belong in separate synchronization envelopes and are absent for never-uploaded records. Local versions must not masquerade as server acknowledgements. Game mutation commands also use a confirmed aggregate revision after server creation. Define those envelopes and command contracts in the synchronization slice, not Phase 2.
+`deriveMatchState` replays non-deleted events from starters to produce lineup, score, blue counts, ejections and powerplay. The queue and maximum count are derived, not separately persisted Match fields. Explicit order controls replay even when game time is missing or corrected.
 
-Use client-generated stable IDs for the local workspace, teams, players, games, roster entries, events and commands. Local creation does not wait for a server-issued ID or account. Authentication IDs belong to Better Auth; the online-only personal server account receives a server-generated UUID during provisioning. Server storage maps the explicitly bound workspace to an authorized account and preserves stable entity IDs for retries. `createdAt` preserves local entry time; it is not a globally trustworthy ordering clock. Server operation receipts separately record acceptance time. No `source` field is required for game time.
+## Undo and compatibility
 
-## Shot vocabulary
+Undo targets the latest non-deleted event only when this browser retains its local creation history. It atomically tombstones the event, marks history undone, advances Match revision and queues an inverse. Replay must remain valid. Clock controls and period transitions are not event Undo operations. Completed Matches cannot Undo; there is no redo or arbitrary historical edit/delete UI.
 
-Working default based on the user's preferred wording:
+Event commands use version 3. Older stored independent movements, cards and suspension-end events remain readable; old suspension-end records no longer impose temporary availability state. New cards carry startsPowerplay explicitly so historical cards are not silently converted into unfinished penalties. Legacy delivery rules are described in [Offline and sync](offline-sync.md).
 
-| Outcome | Meaning |
-| --- | --- |
-| `goal` | The shot scored. |
-| `on-target` | A non-goal, unblocked shot directed at the goal, usually saved. |
-| `off-target` | A non-goal shot that missed the target. |
-| `blocked` | A shot stopped before an on-target/off-target outcome was established. |
-
-These are mutually exclusive recorder outcomes. A future aggregate named shots on target would include goals plus `on-target` events under this working definition. The recorder does not yet calculate that statistic.
-
-Confirm edge cases before the shot phase. Do not claim this is an official federation taxonomy or silently use `on-target` to mean both the event outcome and an inclusive aggregate. Revisiting the labels does not block the first recovery slice.
-
-## Invariants
-
-1. Local references stay within one workspace; synchronized references stay within its bound authorized account. An event's roster entry belongs to its game.
-2. Team membership is unique per team/player pair in V1. A game roster contains a player at most once.
-3. Referenced historical identities are archived, not hard-deleted.
-4. Names and jersey numbers are copied into game snapshots intentionally. Events reference snapshots rather than duplicating their display fields.
-5. Jersey numbers are strings. Duplicate numbers generate a setup warning rather than an invented rule.
-6. Every event requires a game player. Recovery subtype, loss reason, shot outcome and card colour are mandatory where applicable.
-7. Period identifiers are positive and belong to the game's configured periods.
-8. Player-in/out require period and game time. Other event variants may omit game time; coordinates are optional for spatial events. Missing values never become zero by default.
-9. Supplied time is finite, non-negative elapsed milliseconds in the selected period.
-10. Supplied coordinates contain both finite values in `[0, 1]`. Movement events reject them.
-11. Cards never modify lineup automatically. Movement events require no paired replacement.
-12. Active-player counts are derived and have no hard-coded regulation limit.
-13. Live entry rejects putting an already active player in or taking an absent player out.
-14. Other event types may reference a bench player. Show the player's state without inventing an on-field-only restriction.
-15. A period change does not reset the lineup.
-
-An active clock is not required for movement entry. Capture a known clock value automatically or require manual period/time before commit. Validate the requirement in the browser and API, including historical edits; a movement timestamp cannot be cleared. If the clock has not been established, do not substitute zero or wall-clock creation time.
-
-PostgreSQL enforces relational/unique constraints. IndexedDB workflows check the same relationships within their local transactions because IndexedDB has no SQL foreign keys. Server services revalidate uploaded commands against authorized current state.
-
-## Roster corrections
-
-Before recording, roster and starter choices are freely editable. After recording begins:
-
-- Add a missed player as another snapshot.
-- Disable availability rather than removing referenced entries.
-- Treat starter changes as historical corrections with a replay preview.
-- Preserve historical names and numbers when current player or membership details change.
-- Do not add a required TeamPlayer reference to GamePlayer that could make old participation depend on current membership.
-
-## Event order and statistics time
-
-Use explicit event order for timeline, corrections and lineup replay. Normal edits preserve it. Historical insertion or movement is an explicit operation, not a side effect of changing a timestamp.
-
-Period plus elapsed game time is suitable for chronological statistical views when present. It is insufficient as the only stable order because times can be missing, equal, rounded or corrected. Such views need a deterministic event-order tie-breaker and an explicit policy for untimed events. Future statistics must state how untimed events affect each metric.
-
-Countdown is the default display. Store elapsed time so chronological comparisons remain consistent across periods. Display remaining time as configured period duration minus elapsed time. A period's duration becomes historical configuration once timed events reference it; changing it needs a deliberate correction, not a generic settings edit.
-
-## Corrections and undo
-
-Use current event rows, increasing revisions, soft-delete tombstones and a durable operation journal. Keep typed before/after data for local undo. Server commands express validated intent; do not trust client-provided before-images to overwrite SQL rows.
-
-Undo is another durable operation. If an original command has already been sent or accepted, send the inverse after it. A lost acknowledgement means its server status is unknown, so do not simply remove it from the queue. Server receipts make retry safe.
-
-Undo must reject stale state or show a conflict instead of overwriting unrelated changes. Compound edits apply and undo atomically within each database. There is no atomic transaction spanning both databases.
-
-### Contradictory movement example
-
-1. Alex starts on the field.
-2. Event 10 records Alex out.
-3. Event 20 records Alex in.
-4. The observer deletes event 10.
-
-Alex was then never taken off, so event 20 asks to put an already active player in. The same problem can follow a starter correction, player reassignment or event reorder.
-
-Policy for explicit historical corrections:
-
-- Preview downstream contradictions before committing.
-- Preserve affected movement events and visibly flag them.
-- Replay redundant transitions as no-ops, never as duplicate active players or negative counts.
-- Keep the warning visible until the observer fixes the history.
-- Require explicit acceptance of a correction that leaves contradictions.
-- Never silently delete or rewrite another event.
-
-Use the same deterministic replay and diagnostics on client and server. A server receiving an intentionally accepted correction must not reject it merely because ordinary live-entry validation would reject the resulting redundant movement. Structural validation still applies.
-
-## Derived data
-
-Derive lineup from snapshots and non-deleted movements. Do not persist a separate authoritative active count, player stint, field half or shot zone initially.
-
-Movement boundaries have mandatory time. Playing-time intervals can still be unknown/flagged when final game time or period duration is missing, manually corrected times are inconsistent or movement history contradicts itself. Do not invent durations. Analytics remain outside recorder V1.
+Future historical corrections must preview downstream contradictions and never silently rewrite another event. They require a separate agreed protocol before implementation.

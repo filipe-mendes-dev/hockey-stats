@@ -1,70 +1,200 @@
 import { Dexie } from "dexie";
+import { playerSchema } from "../../domain/players/player.schema";
+import { teamPlayerSchema } from "../../domain/teams/teamPlayer.schema";
+import {
+  outboxOperationSchema,
+  migrateLegacyOutboxOperation,
+} from "../features/sync/outbox.schema";
+import { requestStoragePersistence } from "./persistence";
+import type { StoragePersistence } from "./persistence";
 
-export interface LocalWorkspaceIdentity {
-  key: "workspace";
-  workspaceId: string;
-  createdAt: number;
+export interface DatabaseStatus {
+  status:
+    "preparing" | "ready" | "blocked" | "closed" | "unsupported" | "failed";
+  persistence: StoragePersistence | null;
 }
 
-export function createLocalDatabase(): Dexie {
-  const database = new Dexie("benchline-stats", {
-    autoOpen: false,
-    chromeTransactionDurability: "strict",
-  });
+export const localDataClearedEvent = "benchline.local-data-cleared";
+const databaseName = "benchline-stats";
+const initialStatus: DatabaseStatus = {
+  status: "preparing",
+  persistence: null,
+};
+let snapshot = initialStatus;
+let database: Dexie | undefined;
+let opening: Promise<Dexie> | undefined;
+let signingOut = false;
+const listeners = new Set<() => void>();
 
-  database.version(1).stores({ metadata: "key" });
-  return database;
+function setStatus(
+  status: DatabaseStatus["status"],
+  persistence: StoragePersistence | null = null,
+): void {
+  snapshot = { status, persistence };
+  listeners.forEach((listener) => listener());
 }
 
-function parseWorkspaceIdentity(value: unknown): LocalWorkspaceIdentity {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    !("key" in value) ||
-    value.key !== "workspace" ||
-    !("workspaceId" in value) ||
-    typeof value.workspaceId !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value.workspaceId,
-    ) ||
-    !("createdAt" in value) ||
-    typeof value.createdAt !== "number" ||
-    !Number.isSafeInteger(value.createdAt) ||
-    value.createdAt <= 0
-  ) {
-    throw new Error(
-      "Invalid local workspace identity; existing data retained.",
-    );
-  }
+export function getDatabaseStatus(): DatabaseStatus {
+  return snapshot;
+}
 
-  return {
-    key: "workspace",
-    workspaceId: value.workspaceId,
-    createdAt: value.createdAt,
+export function getServerDatabaseStatus(): DatabaseStatus {
+  return initialStatus;
+}
+
+export function subscribeDatabaseStatus(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
   };
 }
 
-export async function initializeLocalWorkspace(
-  database: Dexie,
-): Promise<LocalWorkspaceIdentity> {
-  const metadata = database.table<LocalWorkspaceIdentity, string>("metadata");
+async function openDatabase(): Promise<Dexie> {
+  setStatus("preparing");
+  if (!("indexedDB" in window) || !window.indexedDB) {
+    setStatus("unsupported");
+    throw new Error("IndexedDB is unavailable.");
+  }
 
-  return database.transaction("rw", metadata, async () => {
-    const stored: unknown = await metadata.get("workspace");
-
-    if (stored === undefined) {
-      const workspace: LocalWorkspaceIdentity = {
-        key: "workspace",
-        workspaceId: crypto.randomUUID(),
-        createdAt: Date.now(),
-      };
-      await metadata.add(workspace);
-      return workspace;
-    }
-
-    const workspace = parseWorkspaceIdentity(stored);
-    // Rewriting the validated identity verifies write access on every launch.
-    await metadata.put(workspace);
-    return workspace;
+  const connection = new Dexie(databaseName, {
+    autoOpen: false,
+    chromeTransactionDurability: "strict",
   });
+  database = connection;
+  connection.version(1).stores({ metadata: "key" });
+  connection.version(2).stores({ players: "id, workspaceId" });
+  connection
+    .version(3)
+    .stores({ metadata: null, players: "id" })
+    .upgrade(async (transaction) => {
+      const players = transaction.table<unknown, string>("players");
+      const records = await players.toArray();
+      for (const record of records) {
+        await players.put(playerSchema.parse(record));
+      }
+    });
+
+  connection.version(4).stores({
+    metadata: "key",
+    outbox: "++sequence, &operationId, playerId, status",
+  });
+
+  connection
+    .version(5)
+    .stores({
+      teams: "id",
+      outbox: "++sequence, &operationId, entityId, status",
+    })
+    .upgrade(async (transaction) => {
+      const outbox = transaction.table<unknown, number>("outbox");
+      for (const record of await outbox.toArray()) {
+        await outbox.put(migrateLegacyOutboxOperation(record));
+      }
+    });
+
+  connection
+    .version(6)
+    .stores({ teamPlayers: "id, &[teamId+playerId], teamId, playerId" });
+
+  connection
+    .version(7)
+    .stores({})
+    .upgrade(async (transaction) => {
+      const teamPlayers = transaction.table<unknown, string>("teamPlayers");
+      for (const record of await teamPlayers.toArray()) {
+        await teamPlayers.put(teamPlayerSchema.parse(record));
+      }
+      const outbox = transaction.table<unknown, number>("outbox");
+      for (const record of await outbox.toArray()) {
+        const operation = outboxOperationSchema.parse(record);
+        if (
+          operation.command.kind === "teamPlayer.create" ||
+          operation.command.kind === "teamPlayer.update"
+        ) {
+          await outbox.put(operation);
+        }
+      }
+    });
+
+  connection.version(8).stores({
+    matches: "id",
+    matchPlayers: "id, matchId, &[matchId+playerId]",
+  });
+
+  connection.version(9).stores({
+    matchEvents: "id, matchId, &[matchId+order]",
+    matchHistory: "id, matchId",
+  });
+
+  connection.on("blocked", () => setStatus("blocked"));
+  connection.on("versionchange", (event) => {
+    opening = undefined;
+    setStatus("closed");
+    connection.close();
+    if (event.newVersion === null) {
+      signingOut = true;
+      window.dispatchEvent(new Event(localDataClearedEvent));
+    }
+  });
+  connection.on("close", () => {
+    if (snapshot.status === "ready") {
+      opening = undefined;
+      setStatus("closed");
+    }
+  });
+
+  await connection.open();
+  if (signingOut) {
+    connection.close();
+    throw new Error("Local data is being removed.");
+  }
+  await connection.transaction("rw", "players", () =>
+    connection.table<unknown, string>("players").count(),
+  );
+  const persistence = await requestStoragePersistence();
+  if (signingOut || !connection.isOpen())
+    throw new Error("Local storage is closed.");
+  setStatus("ready", persistence);
+  return connection;
+}
+
+export function getDatabase(): Promise<Dexie> {
+  if (signingOut)
+    return Promise.reject(new Error("Local data is being removed."));
+  if (database?.isOpen() && snapshot.status === "ready")
+    return Promise.resolve(database);
+  opening ??= openDatabase().catch((error: unknown) => {
+    if (snapshot.status !== "unsupported" && snapshot.status !== "closed")
+      setStatus("failed");
+    database?.close();
+    opening = undefined;
+    throw error;
+  });
+  return opening;
+}
+
+export function closeDatabaseForSignOut(): void {
+  signingOut = true;
+  database?.close();
+  setStatus("closed");
+}
+
+export async function clearLocalDatabase(): Promise<void> {
+  closeDatabaseForSignOut();
+  try {
+    localStorage.setItem(localDataClearedEvent, crypto.randomUUID());
+  } catch {
+    // Open connections also receive the IndexedDB versionchange event.
+  }
+  await opening?.catch(() => undefined);
+  database?.close();
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(databaseName);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+    request.onblocked = () =>
+      reject(new Error("Close other application tabs to remove local data."));
+  });
+  database = undefined;
+  opening = undefined;
 }

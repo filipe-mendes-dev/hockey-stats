@@ -1,10 +1,5 @@
-import { LocalApp } from "../../client/pwa/local-app";
-import { AppShell } from "../../client/shell/app-shell";
+import { AppHomePage } from "../../client/pages/AppHomePage/AppHomePage";
 
-export default function LocalAppPage() {
-  return (
-    <AppShell>
-      <LocalApp />
-    </AppShell>
-  );
+export default function LocalApplicationRoute() {
+  return <AppHomePage />;
 }

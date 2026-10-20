@@ -1,0 +1,17 @@
+.list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.description {
+  margin: 0;
+}
+
+.comingSoon {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}

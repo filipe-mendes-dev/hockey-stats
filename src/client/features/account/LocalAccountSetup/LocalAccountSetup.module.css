@@ -1,0 +1,22 @@
+.panel {
+  max-width: 46rem;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.panel h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.25;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.error {
+  color: var(--color-error);
+}

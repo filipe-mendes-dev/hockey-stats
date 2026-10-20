@@ -1,167 +1,85 @@
 # Offline persistence and synchronization
 
-## Authority and local durability
+## Ownership and local durability
 
-PostgreSQL is authoritative for accepted shared records. The Next.js API is the access boundary, not itself a database.
+Keep one IndexedDB dataset bound to one metadata ownerUserId. This is a local account-mixing guard, not an authorization credential. Require one successful online sign-in, then allow local workflows through network loss and session expiry. A different authenticated account cannot adopt/upload the dataset.
 
-IndexedDB is the primary working store for local teams, players, memberships, games, roster snapshots, recording, retained history and later synchronization metadata. Local workflows operate without a server account or a prior upload. PostgreSQL is authoritative for server-accepted copies, not a prerequisite for creating local records. Browser storage limits and failures must be handled explicitly; local storage is not a guarantee against device/browser data loss.
+Existing unowned prototype Players require explicit import naming the destination account. Import preserves IDs/timestamps and atomically establishes ownership and pending commands. Not now retains records and leaves setup incomplete. Fresh empty storage initializes after verified online sign-in.
 
-Offline operation includes creating teams/players and setting up a new game using retained data or new local entries. Retain the game's roster, starters, settings, history and corrections to reconstruct recording after reload. Successful upload does not remove working data. Keep team/player data and locally retained games usable offline; bounded history retention must never silently remove unsynced work. Exact retention controls are deferred.
+IndexedDB is the working store online and offline. PostgreSQL is authoritative for accepted shared copies. Save domain changes, required local Undo history and immutable outbox intent in one local transaction before showing success. TanStack Query is temporary UI state; Zustand contains only the open draft.
 
-## Offline scope and installation readiness
+## Local database
 
-Use one generic cached application entry for every local hockey workflow. Team/player management, new-match setup, roster selection, recording, clock, timeline, undo, corrections and locally retained history must work offline as those features are implemented. Account management, sign-in and server synchronization require connectivity. A limited prepared-games-only `/offline` mode is no longer the product requirement.
+`benchline-stats` uses Dexie schema version 9. Stores are players, teams, teamPlayers, matches, matchPlayers, matchEvents, matchHistory, metadata and outbox. Keys/indexes are declared in `src/client/storage/database.ts`; record properties are validated by Zod at input/read/transport boundaries.
 
-During the initial online application download, precache the complete required code/asset set and initialize the local database. Report application readiness only after both complete. The browser's installation prompt does not prove readiness; users need not open every feature first. Each later release must include newly added offline feature code in that asset set. User data comes from local entry or an explicit server download, not from the application manifest.
+Earlier upgrades preserve prototype Players, remove workspace fields, migrate outbox playerId to entityId, remove obsolete membership status and add entity/event stores. Do not alter applied versions or reset storage on failure. Validate existing values; let invalid upgrades abort visibly without deleting data.
 
-Create stable workspace/entity IDs on the device. Starting a new game never requires prior online preparation or a confirmed server revision. Selecting an unknown existing-game ID shows unavailable without inventing a game; the explicit creation workflow remains available offline. Remote history not yet downloaded cannot be shown offline. Route/query parameters cannot bypass local workspace scope.
+Initialization verifies read/write transaction access and reports preparing, ready, failed, unsupported, blocked or closed state. Request persistent storage separately. Refusal permits use with a retention notice. Strict transaction durability is requested where supported; it is not a cross-browser power-loss or backup guarantee.
 
-## Recording writes
+## Shared outbox and protocol
 
-Use the same local-first write path online and offline for management, match setup and recording as features arrive:
+One ordered outbox serves Players, Teams, TeamPlayers, Matches and events. Each operation has a stable operationId, entityId, monotonic local sequence, immutable typed command and pending/blocked status. Never change payload while reusing its ID.
 
-1. Validate the completed UI command.
-2. Commit local changes and the required durable operation/sync intent in one IndexedDB transaction. An unbound local workspace retains intent without selecting a server account automatically.
-3. Show saved locally and clear the visible creation draft.
-4. Attempt upload only after explicit workspace/account binding and when connectivity and authentication permit.
-5. Commit the accepted command and idempotency receipt in one PostgreSQL transaction.
-6. Persist acknowledgement locally and reconcile confirmed data without overwriting later pending work.
-7. Show synced.
+Player/Team/TeamPlayer creates precede dependent work. Commands for one Team, TeamPlayer or Match follow their revision chain. Match creation, setup, Start, clock/lifecycle controls, events and Undo share the Match aggregate ID and expectedRevision. Do not silently rebase a stale command.
 
-This avoids an unreliable split between direct online writes and a separate offline-only queue. It does not create a distributed transaction. A server rejection can leave a valid local recording needing explicit reconciliation.
+| Boundary                     | Current contract                                                                              |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `POST /api/sync/commands`    | Authenticated typed command acceptance.                                                       |
+| `GET /api/sync/players`      | Full owner-scoped Players collection.                                                         |
+| `GET /api/sync/teams`        | Full owner-scoped Teams collection.                                                           |
+| `GET /api/sync/team-players` | Full owner-scoped memberships.                                                                |
+| `GET /api/sync/matches`      | Complete Match snapshots/events, including tombstones, from one repeatable-read SQL snapshot. |
 
-## Local records
+Handlers validate the session and X-Expected-User-Id header independently. Authorization derives from the session, never a supplied owner. POST also checks the configured application origin. Responses are no-store and are not cached by the worker.
 
-Keep local-workspace-scoped entities, confirmed versions, pending projections, operation history, sync intent, cursors and persisted clock state. Server account binding is separate from the local workspace identity. Never-uploaded records have no confirmed server version. Select feature tables and wire contracts during the first product/synchronization slice; Phase 2 only establishes database initialization, versioning and failure handling.
+Entity/setup/control commands use version 1; current event create/Undo commands use version 3. Event versions 1/2 remain shape-compatible for preceding queued work. Once powerplay-protocol events exist, older event-protocol writes conflict; an already accepted operation still replays its exact receipt. The acknowledgement/download envelopes remain version 1. Database, command and application-cache versions are independent.
 
-The implemented foundation uses Dexie 4.4.6 and database `benchline-stats`, version 1. Its only store is `metadata`, containing the `workspace` key with a non-secret UUID and creation time. Initialization validates an existing row or creates it in a read/write transaction, and verifies write access before reporting local storage ready. It does not attach the workspace to a signed-in user or create domain/sync tables. See [storage verification](phase-2-storage-handoff.md).
+The server reserves an owner/operation receipt in the same SQL transaction as the mutation. Concurrent duplicate reservations wait and replay the committed result. Reusing an ID with different content conflicts. Failed workflows roll back receipt and data together. Match event/control workflows lock the owned Match and check revision/domain rules.
 
-Maintain a confirmed server base separately from pending local intent. The visible projection applies pending commands over that base. Receiving an older acknowledgement must not replace a newer local edit. Test that behavior before adding broad UI features.
+## Foreground delivery
 
-Zustand may display pending/error summaries but does not own the only copy of any mutation. An event pending upload is a committed local event, not an invisible creation draft.
+One coordinator cycle pushes pending operations, durably applies each acknowledgement, then downloads Players, Teams, memberships and Matches. Web Locks serialize cycles across same-origin tabs. The existing lock name remains `benchline.players-sync` for compatibility with older open tabs; it protects all command kinds.
 
-Generate stable entity/command IDs before local writes so later edits and retries refer to the same record. Team/player creation, membership changes, game/roster setup, recording, clock and corrections all originate locally. Synchronization delivers prerequisite creates before dependent commands, including edits and inverses. Preserve unsynced creation intent until a server binding and acknowledgements exist.
+Trigger delivery after local writes/import, startup, successful authentication, reconnection, focus/visibility and manual retry. Refresh every 60 seconds while visible. Requests have a 15-second timeout. Transient retries back off from one second to at most 60 seconds, respecting bounded server Retry-After values. Browser online status is only a hint.
 
-## Command protocol
+Authentication failure pauses sync; mismatch preserves local data and reports the owner problem. Permanent validation/revision conflicts remain blocked. Dependent operations wait while independent entities can continue. Unsupported Web Locks retains local work and reports synchronization unavailable. Background Sync and server push are not required.
 
-Use versioned HTTP contracts with, at minimum:
+## Acknowledgements and downloads
 
-- Stable command ID, account scope and schema version.
-- Aggregate identity and explicit command kind/payload.
-- Expected confirmed revision or a declared dependent revision chain.
-- Stable entity IDs and local ordering metadata where required.
+Apply acknowledgement data and remove only its outbox operation in one IndexedDB transaction. Recheck owner and abort state inside the transaction. A failed local acknowledgement leaves the operation available for safe receipt replay. Do not overwrite a higher local entity/event/Match revision with an older acknowledgement.
 
-For the first recorder protocol, serialize mutations per game and use an expected game-aggregate revision. A queued chain can expect successive revisions when each accepted command increments the aggregate once. The initial expected revision comes from the confirmed base; do not silently advance it from an unrelated remote change to bypass a conflict.
+Downloads merge complete records without deleting local entities absent from the response. Pending and blocked entities are protected. A pending Match protects its entire snapshot/event history. Replace accepted Match snapshot and events together only when its revision is not older and no local Match commands remain. The local Undo journal stays local.
 
-A game can be created and recorded locally before server contact. Synchronization must accept its stable client ID through an idempotent create command, after team/player prerequisites, and establish a confirmed revision before delivering dependent game mutations. Do not fabricate confirmed revisions for local-only records. Team/player management has its own mutation scope; do not create one global account revision that makes unrelated games conflict. Define the exact creation/dependency protocol in Phase 3, not the Phase 2 foundation.
+The shared localDataEvents module sends a DOM notification to this tab and BroadcastChannel invalidation to other tabs. SyncLifecycle refreshes entity/outbox queries. Notifications do not replace transaction checks and contain no records or credentials.
 
-Server handling:
+## Failure and cleanup policy
 
-1. Authenticate and authorize account access.
-2. Look up the account-scoped command receipt.
-3. If already accepted, verify the request matches the original and return its recorded result.
-4. Otherwise check the expected revision, references and domain rules.
-5. Commit mutation, aggregate revision, change-log entry and receipt atomically.
-6. Return authoritative revisions and acknowledgement.
+| Failure                                     | Behavior                                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Local transaction failure/quota             | Roll back all records/history/outbox changes; retain visible form/draft and report unsaved. |
+| Timeout/server failure/lost acknowledgement | Preserve local records and command; retry the same ID.                                      |
+| Local acknowledgement failure               | Retain command even if SQL committed; replay receipt safely.                                |
+| Expired session                             | Preserve local use and request sign-in for synchronization.                                 |
+| Wrong authenticated owner                   | Reject synchronization; preserve the dataset.                                               |
+| Permanent command rejection/stale revision  | Mark blocked; retain local work and stop its dependent chain.                               |
+| Failed/blocked sign-out deletion            | Show cleanup retry; never claim that data was removed.                                      |
 
-Do not change a command's payload while reusing its ID. Explicit conflict resolution that changes intent creates a new command. Client before-images cannot authorize arbitrary server row replacement.
+Explicit sign-out first stops synchronization and invalidates the server session. On success it closes local writes, notifies tabs, deletes the complete application IndexedDB, then navigates to clear transient Query/Zustand state. It includes unsynced work. Other tabs close/navigate on notification or deletion. Late responses are aborted and owner-checked. Generic cached files remain.
 
-Separate event order from aggregate revision and server acceptance time. Concurrent devices do not get an automatic merged lineup. A stale writer receives a conflict and preserves its pending data.
+If the server sign-out request fails, including while offline, the current UI retains local data and reports failure. An offline-only clear/revocation workflow is not implemented. Session expiry itself never clears records.
 
-## Delivery and reconciliation
+## Offline routing and updates
 
-- Upload commands serially within a game and in prerequisite order.
-- Trigger delivery on app startup, return to foreground, successful sign-in and reconnect; also provide manual retry.
-- Treat connectivity events as hints. A request failure determines delivery status.
-- Use bounded exponential retry backoff for transient failures.
-- Retain pending commands until acknowledgement is durably stored locally.
-- Advance confirmed revisions monotonically. An old acknowledgement must not replace a newer confirmed base already received through download.
-- Download accepted changes using an account-scoped server change cursor, including tombstones.
-- Apply page data and its cursor atomically. Repeating a page must be safe.
-- Do not advance a cursor past a failed page or overwrite pending projections with a download.
-- Resume after reload from persisted queue, receipts and cursor.
-- Do not require Background Sync support, WebSockets or a permanently running worker.
+`/app` is the public static launch target. Precache generic documents and full RSC payloads for the paths in `src/offline-pages.ts`, including Players/Teams details and Match creation/view/Start/live. Query IDs select IndexedDB records without requiring separate cached URLs. Initial application installation must happen online, and feature data must have been downloaded or created locally.
 
-An acknowledgement can be lost after the PostgreSQL commit. Retry the same command ID; the existing receipt returns the result without applying the event again.
+Never cache personalized server HTML, auth redirects or API responses. Unsupported routes and speculative/segmented prefetches have no generic fallback. Distinguish HTML navigation from full RSC responses. Both language catalogs and feature code ship in the required asset graph.
 
-## Failure policy
+Offline readiness requires verified cached files plus successful storage initialization. Native installation alone is insufficient. Unknown IDs show unavailable. Legacy dynamic Player/Team documents remain outside the offline guarantee.
 
-| Failure | Required behavior |
-| --- | --- |
-| IndexedDB transaction fails. | Roll back all local changes; keep visible draft open; report unsaved. |
-| Network timeout or server unavailable. | Keep local event and queue; retry without duplicate effects. |
-| Authentication expires. | Pause upload for that account; retain recording and queue; offer sign-in when online. |
-| Account access revoked. | Server rejects upload; preserve local pending work under its original account and show action required. |
-| Revision conflict. | Block the affected command chain; retain local intent and fetch authoritative state for explicit resolution. |
-| Invalid command rejected. | Preserve it as action-required; do not retry forever or discard dependent work. |
-| Lost acknowledgement. | Retry the original ID and use the recorded server receipt. |
-| Local quota/storage denied. | Never report saved; preserve the current visible draft while the page stays open. |
+Worker registration runs only in production. Updates remain waiting until all application tabs/windows close, then activate on reopening. Do not force reload during tracking. Use HTTPS outside localhost/loopback, and match browser origin to BETTER_AUTH_URL. Separate origins have separate IndexedDB/caches, even when normal authentication cookies are shared.
 
-Do not silently apply last-write-wins to movement history, starter changes, event edits or clock corrections. Working V1 policy is one active recorder per game; a second device can download accepted data for viewing. Concurrent writing is detected and resolved explicitly, not advertised as collaboration.
+## Current limits
 
-## Undo and historical edits
+One active observer per Match is the product assumption. Same-origin transactions serialize local writes and Web Locks serialize uploads, but a second recorder tab is not automatically read-only. Concurrent remote writers can produce blocked revision conflicts; no merge/resolution UI exists yet.
 
-Persist undo and inverse commands locally. Serialize inverse operations after their original operation, even if its acknowledgement was lost. A server may already have accepted it.
-
-Undoing an accepted event requires another authorized, revision-checked API mutation. Do not remove only the local row and leave the server event intact. Preserve tombstones in download and upload flows.
-
-The historical-correction command distinguishes explicit accepted contradictions from invalid live entry. Both sides run the same replay diagnostics. Do not infer automatic substitution or card consequences during sync.
-
-Both sides require game time for player-in/out, including corrected movements. Reject commands that omit or clear it; other event types may remain untimed.
-
-## Authentication and account isolation
-
-- Use an established authentication integration; provider selection precedes the account/API phase.
-- Keep online session credentials out of Zustand, IndexedDB and exported domain records.
-- Authorize every handler/service against the current session and account scope.
-- Include local workspace scope in local reads/writes. Bind server-bound queues, receipts and queries to an explicitly authorized account.
-- Initial sign-in and uncached account provisioning require connectivity.
-- No login is required to manage local teams/players, create a match, record or view locally retained games. Connection loss and session expiry preserve local data and pause only synchronization.
-- Explicit sign-out must remove the signing-out account's private local dataset and clear transient state, while retaining generic installed app assets. A different account must never automatically adopt or upload those records.
-- Offline access cannot check fresh revocation. Upload always revalidates current access.
-
-The agreed target is personal devices across phones, tablets and computers. Local use survives ordinary reloads, app restarts, connection loss and expired server sessions. The user's explicit sign-out requirement supersedes the earlier lock-and-retain policy: remove private local data instead of retaining it for a later local unlock. This is a planned behavior change; the current Phase 1 code is unchanged.
-
-Before implementing destructive cleanup, resolve unsynced-work handling. The recommended flow synchronizes pending work before deletion when possible. If work remains or the device is offline, ordinary sign-out must not silently delete it: offer cancellation or a separate explicit discard-and-sign-out decision describing the loss. This safeguard is a proposal awaiting agreement, not permission to delete current records.
-
-Stop writes/uploads before cleanup and coordinate other tabs so old in-memory state cannot restore deleted data. Delete the account's local working records, pending commands, undo and derived private state together; clear its binding and transient state. Keep generic HTML/JavaScript/CSS/icons/translations and unrelated workspace data. If cleanup fails, do not report completed removal or allow another account to reuse stale state. Later signing back in can restore only server-accepted data, not discarded unsynced work.
-
-Without connectivity, the application can remove private local data but cannot confirm server-session revocation. Report that distinction and ensure a surviving cookie cannot automatically reconnect the removed dataset. Exact offline revocation handling belongs to the later account/sync flow. This policy trusts the unlocked personal device and does not encrypt IndexedDB; advanced shared-device controls remain deferred.
-
-## Service worker and routing
-
-Cache generic application assets separately from user records. The implemented public entry and manifest launch target is `/app`. Precache its complete required asset graph, including code for unvisited local views, styles, fonts/icons and both catalogs. Workspace metadata now initializes in IndexedDB; private domain data follows in feature phases. Local language switching requires no translation download or server refresh. See [PWA verification](phase-2-handoff.md) and [storage verification](phase-2-storage-handoff.md).
-
-Prove all of these against a production build:
-
-- Cold-launch and reload the normal local application with the network disabled and no authenticated session.
-- Navigate between all implemented local views without first visiting each one online.
-- After their feature phases, create teams/players, set up a new match, record, reload and view retained history entirely offline. Reject unknown existing IDs without an implicit write.
-- Continue all local workflows after the online session expires, without an auth redirect breaking local boot.
-- Move between required offline views without requesting an unavailable server component payload.
-- Prevent account switching from reassigning or uploading another account's local data; verify sign-out cleanup and unsynced-work safeguards when implemented.
-- Switch English/Portuguese offline without losing a draft, clock or pending records.
-
-Do not cache arbitrary personalized HTML, API responses or authentication redirects to solve routing failures. The offline shell itself contains no private server-rendered account data.
-
-Show offline readiness only after required assets and database initialization succeed; do not require a pre-existing game. First-ever access to an uncached application cannot work offline. Recheck readiness after interrupted installation or storage loss. Local data and application caches belong to the current origin/browser context; a hostname change does not migrate them.
-
-Use prompted service-worker updates. Defer activation/reload while recording, while the add-event UI is open or while a local transaction is in progress. Keep old required assets until a safe activation point.
-
-## Migrations and local concurrency
-
-Version IndexedDB schemas, SQL migrations and wire contracts independently. Test existing games, pending commands and undo history through upgrades. Do not reset storage to recover from a failed migration.
-
-Handle blocked IndexedDB upgrades with an explanation about other tabs. Use transactional revision checks as the correctness boundary; tab notifications or locks are supplementary. A second recorder tab is read-only by default.
-
-Wait for complete IndexedDB transaction success before reporting local save. Evaluate strict durability support in the chosen wrapper/browser combination; document actual guarantees rather than promising survival of every power/device failure.
-
-The current Dexie configuration requests `chromeTransactionDurability: "strict"`, which applies where the wrapper/browser supports that option. Readiness waits for transaction completion. This does not establish power-loss durability across browsers or make local data a backup. Blocked initialization waits for the other connection to close; external version changes close the old connection and withdraw readiness without forcing a reload. Full feature migration and recorder-tab safeguards remain later work.
-
-## Limits and deferred backup
-
-Request persistent browser storage where supported and handle refusal. Storage estimates are approximate. Unsynced changes exist only on the device until uploaded and can be lost if its storage is cleared or the device fails.
-
-Manual export/import, automatic backup and recovery tooling remain in the backlog at the user's request. They are not prerequisites of the current implementation phases. Acknowledged server storage improves recovery but is not itself a complete backup policy.
-
-Source: [Browser storage quotas and eviction](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria), [IndexedDB transaction durability](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/transaction).
+Full downloads, local history retention and personal-device access are deliberate prototype choices. Incremental downloads, cross-device Undo, export/backup, encrypted/shared-device unlock and conflict recovery remain in the [Backlog](backlog.md). See [Development plan](development-plan.md) for verification limits.

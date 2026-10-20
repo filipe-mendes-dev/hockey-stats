@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-import { LoginForm } from "../../client/auth/login-form";
-import { AppShell } from "../../client/shell/app-shell";
+import { SignInPage as SignInPageView } from "../../client/pages/SignInPage/SignInPage";
+import { AppShell } from "../../client/components/AppShell/AppShell";
 import { getSession } from "../../server/auth/session";
 
 export default async function SignInPage() {
   const session = await getSession();
-  if (session) redirect("/");
+  if (session) redirect("/app");
   return (
     <AppShell>
-      <LoginForm />
+      <SignInPageView />
     </AppShell>
   );
 }

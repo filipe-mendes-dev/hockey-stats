@@ -1,0 +1,51 @@
+.fields {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.players li {
+  min-width: 0;
+}
+.players button {
+  width: 100%;
+  min-height: 3.5rem;
+  overflow-wrap: anywhere;
+}
+.fields label {
+  display: grid;
+  gap: 0.5rem;
+}
+.fields input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-control);
+  border-radius: 0.5rem;
+}
+.error {
+  color: var(--color-error);
+}
+
+.choices > button {
+  flex: 1 1 10rem;
+  min-width: 0;
+  padding-inline: min(1.25rem, 4vw);
+}
