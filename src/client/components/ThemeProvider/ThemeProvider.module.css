@@ -7,7 +7,7 @@
   padding-block: 0.625rem;
   font-weight: 600;
   line-height: 1.4;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-button);
 }
 
 .buttonLabel {
@@ -54,6 +54,7 @@
   flex-shrink: 0;
   min-width: 2.75rem;
   min-height: 2.75rem;
+  border-radius: var(--radius-icon);
 }
 
 .modal {
@@ -75,6 +76,7 @@
   min-height: 3rem;
   font-size: 1rem;
   background-color: var(--color-surface-input);
+  border-radius: var(--radius-input);
 }
 
 .label {
@@ -139,4 +141,42 @@
 }
 .button::before {
   transition: opacity 100ms ease;
+}
+
+.segmented {
+  --sc-transition-duration: 180ms;
+  min-width: 0;
+  padding: 0.125rem;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-input);
+}
+.segmentLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.625rem;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+}
+.segmentLabel[data-active] {
+  color: var(--color-on-selection);
+}
+.segmentIndicator {
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--color-selection-start),
+    var(--color-selection-end)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .segmented {
+    --sc-transition-duration: 0ms;
+  }
 }

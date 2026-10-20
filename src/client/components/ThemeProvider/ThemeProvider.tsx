@@ -10,6 +10,7 @@ import {
   Modal,
   NativeSelect,
   PasswordInput,
+  SegmentedControl,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -62,7 +63,7 @@ const theme = createTheme({
   },
   components: {
     Button: Button.extend({
-      defaultProps: { size: "md" },
+      defaultProps: { size: "md", radius: "var(--radius-button)" },
       classNames: (_theme, props) => ({
         root: props.size === "sm" ? `${st.button} ${st.compact}` : st.button,
         label: st.buttonLabel,
@@ -70,7 +71,11 @@ const theme = createTheme({
       }),
     }),
     ActionIcon: ActionIcon.extend({
-      defaultProps: { size: 44, variant: "subtle", radius: "md" },
+      defaultProps: {
+        size: 44,
+        variant: "subtle",
+        radius: "var(--radius-icon)",
+      },
       classNames: { root: st.iconAction },
     }),
     Modal: Modal.extend({
@@ -83,7 +88,7 @@ const theme = createTheme({
       },
     }),
     Input: Input.extend({
-      defaultProps: { size: "md" },
+      defaultProps: { size: "md", radius: "var(--radius-input)" },
       classNames: { input: st.input },
     }),
     InputWrapper: Input.Wrapper.extend({ classNames: { label: st.label } }),
@@ -97,6 +102,18 @@ const theme = createTheme({
       classNames: { visibilityToggle: st.visibilityToggle },
     }),
     NativeSelect: NativeSelect.extend({ defaultProps: { size: "md" } }),
+    SegmentedControl: SegmentedControl.extend({
+      defaultProps: {
+        fullWidth: true,
+        radius: "var(--radius-pill)",
+        withItemsBorders: false,
+      },
+      classNames: {
+        root: st.segmented,
+        label: st.segmentLabel,
+        indicator: st.segmentIndicator,
+      },
+    }),
     Tooltip: Tooltip.extend({
       classNames: { tooltip: st.tooltip },
       defaultProps: { multiline: true, maw: 240 },

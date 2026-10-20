@@ -5,6 +5,10 @@
   --color-surface-elevated: #25282d;
   --color-surface-glass: rgb(29 31 35 / 72%);
   --color-surface-glass-elevated: rgb(37 40 45 / 90%);
+  --color-surface-dialog: #181b1f;
+  --color-surface-dialog-glass: rgb(20 23 26 / 76%);
+  --color-surface-dialog-chrome: rgb(236 238 241 / 3%);
+  --color-overlay-dialog: rgb(0 0 0 / 38%);
   --color-surface-header: rgb(20 21 24 / 78%);
   --color-surface-input: rgb(20 21 24 / 64%);
   --color-surface-hover: #2a2d33;
@@ -22,6 +26,9 @@
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;
   --color-action-pressed: #a3c4b9;
+  --color-selection-start: var(--color-action);
+  --color-selection-end: #96c5b5;
+  --color-on-selection: var(--color-on-action);
   --color-surface-action: rgb(184 216 206 / 7%);
   --color-border-action: rgb(184 216 206 / 24%);
   --color-on-action: #182421;
@@ -31,7 +38,10 @@
   --color-on-error: #381211;
   --color-success: #a8d8b5;
   --radius-control: 0.875rem;
+  --radius-input: 1.25rem;
+  --radius-button: 1.25rem;
   --radius-pill: 9999px;
+  --radius-icon: var(--radius-pill);
   --radius-surface: 1.25rem;
   font-family: system-ui, sans-serif;
   color: var(--color-text);
