@@ -1,0 +1,16 @@
+.indicator {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-control);
+  color: var(--color-text-muted);
+}
+.indicator[data-state="blocked"],
+.indicator[data-state="unavailable"] {
+  color: var(--color-error);
+}
+.indicator[data-state="saved"],
+.indicator[data-state="waiting"] {
+  color: var(--color-action);
+}

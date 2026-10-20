@@ -30,7 +30,8 @@
   --color-error-hover: #ffc2be;
   --color-on-error: #381211;
   --color-success: #a8d8b5;
-  --radius-control: 0.625rem;
+  --radius-control: 0.875rem;
+  --radius-pill: 9999px;
   --radius-surface: 1.25rem;
   font-family: system-ui, sans-serif;
   color: var(--color-text);

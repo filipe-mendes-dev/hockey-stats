@@ -1,17 +1,3 @@
-.phoneAccountAction {
-  display: none;
-}
-
-@media (max-width: 36rem) {
-  .desktopAccountAction {
-    display: none;
-  }
-
-  .phoneAccountAction {
-    display: inline-flex;
-  }
-}
-
 .shell {
   display: flex;
   flex-direction: column;

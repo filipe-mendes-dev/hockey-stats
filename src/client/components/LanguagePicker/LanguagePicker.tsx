@@ -23,8 +23,9 @@ export function LanguagePicker() {
     <Menu
       opened={opened}
       onChange={setOpened}
-      width="target"
+      width={136}
       position="bottom-end"
+      classNames={{ dropdown: st.dropdown, item: st.item }}
       withinPortal
     >
       <Menu.Target>
@@ -33,17 +34,17 @@ export function LanguagePicker() {
           data-expanded={opened || undefined}
           aria-label={t("pickerLabel", { language: t(selected.label) })}
         >
-          <Group gap="xs" wrap="nowrap" className={st.selection}>
+          <Group gap={6} wrap="nowrap" className={st.selection}>
             <Image
               src={selected.image}
-              w={22}
-              h={17}
+              w={16}
+              h={12}
               alt=""
               className={st.flag}
             />
             <span className={st.label}>{t(selected.label)}</span>
           </Group>
-          <ChevronDown size={16} className={st.chevron} aria-hidden="true" />
+          <ChevronDown size={12} className={st.chevron} aria-hidden="true" />
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
@@ -55,15 +56,15 @@ export function LanguagePicker() {
             leftSection={
               <Image
                 src={language.image}
-                w={18}
-                h={14}
+                w={16}
+                h={12}
                 alt=""
                 className={st.flag}
               />
             }
             rightSection={
               locale === language.locale ? (
-                <Check size={14} aria-hidden="true" />
+                <Check size={12} aria-hidden="true" />
               ) : undefined
             }
           >

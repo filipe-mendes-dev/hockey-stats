@@ -1,0 +1,41 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.625rem 0;
+}
+.row + .row {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+.main:hover .title {
+  color: var(--color-action);
+}
+.avatar {
+  display: flex;
+  flex-shrink: 0;
+}
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.meta,
+.actions {
+  display: flex;
+  flex-shrink: 0;
+}

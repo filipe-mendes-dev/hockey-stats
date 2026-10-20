@@ -11,6 +11,7 @@ import {
   NativeSelect,
   PasswordInput,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import type { CSSVariablesResolver } from "@mantine/core";
 import type { ThemeProviderProps } from "./ThemeProvider.interfaces";
@@ -23,7 +24,7 @@ const theme = createTheme({
   autoContrast: true,
   black: "#182421",
   defaultRadius: "md",
-  radius: { md: "0.625rem", lg: "0.75rem", xl: "1.25rem" },
+  radius: { md: "var(--radius-control)", lg: "0.75rem", xl: "1.25rem" },
   colors: {
     dark: [
       "#eceef1",
@@ -64,6 +65,7 @@ const theme = createTheme({
       classNames: (_theme, props) => ({
         root: props.size === "sm" ? `${st.button} ${st.compact}` : st.button,
         label: st.buttonLabel,
+        inner: st.buttonInner,
       }),
     }),
     ActionIcon: ActionIcon.extend({
@@ -94,6 +96,10 @@ const theme = createTheme({
       classNames: { visibilityToggle: st.visibilityToggle },
     }),
     NativeSelect: NativeSelect.extend({ defaultProps: { size: "md" } }),
+    Tooltip: Tooltip.extend({
+      classNames: { tooltip: st.tooltip },
+      defaultProps: { multiline: true, maw: 240 },
+    }),
     Menu: Menu.extend({
       defaultProps: { radius: "lg" },
       classNames: { dropdown: st.dropdown, item: st.menuItem },

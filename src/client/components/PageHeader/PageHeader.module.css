@@ -1,0 +1,30 @@
+.header {
+  margin-bottom: 2.5rem;
+}
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--color-action);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+.description {
+  margin-top: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+@media (max-width: 36rem) {
+  .header {
+    margin-bottom: 2rem;
+  }
+}
+
+.header[data-with-back="true"] {
+  margin-bottom: 1.5rem;
+}

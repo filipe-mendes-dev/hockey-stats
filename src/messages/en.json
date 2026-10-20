@@ -103,7 +103,18 @@
     "loadFailed": "Could not read the player data. Try again. Existing records have not been removed.",
     "retry": "Try again",
     "saving": "Saving player…",
-    "saveFailed": "The player could not be saved. Your name is still here. Try creating the player again."
+    "saveFailed": "The player could not be saved. Your name is still here. Try creating the player again.",
+    "newPlayer": "New player",
+    "view": "View player",
+    "viewPlayer": "View {name}",
+    "editUnavailable": "Editing is not available yet",
+    "deleteUnavailable": "Deletion is not available yet",
+    "editPlayerUnavailable": "Edit {name}, unavailable",
+    "deletePlayerUnavailable": "Delete {name}, unavailable",
+    "actionsFor": "Actions for {name}",
+    "actionsUnavailable": "Actions are not available yet",
+    "edit": "Edit",
+    "delete": "Delete"
   },
   "appHome": {
     "title": "Home",
@@ -464,5 +475,14 @@
     "filesIssue": "Offline files unavailable",
     "offlineReady": "Available offline",
     "updateReady": "Update ready"
+  },
+  "navigation": {
+    "label": "Navigation",
+    "open": "Open navigation",
+    "close": "Close navigation",
+    "home": "Home",
+    "players": "Players",
+    "teams": "Teams",
+    "matches": "Matches"
   }
 }

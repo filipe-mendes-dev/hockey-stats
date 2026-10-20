@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ActionIcon, Button } from "@mantine/core";
-import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -90,31 +88,18 @@ export function AppShell({ children }: AppShellProps) {
       <a className={st.skipLink} href="#main-content">
         {t("shell.skipToContent")}
       </a>
-      <AppHeader homeHref={isSignIn ? "/sign-in" : "/app"}>
-        {showAccountActions && (
-          <>
-            <Button
-              className={st.desktopAccountAction}
-              variant="subtle"
-              size="sm"
-              type="button"
-              leftSection={<LogOut size={16} aria-hidden="true" />}
-              onClick={() => setConfirmingSignOut(true)}
-              disabled={pending}
-            >
-              {pending ? t("auth.signingOut") : t("auth.signOut")}
-            </Button>
-            <ActionIcon
-              className={st.phoneAccountAction}
-              aria-label={t("auth.signOut")}
-              onClick={() => setConfirmingSignOut(true)}
-              disabled={pending}
-            >
-              <LogOut size={19} aria-hidden="true" />
-            </ActionIcon>
-          </>
-        )}
-      </AppHeader>
+      <AppHeader
+        homeHref={isSignIn ? "/sign-in" : "/app"}
+        accountAction={
+          showAccountActions
+            ? {
+                label: pending ? t("auth.signingOut") : t("auth.signOut"),
+                pending,
+                onClick: () => setConfirmingSignOut(true),
+              }
+            : undefined
+        }
+      />
       {failed && !confirmingSignOut && (
         <p className={st.error} role="alert">
           {t(`auth.${failed}`)}

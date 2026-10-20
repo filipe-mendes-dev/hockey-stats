@@ -1,0 +1,10 @@
+.avatar {
+  background: var(--color-surface-action);
+  color: var(--color-action);
+  border: 1px solid var(--color-border-action);
+  font-size: 0.8125rem;
+}
+.avatarPlaceholder {
+  background: transparent;
+  color: inherit;
+}

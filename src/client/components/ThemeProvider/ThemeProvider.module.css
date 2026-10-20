@@ -1,7 +1,10 @@
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 3rem;
   height: auto;
-  padding-block: 0.75rem;
+  padding-block: 0.625rem;
   font-weight: 600;
   border-radius: var(--radius-control);
 }
@@ -111,4 +114,17 @@
   .input {
     transition: none;
   }
+}
+
+.tooltip {
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  box-shadow: var(--shadow-floating);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.buttonInner {
+  height: auto;
 }

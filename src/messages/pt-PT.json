@@ -103,7 +103,18 @@
     "loadFailed": "Não foi possível ler os dados dos jogadores. Tente novamente. Os registos existentes não foram eliminados.",
     "retry": "Tentar novamente",
     "saving": "A guardar jogador…",
-    "saveFailed": "Não foi possível guardar o jogador. O nome introduzido foi mantido. Tente criar o jogador novamente."
+    "saveFailed": "Não foi possível guardar o jogador. O nome introduzido foi mantido. Tente criar o jogador novamente.",
+    "newPlayer": "Novo jogador",
+    "view": "Ver jogador",
+    "viewPlayer": "Ver {name}",
+    "editUnavailable": "A edição ainda não está disponível",
+    "deleteUnavailable": "A eliminação ainda não está disponível",
+    "editPlayerUnavailable": "Editar {name}, indisponível",
+    "deletePlayerUnavailable": "Eliminar {name}, indisponível",
+    "actionsFor": "Ações para {name}",
+    "actionsUnavailable": "As ações ainda não estão disponíveis",
+    "edit": "Editar",
+    "delete": "Eliminar"
   },
   "appHome": {
     "title": "Início",
@@ -464,5 +475,14 @@
     "filesIssue": "Ficheiros sem ligação indisponíveis",
     "offlineReady": "Disponível sem ligação",
     "updateReady": "Atualização disponível"
+  },
+  "navigation": {
+    "label": "Navegação",
+    "open": "Abrir navegação",
+    "close": "Fechar navegação",
+    "home": "Início",
+    "players": "Jogadores",
+    "teams": "Equipas",
+    "matches": "Jogos"
   }
 }
