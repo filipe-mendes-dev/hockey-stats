@@ -360,7 +360,9 @@
     "periodDuration": "{minutes, plural, one {# minuto} other {# minutos}}",
     "backToDetails": "Voltar aos detalhes do jogo",
     "completed": "Terminado",
-    "summaryTitle": "Resumo do jogo"
+    "summaryTitle": "Resumo do jogo",
+    "matchLabel": "{team} vs {opponent}",
+    "calledUpCount": "{count, plural, one {# convocado} other {# convocados}}"
   },
   "recorder": {
     "period": "Período",
