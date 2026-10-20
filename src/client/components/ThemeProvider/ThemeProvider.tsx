@@ -22,6 +22,7 @@ const theme = createTheme({
   primaryColor: "mint",
   primaryShade: 3,
   autoContrast: true,
+  activeClassName: "",
   black: "#182421",
   defaultRadius: "md",
   radius: { md: "var(--radius-control)", lg: "0.75rem", xl: "1.25rem" },

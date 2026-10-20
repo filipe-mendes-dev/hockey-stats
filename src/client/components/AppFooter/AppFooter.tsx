@@ -12,7 +12,6 @@ import { LocalStorageStatus } from "../../pwa/LocalStorageStatus";
 import { PwaStatus } from "../../pwa/PwaStatus";
 import { useServiceWorker } from "../../pwa/use-service-worker";
 import { useDatabaseStatus } from "../../storage/useDatabaseStatus";
-import { LanguagePicker } from "../LanguagePicker/LanguagePicker";
 import type { ApplicationStatusProps } from "./AppFooter.interfaces";
 import st from "./AppFooter.module.css";
 
@@ -34,6 +33,11 @@ function ApplicationStatus({ worker }: ApplicationStatusProps) {
       <div className={st.row}>
         <div className={st.summary}>
           <SyncStatusPanel />
+          {worker.updateAvailable && (
+            <span className={st.mobileUpdate} role="status">
+              {t("updateReady")}
+            </span>
+          )}
           {!sync.accountName && !storageIssue && (
             <span className={st.hint} role="status">
               <HardDrive size={15} aria-hidden="true" />
@@ -56,6 +60,7 @@ function ApplicationStatus({ worker }: ApplicationStatusProps) {
         <div className={st.tools}>
           {worker.updateAvailable ? (
             <Button
+              className={st.updateAction}
               size="sm"
               variant="subtle"
               onClick={() => setDetailsOpen(true)}
@@ -65,7 +70,9 @@ function ApplicationStatus({ worker }: ApplicationStatusProps) {
           ) : (
             filesCached &&
             storage.status === "ready" && (
-              <span className={st.hint}>{t("offlineReady")}</span>
+              <span className={`${st.hint} ${st.offlineReady}`}>
+                {t("offlineReady")}
+              </span>
             )
           )}
           <Button
@@ -123,9 +130,6 @@ export function AppFooter() {
       aria-label={t("label")}
     >
       <div className={st.content}>
-        <div className={st.language}>
-          <LanguagePicker />
-        </div>
         {isApp ? (
           <ApplicationStatus worker={worker} />
         ) : (

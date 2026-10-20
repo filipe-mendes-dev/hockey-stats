@@ -6,11 +6,15 @@
   height: auto;
   padding-block: 0.625rem;
   font-weight: 600;
+  line-height: 1.4;
   border-radius: var(--radius-control);
 }
 
 .buttonLabel {
   height: auto;
+  line-height: 1.4;
+  text-box-trim: none;
+  overflow: visible;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -125,6 +129,14 @@
   line-height: 1.5;
 }
 
-.buttonInner {
+.button .buttonInner {
   height: auto;
+  transition: opacity 100ms ease;
+}
+.button[data-loading] .buttonInner,
+.button::before {
+  transform: none;
+}
+.button::before {
+  transition: opacity 100ms ease;
 }

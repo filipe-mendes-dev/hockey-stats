@@ -133,7 +133,9 @@
 .drawerLinks {
   overflow-y: auto;
 }
-.drawerAccount {
+.drawerBottom {
+  display: grid;
+  gap: 0.5rem;
   margin-top: auto;
   padding-top: 1rem;
   padding-bottom: env(safe-area-inset-bottom);
@@ -161,5 +163,15 @@
   }
   .actions {
     grid-column: 2;
+  }
+}
+
+.drawerLanguage {
+  display: flex;
+  justify-content: center;
+}
+@media (max-width: 36rem) {
+  .header[data-auth-page="true"] .language {
+    display: block;
   }
 }

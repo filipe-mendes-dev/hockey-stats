@@ -35,7 +35,7 @@ export function AppHeader({
   }
 
   return (
-    <header className={st.header}>
+    <header className={st.header} data-auth-page={homeHref === "/sign-in"}>
       <div className={st.content}>
         <Link className={st.brand} href={homeHref} prefetch={false}>
           <span className={st.mark} aria-hidden="true">
@@ -100,8 +100,11 @@ export function AppHeader({
           <div className={st.drawerLinks}>
             <AppNavigation vertical onNavigate={closeNavigation} />
           </div>
-          {accountAction && (
-            <div className={st.drawerAccount}>
+          <div className={st.drawerBottom}>
+            <div className={st.drawerLanguage}>
+              <LanguagePicker />
+            </div>
+            {accountAction && (
               <Button
                 variant="subtle"
                 fullWidth
@@ -114,8 +117,8 @@ export function AppHeader({
               >
                 {accountAction.label}
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </Drawer>
       )}
     </header>

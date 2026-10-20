@@ -45,7 +45,7 @@
 .hint > svg {
   flex-shrink: 0;
 }
-.language {
+.mobileUpdate {
   display: none;
 }
 .details {
@@ -69,19 +69,32 @@
   }
 }
 @media (max-width: 36rem) {
-  .language {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 0.75rem;
+  .content {
+    padding-block: 0.75rem;
   }
   .row {
-    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    min-height: 2.75rem;
   }
   .summary {
-    flex-basis: 100%;
-    justify-content: center;
+    flex: 1 1 0;
+    justify-content: flex-start;
+    gap: 0.25rem;
   }
   .tools {
-    justify-content: center;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+  .tools .offlineReady,
+  .tools .updateAction {
+    display: none;
+  }
+  .mobileUpdate {
+    display: inline;
+    color: var(--color-action);
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
 }

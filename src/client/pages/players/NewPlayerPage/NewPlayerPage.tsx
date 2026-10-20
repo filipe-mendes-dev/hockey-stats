@@ -1,5 +1,6 @@
 "use client";
 
+import { TextInput } from "@mantine/core";
 import { useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useTranslations } from "next-intl";
@@ -7,9 +8,9 @@ import { useRouter } from "next/navigation";
 import { useCreatePlayer } from "../../../features/players/mutations/players.mutations";
 import { createPlayerInputSchema } from "../../../../domain/players/validation/createPlayer.schema";
 import type { CreatePlayerInput } from "../../../../domain/players/validation/createPlayer.schema";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
-import { EntityForm } from "../../../components/EntityForm/EntityForm";
-import { TextInputField } from "../../../components/TextInputField/TextInputField";
+import { PageHeader } from "../../../components/PageHeader/PageHeader";
+import { FormLayout } from "../../../components/FormLayout/FormLayout";
+import st from "./NewPlayerPage.module.css";
 
 export function NewPlayerPage() {
   const creation = useCreatePlayer();
@@ -43,27 +44,25 @@ export function NewPlayerPage() {
   }
 
   return (
-    <EntityPage
-      backHref="/app/players"
-      backLabel={t("back")}
-      title={t("newTitle")}
-      description={t("newDescription")}
-      storageNotice={t("storageNotice")}
-    >
-      <EntityForm
+    <section className={st.page}>
+      <PageHeader
+        back={{ href: "/app/players", label: t("back") }}
+        title={t("newTitle")}
+        description={t("newDescription")}
+      />
+      <FormLayout
+        label={t("newTitle")}
         pending={creation.isPending}
-        failed={creation.isError}
-        failedLabel={t("saveFailed")}
+        error={creation.isError ? t("saveFailed") : null}
         submitLabel={t(creation.isPending ? "saving" : "create")}
         cancelLabel={t("cancel")}
         cancelHref="/app/players"
         onSubmit={submit}
       >
-        <TextInputField
-          inputRef={nameInput}
+        <TextInput
+          ref={nameInput}
           name="name"
           label={t("name")}
-          requiredLabel={t("required")}
           placeholder={t("namePlaceholder")}
           autoComplete="off"
           autoCapitalize="words"
@@ -71,13 +70,14 @@ export function NewPlayerPage() {
           disabled={creation.isPending}
           value={name}
           error={invalid ? t("nameRequired") : undefined}
+          errorProps={{ role: "alert" }}
           onChange={(event) => {
             setName(event.target.value);
             if (creation.isError) creation.reset();
             if (invalid && event.target.value.trim()) setInvalid(false);
           }}
         />
-      </EntityForm>
-    </EntityPage>
+      </FormLayout>
+    </section>
   );
 }
