@@ -1,9 +1,16 @@
 {
   "shell": {
-    "title": "Benchline Stats"
+    "title": "Benchline Stats",
+    "description": "Estatísticas de hóquei em patins",
+    "skipToContent": "Saltar para o conteúdo"
   },
   "auth": {
     "signIn": "Iniciar sessão",
+    "welcomeBack": "Bem-vindo de volta",
+    "signInDescription": "Inicie sessão para gerir as suas equipas e registar jogos.",
+    "offlineHint": "Inicie sessão com ligação à Internet para preparar este dispositivo. Depois, pode registar jogos mesmo sem ligação.",
+    "showPassword": "Mostrar palavra-passe",
+    "hidePassword": "Ocultar palavra-passe",
     "signingIn": "A iniciar sessão…",
     "username": "Nome de utilizador",
     "password": "Palavra-passe",
@@ -22,6 +29,9 @@
   },
   "language": {
     "label": "Idioma",
+    "pickerLabel": "Idioma: {language}",
+    "englishNative": "English",
+    "portugueseNative": "Português",
     "english": "Inglês",
     "portuguese": "Português (Portugal)"
   },
@@ -42,6 +52,7 @@
     }
   },
   "pwa": {
+    "statusLabel": "Disponibilidade da aplicação",
     "title": "Benchline Stats",
     "description": "Gira jogadores, equipas e a preparação de jogos.",
     "preparing": "A preparar os ficheiros da aplicação para utilização sem ligação…",

@@ -1,9 +1,16 @@
 {
   "shell": {
-    "title": "Benchline Stats"
+    "title": "Benchline Stats",
+    "description": "Rink hockey statistics",
+    "skipToContent": "Skip to content"
   },
   "auth": {
     "signIn": "Sign in",
+    "welcomeBack": "Welcome back",
+    "signInDescription": "Sign in to manage your teams and record matches.",
+    "offlineHint": "Sign in online to set up this device. Then record matches offline, too.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "signingIn": "Signing in…",
     "username": "Username",
     "password": "Password",
@@ -22,6 +29,9 @@
   },
   "language": {
     "label": "Language",
+    "pickerLabel": "Language: {language}",
+    "englishNative": "English",
+    "portugueseNative": "Português",
     "english": "English",
     "portuguese": "Portuguese (Portugal)"
   },
@@ -42,6 +52,7 @@
     }
   },
   "pwa": {
+    "statusLabel": "Application availability",
     "title": "Benchline Stats",
     "description": "Manage players, teams and match setup.",
     "preparing": "Preparing application files for offline use…",
