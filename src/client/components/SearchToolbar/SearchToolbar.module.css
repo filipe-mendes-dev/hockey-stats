@@ -23,6 +23,7 @@
   border: 0;
   outline: none;
   box-shadow: none;
+  text-overflow: ellipsis;
   padding-inline-start: 2.5rem;
 }
 .input::-webkit-search-cancel-button {
