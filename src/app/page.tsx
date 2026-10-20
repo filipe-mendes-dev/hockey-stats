@@ -1,14 +1,9 @@
 import { redirect } from "next/navigation";
-import { AppShell } from "../client/components/AppShell/AppShell";
 import { HomePage as HomePageView } from "../client/pages/HomePage/HomePage";
 import { getSession } from "../server/auth/session";
 
 export default async function HomePage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  return (
-    <AppShell authenticated>
-      <HomePageView name={session.user.name} />
-    </AppShell>
-  );
+  return <HomePageView name={session.user.name} />;
 }
