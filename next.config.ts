@@ -12,6 +12,13 @@ const withNextIntl = createNextIntlPlugin({
 
 export default withSerwist(
   withNextIntl({
+    experimental: {
+      optimizePackageImports: [
+        "@mantine/core",
+        "@mantine/hooks",
+        "lucide-react",
+      ],
+    },
     async headers() {
       return [
         {
