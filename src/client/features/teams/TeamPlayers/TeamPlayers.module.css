@@ -1,5 +1,4 @@
-.players,
-.picker {
+.players {
   display: grid;
   gap: 1rem;
   min-width: 0;
@@ -9,20 +8,6 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
-.list {
-  display: grid;
-  gap: 1rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  min-width: 0;
-}
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
 .heading {
   display: flex;
   align-items: center;

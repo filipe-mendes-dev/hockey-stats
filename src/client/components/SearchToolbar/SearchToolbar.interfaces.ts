@@ -1,9 +1,6 @@
-export interface SearchToolbarProps {
-  label: string;
-  placeholder: string;
-  clearLabel: string;
-  value: string;
-  onChange: (value: string) => void;
+import type { SearchFieldProps } from "../SearchField/SearchField.interfaces";
+
+export interface SearchToolbarProps extends Omit<SearchFieldProps, "children"> {
   actionHref: string;
   actionLabel: string;
   compactActionLabel: string;

@@ -252,7 +252,14 @@
     "loading": "Loading team players…",
     "duplicate": "Some players have the same jersey number. You can still save.",
     "unknown": "Player unavailable",
-    "saved": "Team players saved on this device."
+    "saved": "Team players saved on this device.",
+    "step": "Step {step} of {total}",
+    "selectPlayers": "Select players",
+    "configureMemberships": "Configure memberships",
+    "continue": "Continue",
+    "addCount": "{count, plural, one {Add # player} other {Add # players}}",
+    "backToSelection": "Back",
+    "noAvailable": "No players available to add. All players are already in this team, or none have been created."
   },
   "matches": {
     "title": "Matches",

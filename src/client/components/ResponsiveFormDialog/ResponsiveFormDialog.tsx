@@ -14,6 +14,9 @@ export function ResponsiveFormDialog({
   submitLabel,
   cancelLabel,
   pending,
+  layout = "compact",
+  submitDisabled = false,
+  secondaryAction,
   error,
   children,
   onSubmit,
@@ -51,7 +54,8 @@ export function ResponsiveFormDialog({
       opened={opened}
       onClose={close}
       title={title}
-      size="sm"
+      size={layout === "flow" ? "lg" : "sm"}
+      data-layout={layout}
       fullScreen={phone}
       centered={!phone}
       closeOnClickOutside={false}
@@ -96,12 +100,22 @@ export function ResponsiveFormDialog({
             size="sm"
             variant="subtle"
             disabled={pending}
-            onClick={close}
+            onClick={() => {
+              if (!pending) {
+                if (secondaryAction) secondaryAction.onClick();
+                else close();
+              }
+            }}
             className={st.cancel}
           >
-            {cancelLabel}
+            {secondaryAction?.label ?? cancelLabel}
           </Button>
-          <Button type="submit" size="sm" loading={pending} disabled={pending}>
+          <Button
+            type="submit"
+            size="sm"
+            loading={pending}
+            disabled={pending || submitDisabled}
+          >
             {submitLabel}
           </Button>
         </div>

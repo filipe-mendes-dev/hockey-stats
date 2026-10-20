@@ -252,7 +252,14 @@
     "loading": "A carregar jogadores da equipa…",
     "duplicate": "Alguns jogadores têm o mesmo número de camisola. Pode guardar na mesma.",
     "unknown": "Jogador indisponível",
-    "saved": "Jogadores da equipa guardados neste dispositivo."
+    "saved": "Jogadores da equipa guardados neste dispositivo.",
+    "step": "Passo {step} de {total}",
+    "selectPlayers": "Selecionar jogadores",
+    "configureMemberships": "Configurar inscrições",
+    "continue": "Continuar",
+    "addCount": "{count, plural, one {Adicionar # jogador} other {Adicionar # jogadores}}",
+    "backToSelection": "Voltar",
+    "noAvailable": "Não há jogadores disponíveis para adicionar. Todos os jogadores já pertencem a esta equipa ou ainda não foram criados jogadores."
   },
   "matches": {
     "title": "Jogos",

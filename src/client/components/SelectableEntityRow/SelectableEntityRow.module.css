@@ -1,0 +1,36 @@
+.item + .item {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.row.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 4rem;
+  padding: 0.625rem 0.5rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+}
+.row:hover {
+  background: var(--color-surface-highlight);
+}
+.row[data-checked] {
+  background: var(--color-surface-action);
+}
+.avatar,
+.indicator {
+  display: flex;
+  flex-shrink: 0;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}

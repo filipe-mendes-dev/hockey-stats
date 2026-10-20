@@ -91,3 +91,12 @@
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
+
+@media (min-width: 36.001rem) {
+  .root[data-layout="flow"] .content {
+    height: min(42rem, calc(100dvh - 2 * var(--modal-y-offset)));
+  }
+  .root[data-layout="flow"] .fields {
+    flex: 1;
+  }
+}
