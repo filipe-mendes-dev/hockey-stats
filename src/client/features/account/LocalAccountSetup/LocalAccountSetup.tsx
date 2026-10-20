@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { Button, ButtonLink } from "../../../components/Button/Button";
 import { subscribeLocalDataChanges } from "../../../storage/localDataEvents";
@@ -36,8 +37,7 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
         }
         const account = await getOnlineAccount();
         if (!account) {
-          if (active)
-            setState({ status: "signIn", account: null, playerCount: 0 });
+          if (active) window.location.replace("/sign-in");
           return;
         }
         const players = await listStoredPlayers();
@@ -84,16 +84,18 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
   }
 
   if (state.status === "ready") return children;
+  if (state.status === "loading") {
+    return (
+      <div className={st.loading} role="status" aria-label={t("loading")}>
+        <Loader size="sm" aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
-    <section
-      className={st.panel}
-      aria-busy={pending || state.status === "loading"}
-    >
+    <section className={st.panel} aria-busy={pending}>
       <h1>{t("title")}</h1>
-      {state.status === "loading" ? (
-        <p role="status">{t("loading")}</p>
-      ) : state.status === "import" && state.account ? (
+      {state.status === "import" && state.account ? (
         <>
           <p>
             {t("importDescription", {
@@ -127,9 +129,7 @@ export function LocalAccountSetup({ children }: LocalAccountSetupProps) {
         </>
       ) : (
         <>
-          <p role={state.status === "failed" ? "alert" : "status"}>
-            {t(state.status === "failed" ? "failed" : "signInRequired")}
-          </p>
+          <p role="alert">{t("failed")}</p>
           <div className={st.actions}>
             <ButtonLink href="/sign-in">{t("signIn")}</ButtonLink>
             <Button

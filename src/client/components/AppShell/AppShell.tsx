@@ -22,14 +22,18 @@ import st from "./AppShell.module.css";
 export function AppShell({ children }: AppShellProps) {
   const t = useTranslations();
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
   const isSignIn = pathname === "/sign-in";
-  const showAccountActions =
+  const supportsAccountActions =
     pathname === "/" || pathname === "/app" || pathname.startsWith("/app/");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState<
     "signOutFailed" | "signOutCleanupFailed" | null
   >(null);
   const sessionEnded = useRef(false);
+  const showAccountActions =
+    supportsAccountActions &&
+    (Boolean(session) || pending || failed === "signOutCleanupFailed");
 
   useEffect(() => {
     function leaveLocalApp(): void {
@@ -83,7 +87,7 @@ export function AppShell({ children }: AppShellProps) {
       <a className={st.skipLink} href="#main-content">
         {t("shell.skipToContent")}
       </a>
-      <AppHeader>
+      <AppHeader homeHref={isSignIn ? "/sign-in" : "/app"}>
         {showAccountActions && (
           <Button
             variant="default"

@@ -7,13 +7,13 @@ import { LanguagePicker } from "../LanguagePicker/LanguagePicker";
 import type { AppHeaderProps } from "./AppHeader.interfaces";
 import st from "./AppHeader.module.css";
 
-export function AppHeader({ children }: AppHeaderProps) {
+export function AppHeader({ children, homeHref = "/app" }: AppHeaderProps) {
   const t = useTranslations();
 
   return (
     <header className={st.header}>
       <div className={st.content}>
-        <Link className={st.brand} href="/app" prefetch={false}>
+        <Link className={st.brand} href={homeHref} prefetch={false}>
           <span className={st.mark} aria-hidden="true">
             <Activity size={21} strokeWidth={2} />
           </span>
