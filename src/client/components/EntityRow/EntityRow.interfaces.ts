@@ -4,6 +4,7 @@ export interface EntityRowProps {
   title: string;
   href: string;
   avatar: ReactNode;
+  description?: string;
   meta?: ReactNode;
   actions?: ReactNode;
 }

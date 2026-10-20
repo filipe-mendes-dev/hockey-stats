@@ -34,6 +34,18 @@
   font-weight: 500;
   line-height: 1.5;
 }
+.copy {
+  display: grid;
+  min-width: 0;
+}
+.description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
 .meta,
 .actions {
   display: flex;

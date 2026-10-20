@@ -6,6 +6,7 @@ export function EntityRow({
   title,
   href,
   avatar,
+  description,
   meta,
   actions,
 }: EntityRowProps) {
@@ -15,7 +16,16 @@ export function EntityRow({
         <span className={st.avatar} aria-hidden="true">
           {avatar}
         </span>
-        <span className={st.title}>{title}</span>
+        {description ? (
+          <span className={st.copy}>
+            <span className={st.title}>{title}</span>
+            <span className={st.description} title={description}>
+              {description}
+            </span>
+          </span>
+        ) : (
+          <span className={st.title}>{title}</span>
+        )}
       </Link>
       {meta && <div className={st.meta}>{meta}</div>}
       {actions && <div className={st.actions}>{actions}</div>}

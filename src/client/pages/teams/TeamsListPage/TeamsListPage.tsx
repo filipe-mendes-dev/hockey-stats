@@ -2,14 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { useLanguage } from "../../../i18n/LanguageProvider";
-import { ButtonLink } from "../../../components/Button/Button";
-import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
-import { ListItem } from "../../../components/ListItem/ListItem";
+import Link from "next/link";
+import { Alert, Button, Loader, Text, Title } from "@mantine/core";
+import { Search, Shield } from "lucide-react";
+import { PageHeader } from "../../../components/PageHeader/PageHeader";
+import { SearchToolbar } from "../../../components/SearchToolbar/SearchToolbar";
+import { TeamRow } from "../../../features/teams/TeamRow/TeamRow";
 import { useTeams } from "../../../features/teams/queries/teams.queries";
 import { useState } from "react";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
-import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
-import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
 import { normalizeSearch } from "../../../utils/search";
 import st from "./TeamsListPage.module.css";
 
@@ -31,37 +31,58 @@ export function TeamsListPage() {
     .sort((first, second) => collator.compare(first.name, second.name));
 
   return (
-    <EntityPage
-      backHref="/app"
-      backLabel={t("backToMenu")}
-      title={t("title")}
-      description={t("description")}
-      storageNotice={t("storageNotice")}
-    >
-      <div className={st.toolbar}>
-        <SearchInputField
-          label={t("searchLabel")}
-          placeholder={t("searchPlaceholder")}
-          clearLabel={t("clearSearch")}
-          value={search}
-          onChange={setSearch}
-        />
-        <ButtonLink href="/app/teams/new">{t("new")}</ButtonLink>
-      </div>
-      {teamsQuery.isPending || teamsQuery.isError ? (
-        <EntityDataStatus
-          loadingLabel={t("loading")}
-          failedLabel={t("loadFailed")}
-          retryLabel={t("retry")}
-          failed={teamsQuery.isError}
-          onRetry={() => {
-            void teamsQuery.refetch();
-          }}
-        />
+    <section className={st.page}>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        back={{ href: "/app", label: t("backToMenu") }}
+      />
+      <SearchToolbar
+        label={t("searchLabel")}
+        placeholder={t("searchPlaceholder")}
+        clearLabel={t("clearSearch")}
+        value={search}
+        onChange={setSearch}
+        actionHref="/app/teams/new"
+        actionLabel={t("newTitle")}
+        compactActionLabel={t("new")}
+      />
+      {teamsQuery.isPending ? (
+        <div className={st.loading} role="status">
+          <Loader size="sm" />
+          <Text>{t("loading")}</Text>
+        </div>
+      ) : teamsQuery.isError ? (
+        <Alert
+          className={st.error}
+          color="red"
+          title={t("loadFailed")}
+          role="alert"
+        >
+          <Button
+            variant="subtle"
+            size="sm"
+            onClick={() => {
+              void teamsQuery.refetch();
+            }}
+          >
+            {t("retry")}
+          </Button>
+        </Alert>
       ) : teams.length === 0 ? (
         <div className={st.empty}>
-          <h2>{t("emptyTitle")}</h2>
-          <p>{t("emptyDescription")}</p>
+          <Shield size={30} strokeWidth={1.4} aria-hidden="true" />
+          <Title order={2}>{t("emptyTitle")}</Title>
+          <Text>{t("emptyDescription")}</Text>
+          <Button
+            component={Link}
+            href="/app/teams/new"
+            prefetch={false}
+            variant="subtle"
+            size="sm"
+          >
+            {t("newTitle")}
+          </Button>
         </div>
       ) : (
         <>
@@ -70,27 +91,22 @@ export function TeamsListPage() {
           </p>
           {filtered.length === 0 ? (
             <div className={st.empty}>
-              <h2>{t("noMatchesTitle")}</h2>
-              <p>{t("noMatchesDescription")}</p>
+              <Search size={30} strokeWidth={1.4} aria-hidden="true" />
+              <Title order={2}>{t("noMatchesTitle")}</Title>
+              <Text>{t("noMatchesDescription")}</Text>
+              <Button variant="subtle" size="sm" onClick={() => setSearch("")}>
+                {t("clearSearch")}
+              </Button>
             </div>
           ) : (
             <ul className={st.list} aria-label={t("title")}>
               {filtered.map((team) => (
-                <ListItem
-                  key={team.id}
-                  title={team.name}
-                  href={`/app/teams/view?id=${encodeURIComponent(team.id)}`}
-                >
-                  <p className={st.metadata}>
-                    {[team.category, team.season].filter(Boolean).join(" · ")}
-                  </p>
-                  <DeliveryStatus kind="team.create" entityId={team.id} />
-                </ListItem>
+                <TeamRow key={team.id} team={team} />
               ))}
             </ul>
           )}
         </>
       )}
-    </EntityPage>
+    </section>
   );
 }
