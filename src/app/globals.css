@@ -2,11 +2,23 @@
   color-scheme: dark;
   --color-background: #141518;
   --color-surface: #1d1f23;
+  --color-surface-elevated: #25282d;
+  --color-surface-glass: rgb(29 31 35 / 72%);
+  --color-surface-glass-elevated: rgb(37 40 45 / 90%);
+  --color-surface-header: rgb(20 21 24 / 78%);
+  --color-surface-input: rgb(20 21 24 / 64%);
   --color-surface-hover: #2a2d33;
+  --color-canvas-highlight: rgb(236 238 241 / 5%);
   --color-text: #eceef1;
   --color-text-muted: #b0b5bf;
   --color-border: #35383d;
-  --color-border-control: #757b85;
+  --color-border-subtle: rgb(236 238 241 / 10%);
+  --color-border-control: #626873;
+  --color-surface-highlight: rgb(255 255 255 / 5%);
+  --shadow-surface:
+    0 16px 48px rgb(0 0 0 / 18%), inset 0 1px 0 var(--color-surface-highlight);
+  --shadow-floating: 0 8px 24px rgb(0 0 0 / 24%);
+  --surface-blur: 20px;
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;
   --color-action-pressed: #a3c4b9;
@@ -14,30 +26,24 @@
   --color-focus: #97d0ed;
   --color-error: #ffaaa5;
   --color-success: #a8d8b5;
+  --radius-control: 0.625rem;
+  --radius-surface: 1.25rem;
   font-family: system-ui, sans-serif;
   color: var(--color-text);
   background: var(--color-background);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 body {
   margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
 }
-button,
-input,
-select {
-  font: inherit;
-}
-a {
-  color: var(--color-action);
-}
-input::placeholder {
-  color: var(--color-text-muted);
-  opacity: 1;
-}
-:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 4px;
+:where(a, button, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
 }
