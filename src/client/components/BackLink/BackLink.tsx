@@ -15,7 +15,9 @@ export function BackLink({ href, label }: BackLinkProps) {
       variant="subtle"
       size="sm"
       className={st.link}
-      leftSection={<ArrowLeft size={16} aria-hidden="true" />}
+      leftSection={
+        <ArrowLeft size={16} className={st.arrow} aria-hidden="true" />
+      }
     >
       {label}
     </Button>

@@ -11,7 +11,14 @@
   min-width: 0;
   max-width: 68rem;
   margin-inline: auto;
-  padding: 2rem 1rem;
+  padding: 1.25rem 1rem 2rem;
+  scroll-margin-top: 5rem;
+}
+
+@media (max-width: 36rem) {
+  .main {
+    padding-top: 0.75rem;
+  }
 }
 
 .main[data-auth-page="true"] {

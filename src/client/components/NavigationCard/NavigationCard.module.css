@@ -26,6 +26,7 @@
 .icon {
   display: inline-flex;
   color: var(--color-action);
+  transition: transform 150ms ease;
 }
 .arrow {
   flex-shrink: 0;
@@ -78,6 +79,9 @@
     color: var(--color-text);
     transform: translate(2px, -2px);
   }
+  .card:hover .icon {
+    transform: scale(1.08);
+  }
 }
 @media (max-width: 36rem) {
   .card {
@@ -89,10 +93,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .card,
+  .icon,
   .arrow {
     transition: none;
   }
-  .card:hover .arrow {
+  .card:hover .arrow,
+  .card:hover .icon {
     transform: none;
   }
 }

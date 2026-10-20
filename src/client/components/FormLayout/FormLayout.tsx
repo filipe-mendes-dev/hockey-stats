@@ -30,7 +30,7 @@ export function FormLayout({
         </Alert>
       )}
       <div className={st.actions}>
-        <Button type="submit" loading={pending} disabled={pending}>
+        <Button type="submit" size="sm" loading={pending} disabled={pending}>
           {submitLabel}
         </Button>
         {pending ? (
