@@ -5,3 +5,7 @@
   height: 2.5rem;
   color: var(--color-action);
 }
+.mark[data-size="lg"] {
+  width: 3.5rem;
+  height: 3.5rem;
+}

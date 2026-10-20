@@ -6,6 +6,8 @@ import { usePlayers } from "../../players/queries/players.queries";
 import { useTeamPlayers } from "../queries/teams.queries";
 import { useAddTeamPlayers } from "../mutations/teams.mutations";
 import { Button } from "../../../components/Button/Button";
+import { Button as MantineButton } from "@mantine/core";
+import { Plus } from "lucide-react";
 import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
 import { SelectableListItem } from "../../../components/SelectableListItem/SelectableListItem";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
@@ -91,12 +93,29 @@ export function TeamPlayers({ teamId }: TeamPlayersProps) {
     );
   return (
     <section className={st.players} aria-label={t("title")}>
-      <h2>{t("title")}</h2>
+      <div className={st.heading}>
+        <h2>{t("title")}</h2>
+        {!adding && (
+          <MantineButton
+            size="sm"
+            aria-label={t("add")}
+            leftSection={<Plus size={17} aria-hidden="true" />}
+            onClick={() => {
+              setAdding(true);
+              setSaved(false);
+              addition.reset();
+            }}
+          >
+            <span className={st.addLabel}>{t("add")}</span>
+            <span className={st.addCompactLabel}>{t("addShort")}</span>
+          </MantineButton>
+        )}
+      </div>
       {saved && <p role="status">{t("saved")}</p>}
       {members.length === 0 ? (
         <p>{t("empty")}</p>
       ) : (
-        <ul className={st.list}>
+        <ul className={st.roster} aria-label={t("title")}>
           {members.map((member) => (
             <TeamMembership
               key={member.id}
@@ -117,19 +136,7 @@ export function TeamPlayers({ teamId }: TeamPlayersProps) {
           ))}
         </ul>
       )}
-      {!adding ? (
-        <div>
-          <Button
-            onClick={() => {
-              setAdding(true);
-              setSaved(false);
-              addition.reset();
-            }}
-          >
-            {t("add")}
-          </Button>
-        </div>
-      ) : (
+      {adding && (
         <div className={st.picker} aria-busy={addition.isPending}>
           <SearchInputField
             label={t("search")}

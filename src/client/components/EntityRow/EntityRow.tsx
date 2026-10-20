@@ -9,9 +9,10 @@ export function EntityRow({
   description,
   meta,
   actions,
+  children,
 }: EntityRowProps) {
   return (
-    <li className={st.row}>
+    <li className={st.row} data-with-details={Boolean(children) || undefined}>
       <Link href={href} prefetch={false} className={st.main} title={title}>
         <span className={st.avatar} aria-hidden="true">
           {avatar}
@@ -29,6 +30,7 @@ export function EntityRow({
       </Link>
       {meta && <div className={st.meta}>{meta}</div>}
       {actions && <div className={st.actions}>{actions}</div>}
+      {children && <div className={st.details}>{children}</div>}
     </li>
   );
 }

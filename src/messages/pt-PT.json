@@ -229,6 +229,7 @@
   "teamPlayers": {
     "title": "Jogadores da equipa",
     "add": "Adicionar jogadores",
+    "addShort": "Adicionar",
     "empty": "Ainda não foram atribuídos jogadores.",
     "search": "Pesquisar jogadores",
     "clear": "Limpar pesquisa",
@@ -241,6 +242,7 @@
     "goalkeeper": "Guarda-redes",
     "member": "Já pertence a esta equipa",
     "edit": "Editar inscrição",
+    "editPlayer": "Editar inscrição de {name}",
     "save": "Guardar inscrição",
     "saving": "A guardar…",
     "cancel": "Cancelar",

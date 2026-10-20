@@ -229,6 +229,7 @@
   "teamPlayers": {
     "title": "Team players",
     "add": "Add players",
+    "addShort": "Add",
     "empty": "No players assigned yet.",
     "search": "Search players",
     "clear": "Clear search",
@@ -241,6 +242,7 @@
     "goalkeeper": "Goalkeeper",
     "member": "Already in this team",
     "edit": "Edit membership",
+    "editPlayer": "Edit membership for {name}",
     "save": "Save membership",
     "saving": "Saving…",
     "cancel": "Cancel",

@@ -7,4 +7,5 @@ export interface EntityRowProps {
   description?: string;
   meta?: ReactNode;
   actions?: ReactNode;
+  children?: ReactNode;
 }
