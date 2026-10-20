@@ -1,13 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useDatabaseStatus } from "../storage/useDatabaseStatus";
+import { Button } from "@mantine/core";
 import type { LocalStorageStatusProps } from "./LocalStorageStatus.interfaces";
-import st from "./LocalStorageStatus.module.css";
 
-export function LocalStorageStatus({ filesCached }: LocalStorageStatusProps) {
+export function LocalStorageStatus({
+  filesCached,
+  storage,
+}: LocalStorageStatusProps) {
   const t = useTranslations("storage");
-  const { status, persistence, retry } = useDatabaseStatus();
+  const { status, persistence, retry } = storage;
 
   return (
     <div>
@@ -18,9 +20,9 @@ export function LocalStorageStatus({ filesCached }: LocalStorageStatusProps) {
         <p>{t(`persistence.${persistence}`)}</p>
       )}
       {(status === "failed" || status === "closed") && (
-        <button className={st.retry} type="button" onClick={retry}>
+        <Button size="sm" variant="default" type="button" onClick={retry}>
           {t("retry")}
-        </button>
+        </Button>
       )}
     </div>
   );

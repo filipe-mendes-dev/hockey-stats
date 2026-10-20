@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  ActionIcon,
   Button,
   createTheme,
   Input,
   MantineProvider,
   Menu,
+  Modal,
   NativeSelect,
   PasswordInput,
   TextInput,
@@ -59,7 +61,23 @@ const theme = createTheme({
   components: {
     Button: Button.extend({
       defaultProps: { size: "md" },
-      classNames: { root: st.button, label: st.buttonLabel },
+      classNames: (_theme, props) => ({
+        root: props.size === "sm" ? `${st.button} ${st.compact}` : st.button,
+        label: st.buttonLabel,
+      }),
+    }),
+    ActionIcon: ActionIcon.extend({
+      defaultProps: { size: 44, variant: "subtle", radius: "md" },
+      classNames: { root: st.iconAction },
+    }),
+    Modal: Modal.extend({
+      defaultProps: { centered: true, radius: "xl" },
+      classNames: {
+        content: st.modal,
+        header: st.modalHeader,
+        title: st.modalTitle,
+        close: st.iconAction,
+      },
     }),
     Input: Input.extend({
       defaultProps: { size: "md" },
@@ -103,6 +121,8 @@ function resolveCssVariables(): ReturnType<CSSVariablesResolver> {
       "--mantine-color-black": "var(--color-on-action)",
       "--mantine-color-error": "var(--color-error)",
       "--mantine-color-success": "var(--color-success)",
+      "--mantine-color-red-filled": "var(--color-error)",
+      "--mantine-color-red-filled-hover": "var(--color-error-hover)",
     },
   };
 }

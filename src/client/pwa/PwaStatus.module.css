@@ -1,47 +1,13 @@
 .status {
-  flex-shrink: 0;
-  width: 100%;
-  padding: 1rem max(1rem, calc((100% - 66rem) / 2));
-  border-top: 1px solid var(--color-border-subtle);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
   line-height: 1.6;
   overflow-wrap: anywhere;
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
 }
-
 .status p {
-  margin: 0.25rem 0;
+  margin: 0;
 }
-
-.language {
-  display: none;
-}
-
-@media (max-width: 36rem) {
-  .language {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-}
-
-.status[data-auth-page="true"] {
-  border-top: 0;
-  text-align: center;
-  font-size: 0.75rem;
-}
-
-.retry {
-  max-width: 100%;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border-control);
-  border-radius: 0.375rem;
-  color: inherit;
-  background: var(--color-surface);
-  cursor: pointer;
-}
-
-.retry:hover {
-  background: var(--color-surface-hover);
+.status > button,
+.status p + p {
+  margin-top: 0.75rem;
 }

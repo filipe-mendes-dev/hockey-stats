@@ -21,7 +21,15 @@
     "signingOut": "A terminar sessão…",
     "signOutFailed": "Não foi possível terminar sessão. Tente novamente.",
     "signOutCleanupFailed": "A sessão terminou, mas não foi possível eliminar os dados locais. Feche os outros separadores da aplicação e selecione Terminar sessão novamente para tentar eliminar os dados.",
-    "signOutCleanupTitle": "Concluir o fim de sessão"
+    "signOutCleanupTitle": "Concluir o fim de sessão",
+    "confirmSignOut": "Terminar sessão neste dispositivo?",
+    "signOutDescription": "Terminar sessão elimina todos os dados locais deste dispositivo. Os registos sincronizados permanecem na sua conta.",
+    "unsyncedWarning": "{count, plural, one {# alteração por sincronizar será eliminada permanentemente.} other {# alterações por sincronizar serão eliminadas permanentemente.}}",
+    "checkingUnsynced": "A verificar alterações por sincronizar…",
+    "unsyncedCheckFailed": "Não foi possível verificar as alterações por sincronizar. Tente novamente antes de terminar sessão.",
+    "retryCheck": "Verificar novamente",
+    "allSynced": "Não existem alterações por sincronizar neste dispositivo.",
+    "cancelSignOut": "Cancelar"
   },
   "home": {
     "welcome": "Bem-vindo, {name}",
@@ -99,15 +107,19 @@
   },
   "appHome": {
     "title": "Início",
-    "description": "Escolha para onde pretende ir.",
+    "description": "Inicie um jogo ou organize as suas equipas e jogadores.",
     "navigationLabel": "Menu da aplicação",
     "players": "Jogadores",
-    "playersDescription": "Consulte os jogadores e os respetivos detalhes.",
+    "playersDescription": "Os seus jogadores, prontos para a convocatória.",
     "teams": "Equipas",
-    "teamsDescription": "Consulte as equipas e os respetivos detalhes.",
+    "teamsDescription": "As suas equipas, plantéis e épocas.",
     "matches": "Jogos",
-    "matchesDescription": "Crie jogos e acompanhe a ação.",
-    "comingSoon": "Em breve"
+    "matchesDescription": "Preparação, ação em direto e resultados.",
+    "comingSoon": "Em breve",
+    "welcome": "Bem-vindo de volta",
+    "recordMatch": "Registar um jogo",
+    "recordMatchDescription": "Escolha uma equipa e prepare o próximo jogo.",
+    "quickAccess": "Acesso rápido"
   },
   "localAccount": {
     "title": "Preparar este dispositivo",
@@ -141,7 +153,20 @@
     "recordBlocked": "Guardado neste dispositivo · Precisa de atenção",
     "recordSynced": "Sincronizado",
     "deliveryUnavailable": "Estado de sincronização indisponível",
-    "waiting": "Guardado neste dispositivo · A aguardar uma alteração anterior"
+    "waiting": "Guardado neste dispositivo · A aguardar uma alteração anterior",
+    "short": {
+      "saved": "Guardado neste dispositivo",
+      "upToDate": "Sincronizado",
+      "syncing": "A sincronizar…",
+      "offline": "Sem ligação",
+      "signIn": "Inicie sessão para sincronizar",
+      "mismatch": "Conta diferente · Sincronização em pausa",
+      "unsupported": "Sincronização indisponível",
+      "failed": "A sincronização precisa de atenção",
+      "blocked": "Alterações que precisam de atenção"
+    },
+    "pendingShort": "{count, plural, one {# pendente} other {# pendentes}}",
+    "blockedShort": "{count, plural, one {# bloqueada} other {# bloqueadas}}"
   },
   "teams": {
     "title": "Equipas",
@@ -424,5 +449,20 @@
     "choosePowerplayRemoval": "Escolhe um jogador em campo para sair devido a este cartão no banco. Esta ação inicia o powerplay.",
     "thirdBlueRed": "Terceiro cartão azul: expulsão por cartão vermelho. Este jogador não pode regressar.",
     "eventTimeRequired": "Introduza o tempo decorrido neste período antes de guardar o evento."
+  },
+  "footer": {
+    "label": "Estado da aplicação",
+    "details": "Detalhes",
+    "detailsTitle": "Dispositivo e sincronização",
+    "close": "Fechar",
+    "sync": "Sincronização",
+    "storage": "Neste dispositivo",
+    "installation": "Ficheiros da aplicação",
+    "localReady": "Armazenamento local pronto",
+    "preparing": "A preparar este dispositivo…",
+    "storageIssue": "O armazenamento local precisa de atenção",
+    "filesIssue": "Ficheiros sem ligação indisponíveis",
+    "offlineReady": "Disponível sem ligação",
+    "updateReady": "Atualização disponível"
   }
 }

@@ -22,9 +22,13 @@
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;
   --color-action-pressed: #a3c4b9;
+  --color-surface-action: rgb(184 216 206 / 7%);
+  --color-border-action: rgb(184 216 206 / 24%);
   --color-on-action: #182421;
   --color-focus: #97d0ed;
   --color-error: #ffaaa5;
+  --color-error-hover: #ffc2be;
+  --color-on-error: #381211;
   --color-success: #a8d8b5;
   --radius-control: 0.625rem;
   --radius-surface: 1.25rem;

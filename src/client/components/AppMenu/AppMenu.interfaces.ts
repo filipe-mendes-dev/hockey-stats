@@ -1,12 +1,9 @@
-export interface AppMenuItem {
-  id: string;
-  title: string;
-  description: string;
-  href?: string;
-}
+import type { NavigationCardProps } from "../NavigationCard/NavigationCard.interfaces";
 
+export interface AppMenuItem extends NavigationCardProps {
+  id: string;
+}
 export interface AppMenuProps {
   label: string;
-  comingSoonLabel: string;
   items: readonly AppMenuItem[];
 }

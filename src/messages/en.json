@@ -21,7 +21,15 @@
     "signingOut": "Signing out…",
     "signOutFailed": "Unable to sign out. Please try again.",
     "signOutCleanupFailed": "Your session ended, but local data could not be removed. Close other application tabs, then choose Sign out again to retry cleanup.",
-    "signOutCleanupTitle": "Finish signing out"
+    "signOutCleanupTitle": "Finish signing out",
+    "confirmSignOut": "Sign out of this device?",
+    "signOutDescription": "Signing out removes all local data from this device. Synced records remain in your account.",
+    "unsyncedWarning": "{count, plural, one {# unsynced change will be permanently removed.} other {# unsynced changes will be permanently removed.}}",
+    "checkingUnsynced": "Checking for unsynced work…",
+    "unsyncedCheckFailed": "Could not check unsynced work. Try again before signing out.",
+    "retryCheck": "Check again",
+    "allSynced": "No unsynced changes on this device.",
+    "cancelSignOut": "Cancel"
   },
   "home": {
     "welcome": "Welcome, {name}",
@@ -99,15 +107,19 @@
   },
   "appHome": {
     "title": "Home",
-    "description": "Choose where to go.",
+    "description": "Start a match or manage your teams and players.",
     "navigationLabel": "Application menu",
     "players": "Players",
-    "playersDescription": "Browse players and view their details.",
+    "playersDescription": "Your players, ready for the call-up.",
     "teams": "Teams",
-    "teamsDescription": "Browse teams and view their details.",
+    "teamsDescription": "Your squads, lineups and seasons.",
     "matches": "Matches",
-    "matchesDescription": "Create matches and follow the action.",
-    "comingSoon": "Coming soon"
+    "matchesDescription": "Setups, live action and final scores.",
+    "comingSoon": "Coming soon",
+    "welcome": "Welcome back",
+    "recordMatch": "Record a match",
+    "recordMatchDescription": "Choose a team and set up your next game.",
+    "quickAccess": "Quick access"
   },
   "localAccount": {
     "title": "Set up this device",
@@ -141,7 +153,20 @@
     "recordBlocked": "Saved on this device · Needs attention",
     "recordSynced": "Synced",
     "deliveryUnavailable": "Sync status unavailable",
-    "waiting": "Saved on this device · Waiting for an earlier change"
+    "waiting": "Saved on this device · Waiting for an earlier change",
+    "short": {
+      "saved": "Saved on this device",
+      "upToDate": "Synced",
+      "syncing": "Syncing…",
+      "offline": "Offline",
+      "signIn": "Sign in to sync",
+      "mismatch": "Account mismatch · Sync paused",
+      "unsupported": "Sync unavailable",
+      "failed": "Sync needs attention",
+      "blocked": "Changes need attention"
+    },
+    "pendingShort": "{count, plural, one {# pending} other {# pending}}",
+    "blockedShort": "{count, plural, one {# blocked} other {# blocked}}"
   },
   "teams": {
     "title": "Teams",
@@ -424,5 +449,20 @@
     "choosePowerplayRemoval": "Choose an active player to leave the field for this bench card. This starts powerplay.",
     "thirdBlueRed": "Third blue card: red-card exclusion. This player cannot return.",
     "eventTimeRequired": "Enter elapsed time in this period before saving the event."
+  },
+  "footer": {
+    "label": "Application status",
+    "details": "Details",
+    "detailsTitle": "Device & sync",
+    "close": "Close",
+    "sync": "Synchronization",
+    "storage": "On this device",
+    "installation": "Application files",
+    "localReady": "Local storage ready",
+    "preparing": "Preparing this device…",
+    "storageIssue": "Local storage needs attention",
+    "filesIssue": "Offline files unavailable",
+    "offlineReady": "Available offline",
+    "updateReady": "Update ready"
   }
 }

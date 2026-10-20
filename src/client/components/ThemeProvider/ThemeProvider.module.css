@@ -12,6 +12,58 @@
   overflow-wrap: anywhere;
 }
 
+.compact {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.button[data-variant="subtle"],
+.iconAction[data-variant="subtle"] {
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.button[data-variant="default"] {
+  border-color: var(--color-border-subtle);
+  background: transparent;
+}
+
+.button[data-destructive] {
+  color: var(--color-on-error);
+}
+
+@media (hover: hover) {
+  .button[data-variant="subtle"]:hover,
+  .iconAction[data-variant="subtle"]:hover,
+  .button[data-variant="default"]:hover {
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+  }
+}
+
+.iconAction {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.modal {
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-floating);
+}
+
+.modalHeader {
+  background: transparent;
+}
+
+.modalTitle {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
 .input {
   min-height: 3rem;
   font-size: 1rem;
@@ -45,6 +97,11 @@
 
 @supports (backdrop-filter: blur(1px)) {
   .dropdown {
+    background: var(--color-surface-glass-elevated);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+
+  .modal {
     background: var(--color-surface-glass-elevated);
     backdrop-filter: blur(var(--surface-blur));
   }

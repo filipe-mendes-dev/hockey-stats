@@ -1,6 +1,5 @@
 import { LocalAccountSetup } from "../../client/features/account/LocalAccountSetup/LocalAccountSetup";
 import { SyncLifecycle } from "../../client/features/sync/SyncLifecycle";
-import { SyncStatusPanel } from "../../client/features/sync/SyncStatusPanel/SyncStatusPanel";
 import { QueryProvider } from "../../client/query/QueryProvider";
 
 export default function LocalApplicationLayout({
@@ -10,7 +9,6 @@ export default function LocalApplicationLayout({
     <QueryProvider>
       <LocalAccountSetup>
         <SyncLifecycle />
-        <SyncStatusPanel />
         {children}
       </LocalAccountSetup>
     </QueryProvider>

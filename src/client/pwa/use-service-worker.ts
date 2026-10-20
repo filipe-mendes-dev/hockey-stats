@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type WorkerStatus =
   "preparing" | "cached" | "failed" | "unsupported" | "development";
 
-interface WorkerState {
+export interface WorkerState {
   status: WorkerStatus;
   updateAvailable: boolean;
   retry(): void;
