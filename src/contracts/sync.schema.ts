@@ -134,7 +134,7 @@ export const syncErrorSchema = z.object({
 });
 
 export function getCommandFeature(
-  command: SyncCommand,
+  command: Pick<SyncCommand, "kind">,
 ): "players" | "teams" | "teamPlayers" | "matches" {
   switch (command.kind) {
     case "matchEvent.create":

@@ -1,4 +1,5 @@
 "use client";
+import { getCommandFeature } from "../../../../contracts/sync.schema";
 import { getBlockingOperation } from "../dependencies";
 import { useTranslations } from "next-intl";
 import { useOutboxOperations } from "../queries/outbox.queries";
@@ -14,7 +15,7 @@ export function DeliveryStatus({
   if (delivery.isError) return <span>{t("deliveryUnavailable")}</span>;
   const operation = delivery.data.find(
     (entry) =>
-      entry.command.kind.split(".")[0] === kind.split(".")[0] &&
+      getCommandFeature(entry.command) === getCommandFeature({ kind }) &&
       entry.entityId === entityId &&
       (!eventId ||
         ("event" in entry.command && entry.command.event.id === eventId)),
