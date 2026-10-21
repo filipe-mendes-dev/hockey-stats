@@ -7,4 +7,5 @@ export interface RecorderTimelineProps {
   failed: boolean;
   onRetry: () => void;
   expanded?: boolean;
+  scrollable?: boolean;
 }

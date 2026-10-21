@@ -77,3 +77,14 @@
     display: none;
   }
 }
+
+@media (min-width: 64rem) {
+  .shell[data-recorder="true"]:has([data-live-recorder="true"]) {
+    height: 100dvh;
+  }
+
+  .shell[data-recorder="true"]:has([data-live-recorder="true"]) .main {
+    display: grid;
+    min-height: min-content;
+  }
+}

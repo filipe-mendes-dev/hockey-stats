@@ -9,6 +9,7 @@ import type { PowerplayPenalty } from "../../../../domain/matches/powerplay";
 import { PowerplayCorrectionDialog } from "../PowerplayCorrectionDialog/PowerplayCorrectionDialog";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
 import { MatchControls } from "../MatchControls/MatchControls";
+import { MatchScoreboard } from "../MatchScoreboard/MatchScoreboard";
 import { RecorderHeader } from "../RecorderBoard/RecorderHeader";
 import { RecorderPlayers } from "../RecorderBoard/RecorderPlayers";
 import { RecorderActions } from "../RecorderBoard/RecorderActions";
@@ -179,69 +180,48 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   return (
     <div className={st.recorder} data-live-recorder={!readOnly}>
       {!readOnly && (
-        <div className={st.sticky}>
-          <RecorderHeader
-            match={snapshot.match}
-            disabled={
-              state.phase !== "idle" ||
-              controlsBusy ||
-              correction !== null ||
-              undo.isPending
-            }
-            scoreDisabled={disabled}
-            onScoreAdjust={() => handleOpenEvent({ kind: "score-adjustment" })}
-          />
+        <div className={st.board}>
+          <div className={st.sticky}>
+            <RecorderHeader
+              match={snapshot.match}
+              disabled={
+                state.phase !== "idle" ||
+                controlsBusy ||
+                correction !== null ||
+                undo.isPending
+              }
+              scoreDisabled={disabled}
+              onScoreAdjust={() =>
+                handleOpenEvent({ kind: "score-adjustment" })
+              }
+            />
+            <MatchScoreboard
+              match={snapshot.match}
+              now={now}
+              powerplays={
+                events.data && !events.isError ? derivedState.powerplays : []
+              }
+              onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
+              ownScore={
+                events.data && !events.isError
+                  ? derivedState.ownScore
+                  : undefined
+              }
+              opponentScore={
+                events.data && !events.isError
+                  ? derivedState.opponentScore
+                  : undefined
+              }
+              disabled={disabled}
+            />
+          </div>
           <MatchControls
             match={snapshot.match}
-            powerplays={
-              events.data && !events.isError ? derivedState.powerplays : []
-            }
-            onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
-            ownScore={
-              events.data && !events.isError ? derivedState.ownScore : undefined
-            }
-            opponentScore={
-              events.data && !events.isError
-                ? derivedState.opponentScore
-                : undefined
-            }
             disabled={
               state.phase !== "idle" || correction !== null || undo.isPending
             }
             onBusyChange={setControlsBusy}
           />
-        </div>
-      )}
-      {readOnly && (
-        <section className={st.readOnlyScore} aria-label={t("scoreTitle")}>
-          <strong>
-            {snapshot.match.teamNameAtMatch}:{" "}
-            {events.data && !events.isError ? derivedState.ownScore : "…"}
-          </strong>
-          <strong>
-            {snapshot.match.opponentName}:{" "}
-            {events.data && !events.isError ? derivedState.opponentScore : "…"}
-          </strong>
-          <p>{t("completedSummary")}</p>
-          {events.data && !events.isError && (
-            <p>
-              {t(
-                derivedState.isPowerplay
-                  ? "powerplayActive"
-                  : "powerplayInactive",
-                {
-                  maximum: String(derivedState.maxOnField),
-                  queued: String(
-                    Math.max(0, derivedState.powerplayCardEventIds.length - 1),
-                  ),
-                },
-              )}
-            </p>
-          )}
-        </section>
-      )}
-      <div className={readOnly ? st.summary : st.layout}>
-        {!readOnly && (
           <div className={st.capture}>
             <RecorderActions
               context={context}
@@ -278,16 +258,45 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               <p className={st.error}>{t("undoUnavailable")}</p>
             )}
           </div>
-        )}
-        <RecorderTimeline
-          snapshot={snapshot}
-          events={events.data}
-          loading={events.isPending}
-          failed={events.isError}
-          onRetry={() => void events.refetch()}
-          expanded={readOnly}
-        />
-      </div>
+        </div>
+      )}
+      {readOnly && (
+        <section className={st.readOnlyScore} aria-label={t("scoreTitle")}>
+          <strong>
+            {snapshot.match.teamNameAtMatch}:{" "}
+            {events.data && !events.isError ? derivedState.ownScore : "…"}
+          </strong>
+          <strong>
+            {snapshot.match.opponentName}:{" "}
+            {events.data && !events.isError ? derivedState.opponentScore : "…"}
+          </strong>
+          <p>{t("completedSummary")}</p>
+          {events.data && !events.isError && (
+            <p>
+              {t(
+                derivedState.isPowerplay
+                  ? "powerplayActive"
+                  : "powerplayInactive",
+                {
+                  maximum: String(derivedState.maxOnField),
+                  queued: String(
+                    Math.max(0, derivedState.powerplayCardEventIds.length - 1),
+                  ),
+                },
+              )}
+            </p>
+          )}
+        </section>
+      )}
+      <RecorderTimeline
+        snapshot={snapshot}
+        events={events.data}
+        loading={events.isPending}
+        failed={events.isError}
+        onRetry={() => void events.refetch()}
+        expanded={readOnly}
+        scrollable={!readOnly}
+      />
       {correction && !readOnly && (
         <PowerplayCorrectionDialog
           match={snapshot.match}

@@ -22,13 +22,18 @@ export function RecorderTimeline({
   failed,
   onRetry,
   expanded = false,
+  scrollable = false,
 }: RecorderTimelineProps) {
   const t = useTranslations("recorder");
   const heading = useId();
   const [allOpen, setAllOpen] = useState(false);
   const count = events.filter((event) => !event.deletedAt).length;
   return (
-    <section className={st.timeline} aria-labelledby={heading}>
+    <section
+      className={st.timeline}
+      aria-labelledby={heading}
+      data-scrollable={scrollable}
+    >
       <div className={st.heading}>
         <h2 id={heading}>{t("timeline")}</h2>
         <span role="status" aria-label={t("eventCount", { count })}>

@@ -101,6 +101,18 @@
   }
 }
 @media (min-width: 64rem) {
+  .timeline[data-scrollable="true"] {
+    min-height: 0;
+    contain: size;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+  .timeline[data-scrollable="true"] .heading {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-background);
+  }
   .all {
     display: none;
   }

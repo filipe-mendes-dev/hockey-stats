@@ -4,17 +4,16 @@
   max-width: 80rem;
   margin-inline: auto;
 }
+.board {
+  display: contents;
+}
 .sticky {
   position: sticky;
   top: 0;
   z-index: 20;
-  padding: env(safe-area-inset-top) 1rem 0;
+  padding: env(safe-area-inset-top) 1rem 0.25rem;
   background: var(--color-background);
   border-bottom: 1px solid var(--color-border-subtle);
-}
-.layout {
-  display: grid;
-  gap: 0;
 }
 .capture {
   display: grid;
@@ -23,12 +22,9 @@
   padding: 1rem;
   min-width: 0;
 }
-.layout > section {
+.recorder[data-live-recorder="true"] > section {
   padding: 0 1rem max(1rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border-subtle);
-}
-.summary {
-  min-width: 0;
 }
 .error {
   font-size: 0.8125rem;
@@ -42,56 +38,30 @@
   }
 }
 @media (min-width: 64rem) {
-  .recorder {
+  .recorder[data-live-recorder="true"] {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
     column-gap: 2rem;
     padding: 0 1.5rem;
-    align-items: start;
+  }
+  .board {
+    display: block;
+    min-width: 0;
   }
   .sticky {
-    grid-column: 1;
-    grid-row: 1;
-    padding-inline: 1rem;
     border-bottom: 0;
-    top: calc(
-      var(--app-header-control-height) + 2 * var(--app-header-padding-block) +
-        1px
-    );
-  }
-  .layout {
-    display: contents;
+    top: var(--app-header-height);
   }
   .capture {
-    grid-column: 1;
-    grid-row: 2;
     padding-top: 1.25rem;
-    position: sticky;
-    top: 16rem;
   }
-  .layout > section {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+  .recorder[data-live-recorder="true"] > section {
     padding: 0 0 1rem 2rem;
     border-top: 0;
     border-left: 1px solid var(--color-border-subtle);
-    max-height: calc(100dvh - 6rem);
-    overflow-y: auto;
-    position: sticky;
-    top: calc(
-      var(--app-header-control-height) + 2 * var(--app-header-padding-block) +
-        1px
-    );
-  }
-  .summary {
-    grid-column: 1 / -1;
   }
 }
 
-.recorder[data-live-recorder="false"] {
-  display: block;
-  padding: 0;
-}
 .readOnlyScore {
   display: grid;
   gap: 0.5rem;

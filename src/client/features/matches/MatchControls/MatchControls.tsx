@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  formatCountdown,
   getCountdownMs,
   getClockElapsed,
 } from "../../../../domain/matches/matchControl";
@@ -15,17 +14,12 @@ import {
   getDurationFields,
   parseDurationFields,
 } from "../../../components/DurationCounter/durationFields";
-import { PowerplayIndicator } from "../PowerplayIndicator/PowerplayIndicator";
 import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
 import st from "./MatchControls.module.css";
 export function MatchControls({
   match,
-  powerplays,
-  onCorrectPowerplay,
-  ownScore,
-  opponentScore,
   disabled,
   onBusyChange,
 }: MatchControlsProps) {
@@ -97,51 +91,7 @@ export function MatchControls({
     match.currentPeriod === match.periods.length ? "endMatch" : "endPeriod",
   );
   return (
-    <section className={st.controls} aria-label={t("scoreTitle")}>
-      <div className={st.scoreboard}>
-        <div className={st.team}>
-          <div className={st.teamHeading}>
-            <span className={st.teamName} title={match.teamNameAtMatch}>
-              {match.teamNameAtMatch}
-            </span>
-          </div>
-          <strong>{ownScore ?? "…"}</strong>
-        </div>
-        <div className={st.time} data-powerplay={powerplays.length > 0}>
-          <span className={st.period}>
-            {t("periodNumber", { number: match.currentPeriod })}
-          </span>
-          {powerplays.length > 0 && (
-            <div className={st.penalty}>
-              <PowerplayIndicator
-                penalties={powerplays}
-                disabled={disabled || busy}
-                onCorrect={onCorrectPowerplay}
-              />
-            </div>
-          )}
-          <output
-            aria-live="off"
-            className={st.clock}
-            aria-label={t("remainingTime")}
-          >
-            {running && now === 0
-              ? "…"
-              : (formatCountdown(elapsed, duration) ?? t("untimed"))}
-          </output>
-          <span className={st.status} data-running={running && remaining !== 0}>
-            {t(running && remaining !== 0 ? "clockRunning" : "clockPaused")}
-          </span>
-        </div>
-        <div className={st.team}>
-          <div className={st.teamHeading}>
-            <span className={st.teamName} title={match.opponentName}>
-              {match.opponentName}
-            </span>
-          </div>
-          <strong>{opponentScore ?? "…"}</strong>
-        </div>
-      </div>
+    <section className={st.controls} aria-label={t("clockTitle")}>
       <div className={st.actions}>
         <Tooltip label={t("adjustClock")}>
           <ActionIcon
