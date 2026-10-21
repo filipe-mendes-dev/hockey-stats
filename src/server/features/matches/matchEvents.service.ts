@@ -8,7 +8,10 @@ import { deriveMatchState } from "../../../domain/matches/derivedMatchState";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { db } from "../../db/client.ts";
 import type { MatchEventCommand } from "../../../contracts/match-events-sync.schema";
-import { usesPowerplayProtocol } from "../../../contracts/match-events-sync.schema";
+import {
+  usesPowerplayProtocol,
+  usesEventContextProtocol,
+} from "../../../contracts/match-events-sync.schema";
 import { matchRecordingSchema } from "../../../contracts/matches-sync.schema";
 import {
   matchEventSchema,
@@ -59,8 +62,10 @@ export async function applyMatchEventCommand(
   const events = await listMatchEvents(transaction, match.id);
   if (command.version < 3 && events.some(usesPowerplayProtocol))
     throw new SyncConflictError("event_conflict");
+  if (command.version < 4 && events.some(usesEventContextProtocol))
+    throw new SyncConflictError("event_conflict");
   if (command.kind === "matchEvent.create") {
-    if (command.version === 3) {
+    if (command.version >= 3) {
       const decision = validateMatchEvent(
         { snapshot, state: deriveMatchState(snapshot, events) },
         toMatchEventInput(event, command.operationId),
@@ -83,7 +88,7 @@ export async function applyMatchEventCommand(
       .at(-1);
     if (
       !current ||
-      (command.version === 3 &&
+      (command.version >= 3 &&
         !validateEventHistory(
           snapshot,
           events.map((entry) => (entry.id === event.id ? event : entry)),

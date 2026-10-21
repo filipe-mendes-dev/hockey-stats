@@ -28,7 +28,7 @@ export function createRegulationPeriods(minutes: number): Match["periods"] {
   return [1, 2].map((number) => ({
     number,
     durationMs: minutes * 60_000,
-    attackDirection: "unknown",
+    attackDirection: "toward-x1",
   }));
 }
 

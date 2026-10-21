@@ -1,6 +1,6 @@
 import type { MatchPlayer, MatchSnapshot } from "./match.schema";
 import type {
-  AddMatchEventInput,
+  MatchEventRuleInput,
   MatchEvent,
   PlayerEventKind,
   CardColour,
@@ -224,7 +224,7 @@ export function isValidEventForMatch(
 }
 export function validateMatchEvent(
   context: MatchRuleContext,
-  input: AddMatchEventInput,
+  input: MatchEventRuleInput,
 ): MatchRuleDecision {
   if (context.snapshot.match.status !== "live") return reject("match-not-live");
   if (input.period !== context.snapshot.match.currentPeriod)

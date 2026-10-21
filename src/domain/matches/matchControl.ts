@@ -47,6 +47,20 @@ export function getClockElapsed(match: Match, now: number): number | undefined {
 export function formatMatchTime(elapsedMs: number): string {
   return `${String(Math.floor(elapsedMs / 60_000)).padStart(2, "0")}:${String(Math.floor(elapsedMs / 1000) % 60).padStart(2, "0")}`;
 }
+export function getCountdownMs(
+  elapsedMs: number | undefined,
+  durationMs: number | undefined,
+): number | undefined {
+  if (elapsedMs === undefined || durationMs === undefined) return undefined;
+  return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000) * 1000;
+}
+export function formatCountdown(
+  elapsedMs: number | undefined,
+  durationMs: number | undefined,
+): string | undefined {
+  const remaining = getCountdownMs(elapsedMs, durationMs);
+  return remaining === undefined ? undefined : formatMatchTime(remaining);
+}
 export function applyMatchControl(
   match: Match,
   action: MatchControlAction,

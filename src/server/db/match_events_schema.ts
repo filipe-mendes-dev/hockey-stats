@@ -45,6 +45,7 @@ export const matchEvents = pgTable(
     kind: text("kind").notNull(),
     subtype: text("subtype"),
     reason: text("reason"),
+    rinkHalf: text("rink_half", { enum: ["defensive", "attacking"] }),
     outcome: text("outcome"),
     colour: text("colour"),
     ownDelta: integer("own_delta"),

@@ -23,7 +23,6 @@ export const regulationPeriodsSchema = z
   .array(
     matchPeriodSchema.extend({
       durationMs: z.int().positive(),
-      attackDirection: z.literal("unknown"),
     }),
   )
   .length(2)
