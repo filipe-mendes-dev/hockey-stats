@@ -27,7 +27,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const t = useTranslations("recorder");
   const [store] = useState(createEventDraftStore);
   const returnFocusTo = useRef<HTMLElement | null>(null);
-  const [history, setHistory] = useState<EventDraft[]>([]);
   const state = useStore(store, (entry) => entry.state);
   const [controlsBusy, setControlsBusy] = useState(false);
   const readOnly = snapshot.match.status !== "live";
@@ -47,12 +46,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [state.phase]);
-  function back(): void {
-    const previous = history.at(-1);
-    if (!previous) return;
-    store.getState().dispatch({ type: "restoreChoices", draft: previous });
-    setHistory((entries) => entries.slice(0, -1));
-  }
   function save(input: AddMatchEventInput): void {
     void add
       .mutateAsync(input)
@@ -64,9 +57,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       });
   }
   function dispatch(action: EventDraftAction): void {
-    const current = store.getState().state;
-    if (current.phase === "collecting" && action.type !== "cancel")
-      setHistory((entries) => [...entries, current.draft]);
     store.getState().dispatch(action);
     const next = store.getState().state;
     if (next.phase !== "collecting") return;
@@ -91,7 +81,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null;
-    setHistory([]);
     add.reset();
     dispatch({
       type: "open",
@@ -223,8 +212,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           error={add.error}
           onAction={dispatch}
           onRetry={retry}
-          onBack={back}
-          history={history}
         />
       )}
     </div>

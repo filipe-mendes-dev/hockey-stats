@@ -31,7 +31,9 @@ export function RecorderContext({
       </div>
       <span className={st.time}>
         <Clock3 size={13} aria-hidden="true" />
-        {t("eventTime", { period, time })}
+        <span>{t("periodNumber", { number: period })}</span>
+        <span aria-hidden="true">·</span>
+        <strong>{time}</strong>
       </span>
     </div>
   );

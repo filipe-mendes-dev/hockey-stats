@@ -19,7 +19,6 @@ import {
 import type { MatchPlayer } from "../../../../domain/matches/match.schema";
 import { Button } from "@mantine/core";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
-import { ScoreCorrectionForm } from "../ScoreCorrectionForm/ScoreCorrectionForm";
 import { EventTimeForm } from "../EventTimeForm/EventTimeForm";
 import { Shield, Swords, Square } from "lucide-react";
 import { getEventDraftSteps } from "./eventDraftSteps";
@@ -33,7 +32,7 @@ export function EventDraftFields({
 }: EventDraftFieldsProps) {
   const t = useTranslations("recorder");
   const { snapshot, state } = context;
-  const { ownScore, opponentScore, activePlayerIds } = state;
+  const { activePlayerIds } = state;
   function playerLabel(player: MatchPlayer): string {
     return `${player.jerseyNumber ? `#${player.jerseyNumber} · ` : ""}${player.playerNameAtMatch}`;
   }
@@ -401,17 +400,6 @@ export function EventDraftFields({
         <EventTimeForm
           durationMs={durationMs}
           onApply={(elapsedMs) => onAction({ type: "setTime", elapsedMs })}
-        />
-      )}
-      {step === "saveScore" && (
-        <ScoreCorrectionForm
-          ownName={snapshot.match.teamNameAtMatch}
-          opponentName={snapshot.match.opponentName}
-          ownScore={ownScore}
-          opponentScore={opponentScore}
-          onApply={(opponentDelta) =>
-            onAction({ type: "setScoreAdjustment", ownDelta: 0, opponentDelta })
-          }
         />
       )}
     </div>

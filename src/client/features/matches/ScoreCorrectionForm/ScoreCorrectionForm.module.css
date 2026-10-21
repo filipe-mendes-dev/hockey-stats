@@ -2,20 +2,37 @@
   display: grid;
   gap: 1.25rem;
 }
+.scores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-width: 0;
+}
 .ownScore {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-.ownScore span {
+  flex-direction: column;
   min-width: 0;
-  overflow-wrap: anywhere;
+}
+.teamName,
+.scores :global(.mantine-InputWrapper-label) {
+  display: block;
+  max-width: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .ownScore output {
-  font-size: 1.5rem;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
   font-weight: 600;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .form p {

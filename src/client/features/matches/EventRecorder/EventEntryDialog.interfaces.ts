@@ -9,8 +9,6 @@ export interface EventEntryDialogProps {
   context: MatchRuleContext;
   phase: EventDraftState["phase"];
   error: unknown;
-  history: EventDraft[];
   onAction: (action: EventDraftAction) => void;
   onRetry: () => void;
-  onBack: () => void;
 }

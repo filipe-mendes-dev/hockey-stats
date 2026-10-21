@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Alert, Button } from "@mantine/core";
-import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { MatchRuleError } from "../../../../domain/matches/matchRules";
+import { ScoreCorrectionForm } from "../ScoreCorrectionForm/ScoreCorrectionForm";
 import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { MatchEventUnavailableError } from "../matchEvents.service";
 import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
@@ -16,13 +16,22 @@ export function EventEntryDialog({
   context,
   phase,
   error,
-  history,
   onAction,
   onRetry,
-  onBack,
 }: EventEntryDialogProps) {
   const t = useTranslations("recorder");
   const locked = phase === "saving";
+  const scoreFormId = useId();
+  const [opponentScore, setOpponentScore] = useState<number | string>(
+    context.state.opponentScore,
+  );
+  const scoreCorrection = draft.kind === "score-adjustment";
+  const validScore =
+    typeof opponentScore === "number" &&
+    Number.isInteger(opponentScore) &&
+    opponentScore >= 0 &&
+    Math.abs(opponentScore - context.state.opponentScore) <= 2147483647 &&
+    opponentScore !== context.state.opponentScore;
   const remaining = getEventDraftSteps(draft);
   const heading = useRef<HTMLHeadingElement>(null);
   const step = remaining[0];
@@ -52,16 +61,6 @@ export function EventEntryDialog({
       onClose={() => onAction({ type: "cancel" })}
       footer={
         <>
-          {history.length > 0 && phase === "collecting" && (
-            <Button
-              size="sm"
-              variant="subtle"
-              leftSection={<ArrowLeft size={16} />}
-              onClick={onBack}
-            >
-              {t("back")}
-            </Button>
-          )}
           <Button
             size="sm"
             variant="subtle"
@@ -70,6 +69,17 @@ export function EventEntryDialog({
           >
             {t("cancel")}
           </Button>
+          {scoreCorrection && phase === "collecting" && (
+            <Button
+              type="submit"
+              form={scoreFormId}
+              size="md"
+              disabled={!validScore}
+              className={st.submit}
+            >
+              {t("saveScore")}
+            </Button>
+          )}
         </>
       }
     >
@@ -91,7 +101,7 @@ export function EventEntryDialog({
           secondary={player || outgoing ? selectionDetails : undefined}
           kind={draft.kind}
         />
-        {phase === "collecting" && (
+        {phase === "collecting" && !scoreCorrection && (
           <>
             <h2 ref={heading} className={st.heading} tabIndex={-1}>
               {step === "eventTimeRequired" &&
@@ -114,6 +124,26 @@ export function EventEntryDialog({
               onAction={onAction}
             />
           </>
+        )}
+        {phase === "collecting" && scoreCorrection && (
+          <ScoreCorrectionForm
+            formId={scoreFormId}
+            ownName={context.snapshot.match.teamNameAtMatch}
+            opponentName={context.snapshot.match.opponentName}
+            ownScore={context.state.ownScore}
+            opponentScore={context.state.opponentScore}
+            value={opponentScore}
+            onChange={setOpponentScore}
+            onApply={() => {
+              if (validScore)
+                onAction({
+                  type: "setScoreAdjustment",
+                  ownDelta: 0,
+                  opponentDelta:
+                    Number(opponentScore) - context.state.opponentScore,
+                });
+            }}
+          />
         )}
         {phase === "saving" && <p role="status">{t("saving")}</p>}
         {phase === "failed" && (
