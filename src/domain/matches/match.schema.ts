@@ -19,6 +19,19 @@ export const matchPeriodsSchema = z
   .refine((periods) =>
     periods.every((period, index) => period.number === index + 1),
   );
+export const regulationPeriodsSchema = z
+  .array(
+    matchPeriodSchema.extend({
+      durationMs: z.int().positive(),
+      attackDirection: z.literal("unknown"),
+    }),
+  )
+  .length(2)
+  .refine(
+    (periods) =>
+      periods.every((period, index) => period.number === index + 1) &&
+      periods[0]?.durationMs === periods[1]?.durationMs,
+  );
 export const matchStatusSchema = z.enum(["setup", "live", "completed"]);
 export const matchClockSchema = z.strictObject({
   elapsedMs: z.int().nonnegative(),
@@ -147,7 +160,8 @@ export const matchSnapshotSchema = z
       (snapshot.match.status === "setup"
         ? snapshot.players.every((player) => !player.isStarter) &&
           snapshot.match.startedAt === undefined &&
-          snapshot.match.periods.length === 0
+          (snapshot.match.periods.length === 0 ||
+            regulationPeriodsSchema.safeParse(snapshot.match.periods).success)
         : snapshot.match.startedAt !== undefined &&
           snapshot.match.startedAt >= snapshot.match.createdAt &&
           snapshot.match.startedAt <= snapshot.match.updatedAt &&
@@ -161,6 +175,7 @@ export const matchSnapshotSchema = z
   );
 export type MatchSnapshot = z.infer<typeof matchSnapshotSchema>;
 export const createMatchInputSchema = z.object({
+  periods: regulationPeriodsSchema,
   teamId: z.uuidv4(),
   opponentName: z.string().trim().pipe(matchSchema.shape.opponentName),
   scheduledDate: z
@@ -185,6 +200,7 @@ export const createMatchInputSchema = z.object({
 export type CreateMatchInput = z.infer<typeof createMatchInputSchema>;
 
 export const updateMatchSetupInputSchema = createMatchInputSchema.extend({
+  periods: regulationPeriodsSchema.optional(),
   id: z.uuidv4(),
   expectedRevision: z.int().positive(),
 });
@@ -196,6 +212,5 @@ export const startMatchInputSchema = z.object({
     .array(z.uuidv4())
     .length(5)
     .refine((ids) => new Set(ids).size === ids.length),
-  periods: matchPeriodsSchema.refine((periods) => periods.length > 0),
 });
 export type StartMatchInput = z.infer<typeof startMatchInputSchema>;
