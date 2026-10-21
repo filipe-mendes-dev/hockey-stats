@@ -247,6 +247,7 @@ export function validateMatchEvent(
   );
   if (!lineup.allowed) return lineup;
   switch (input.kind) {
+    case "powerplay-adjust":
     case "powerplay-end":
       return context.state.powerplayCardEventIds[0] ===
         input.powerplayCardEventId

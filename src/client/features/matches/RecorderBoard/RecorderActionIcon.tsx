@@ -24,6 +24,7 @@ const icons = {
   "opponent-goal": Target,
   "score-adjustment": Trophy,
   "powerplay-end": Flag,
+  "powerplay-adjust": Flag,
   "suspension-end": Flag,
 };
 export function RecorderActionIcon({

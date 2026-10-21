@@ -1,4 +1,5 @@
 import type { Match } from "../../../../domain/matches/match.schema";
+import { getPowerplayDuration } from "../../../../domain/matches/powerplay";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import type {
   AddMatchEventInput,
@@ -239,7 +240,12 @@ export function completeEventDraft(
   const result = addMatchEventInputSchema.safeParse({
     ...fields,
     ...(draft.kind === "card"
-      ? { startsPowerplay: draft.colour !== "yellow" }
+      ? {
+          startsPowerplay: draft.colour !== "yellow",
+          ...(draft.colour === "blue" || draft.colour === "red"
+            ? { powerplayDurationMs: getPowerplayDuration(draft.colour) }
+            : {}),
+        }
       : {}),
     ...(draft.kind === "player-in" ? { entryReason: "powerplay-ended" } : {}),
   });

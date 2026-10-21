@@ -1,0 +1,1 @@
+ALTER TABLE "match_event" ADD COLUMN "powerplay_duration_ms" integer;

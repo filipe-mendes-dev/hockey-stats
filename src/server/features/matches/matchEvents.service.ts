@@ -11,6 +11,7 @@ import type { MatchEventCommand } from "../../../contracts/match-events-sync.sch
 import {
   usesPowerplayProtocol,
   usesEventContextProtocol,
+  usesTimedPowerplayProtocol,
 } from "../../../contracts/match-events-sync.schema";
 import { matchRecordingSchema } from "../../../contracts/matches-sync.schema";
 import {
@@ -64,10 +65,12 @@ export async function applyMatchEventCommand(
     throw new SyncConflictError("event_conflict");
   if (command.version < 4 && events.some(usesEventContextProtocol))
     throw new SyncConflictError("event_conflict");
+  if (command.version < 5 && events.some(usesTimedPowerplayProtocol))
+    throw new SyncConflictError("event_conflict");
   if (command.kind === "matchEvent.create") {
     if (command.version >= 3) {
       const decision = validateMatchEvent(
-        { snapshot, state: deriveMatchState(snapshot, events) },
+        { snapshot, state: deriveMatchState(snapshot, events, event) },
         toMatchEventInput(event, command.operationId),
       );
       if (!decision.allowed) throw new SyncConflictError("event_conflict");

@@ -20,7 +20,18 @@
 .team {
   gap: 0.125rem;
 }
-.team span {
+.teamHeading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  width: 100%;
+  column-gap: 0.25rem;
+  max-width: 100%;
+  min-width: 0;
+}
+.teamName {
+  min-width: 0;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,4 +102,27 @@
   .team strong {
     font-size: 2.5rem;
   }
+}
+
+.time[data-powerplay="true"] {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 0.25rem;
+  justify-items: center;
+}
+.time[data-powerplay="true"] .period {
+  grid-column: 2;
+  grid-row: 1;
+}
+.time[data-powerplay="true"] .clock {
+  grid-column: 2;
+  grid-row: 2;
+}
+.time[data-powerplay="true"] .status {
+  grid-column: 2;
+  grid-row: 3;
+}
+.penalty {
+  grid-column: 1;
+  grid-row: 2;
 }

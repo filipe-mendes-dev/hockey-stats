@@ -4,7 +4,10 @@ import { Button, Tooltip } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { getEventDetail } from "../../../../domain/matches/matchEvent.schema";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
-import { formatCountdown } from "../../../../domain/matches/matchControl";
+import {
+  formatMatchTime,
+  formatCountdown,
+} from "../../../../domain/matches/matchControl";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
 import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
@@ -87,6 +90,12 @@ export function RecorderTimeline({
                       : "",
                 }),
               ];
+              if (event.kind === "powerplay-adjust")
+                details.push(
+                  t("penaltyAdjustedTo", {
+                    time: formatMatchTime(event.powerplayDurationMs),
+                  }),
+                );
               if (event.kind === "ball-recovery" || event.kind === "ball-loss")
                 details.push(t(event.rinkHalf ?? "locationUnknown"));
               if (event.kind === "card") {

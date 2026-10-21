@@ -550,7 +550,18 @@
     "attacking": "Attacking half",
     "locationUnknown": "Location unknown",
     "ourScore": "Our score",
-    "ownScoreReadOnly": "Our score comes from recorded shots."
+    "ownScoreReadOnly": "Our score comes from recorded shots.",
+    "powerplay-adjust": "Powerplay correction",
+    "correctPowerplay": "Correct powerplay",
+    "powerplayActiveShort": "Powerplay active",
+    "powerplayIndicator": "Correct powerplay. {count, plural, one {# penalty} other {# penalties}}. Total remaining time: {time}.",
+    "powerplayCorrectionHelp": "Set the remaining time for the current penalty. Set it to 00:00 to finish it. Queued penalties start in order, and the match clock stays unchanged.",
+    "penaltyRemaining": "Penalty remaining time",
+    "penaltyCurrent": "Active",
+    "penaltyQueued": "Queued",
+    "savePowerplay": "Save",
+    "powerplayCorrectionFailed": "The correction could not be saved. The penalty may have changed. Retry or cancel and reopen it.",
+    "penaltyAdjustedTo": "Remaining time set to {time}"
   },
   "footer": {
     "label": "Application status",

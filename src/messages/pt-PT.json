@@ -550,7 +550,18 @@
     "attacking": "Meio-campo ofensivo",
     "locationUnknown": "Local desconhecido",
     "ourScore": "O nosso resultado",
-    "ownScoreReadOnly": "O nosso resultado vem dos remates registados."
+    "ownScoreReadOnly": "O nosso resultado vem dos remates registados.",
+    "powerplay-adjust": "Correção de powerplay",
+    "correctPowerplay": "Corrigir powerplay",
+    "powerplayActiveShort": "Powerplay ativo",
+    "powerplayIndicator": "Corrigir powerplay. {count, plural, one {# penalização} other {# penalizações}}. Tempo restante total: {time}.",
+    "powerplayCorrectionHelp": "Define o tempo restante da penalização atual. Define 00:00 para a terminar. As penalizações em espera começam por ordem, sem alterar o relógio do jogo.",
+    "penaltyRemaining": "Tempo restante da penalização",
+    "penaltyCurrent": "Ativa",
+    "penaltyQueued": "Em espera",
+    "savePowerplay": "Guardar",
+    "powerplayCorrectionFailed": "Não foi possível guardar a correção. A penalização pode ter mudado. Tenta novamente ou cancela e volta a abrir.",
+    "penaltyAdjustedTo": "Tempo restante definido para {time}"
   },
   "footer": {
     "label": "Estado da aplicação",

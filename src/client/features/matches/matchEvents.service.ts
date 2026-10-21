@@ -76,7 +76,7 @@ export async function addMatchEvent(
     );
     const { operationId, ...eventFields } = fields;
     const eligibility = validateMatchEvent(
-      { snapshot, state: deriveMatchState(snapshot, events) },
+      { snapshot, state: deriveMatchState(snapshot, events, fields) },
       fields,
     );
     if (!eligibility.allowed) throw new MatchRuleError(eligibility.reason);
@@ -108,7 +108,7 @@ export async function addMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 4,
+        version: 5,
         operationId,
         kind: "matchEvent.create",
         expectedRevision: snapshot.match.revision,
@@ -172,7 +172,7 @@ export async function undoMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 4,
+        version: 5,
         operationId,
         kind: "matchEvent.undo",
         expectedRevision: snapshot.match.revision,

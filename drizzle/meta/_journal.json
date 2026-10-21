@@ -92,6 +92,13 @@
       "when": 1792588126463,
       "tag": "0012_match_event_rink_half",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792591436032,
+      "tag": "0013_timed_powerplay",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useTranslations } from "next-intl";
 import type { AddMatchEventInput } from "../../../../domain/matches/matchEvent.schema";
+import { getClockElapsed } from "../../../../domain/matches/matchControl";
+import { getAvailableEventKinds } from "../../../../domain/matches/matchRules";
+import type { PowerplayPenalty } from "../../../../domain/matches/powerplay";
+import { PowerplayCorrectionDialog } from "../PowerplayCorrectionDialog/PowerplayCorrectionDialog";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
 import { MatchControls } from "../MatchControls/MatchControls";
 import { RecorderHeader } from "../RecorderBoard/RecorderHeader";
@@ -29,23 +33,89 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const state = useStore(store, (entry) => entry.state);
   const [controlsBusy, setControlsBusy] = useState(false);
+  const [correction, setCorrection] = useState<
+    readonly PowerplayPenalty[] | null
+  >(null);
+  const [now, setNow] = useState(0);
+  const promptedPenalty = useRef<string | undefined>(undefined);
   const readOnly = snapshot.match.status !== "live";
   const events = useMatchEvents(snapshot.match.id);
   const candidate = useLatestUndoEvent(snapshot.match.id);
-  const derivedState = deriveMatchState(snapshot, events.data ?? []);
+  const elapsedMs = getClockElapsed(snapshot.match, now);
+  const derivedState = deriveMatchState(snapshot, events.data ?? [], {
+    period: snapshot.match.currentPeriod,
+    gameTime: elapsedMs === undefined ? undefined : { elapsedMs },
+  });
   const context = { snapshot, state: derivedState };
   const add = useAddMatchEvent();
   const undo = useUndoMatchEvent();
   const draft = state.phase === "idle" ? null : state.draft;
+  const draftContext = draft
+    ? { snapshot, state: deriveMatchState(snapshot, events.data ?? [], draft) }
+    : context;
   useEffect(() => {
-    if (state.phase !== "idle" || !returnFocusTo.current) return;
+    if (readOnly) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [readOnly]);
+  const canEnter = getAvailableEventKinds(context).includes("player-in");
+  const lastPenalty = derivedState.lastPowerplayEndCardEventId;
+  useEffect(() => {
+    if (derivedState.isPowerplay) {
+      promptedPenalty.current = undefined;
+      return;
+    }
+    if (
+      !lastPenalty ||
+      promptedPenalty.current === lastPenalty ||
+      !canEnter ||
+      !derivedState.valid ||
+      readOnly ||
+      state.phase !== "idle" ||
+      controlsBusy ||
+      correction ||
+      undo.isPending ||
+      !events.data ||
+      events.isError
+    )
+      return;
+    promptedPenalty.current = lastPenalty;
+    returnFocusTo.current = document.getElementById("recorder-players");
+    add.reset();
+    store.getState().dispatch({
+      type: "open",
+      draft: captureEventDraft(snapshot.match, { kind: "player-in" }),
+    });
+  }, [
+    lastPenalty,
+    canEnter,
+    derivedState.valid,
+    derivedState.isPowerplay,
+    readOnly,
+    state.phase,
+    controlsBusy,
+    correction,
+    undo.isPending,
+    events.data,
+    events.isError,
+    add,
+    store,
+    snapshot.match,
+  ]);
+  useEffect(() => {
+    if (
+      state.phase !== "idle" ||
+      store.getState().state.phase !== "idle" ||
+      !returnFocusTo.current
+    )
+      return;
     const trigger = returnFocusTo.current;
     returnFocusTo.current = null;
     const frame = window.requestAnimationFrame(() => {
       if (trigger.isConnected) trigger.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [state.phase]);
+  }, [state.phase, store]);
   function save(input: AddMatchEventInput): void {
     void add
       .mutateAsync(input)
@@ -72,6 +142,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       store.getState().state.phase !== "idle" ||
       undo.isPending ||
       controlsBusy ||
+      correction !== null ||
       !events.data ||
       events.isError ||
       readOnly
@@ -101,6 +172,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const disabled =
     state.phase !== "idle" ||
     controlsBusy ||
+    correction !== null ||
     undo.isPending ||
     !events.data ||
     events.isError;
@@ -110,12 +182,21 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         <div className={st.sticky}>
           <RecorderHeader
             match={snapshot.match}
-            disabled={state.phase !== "idle" || controlsBusy || undo.isPending}
+            disabled={
+              state.phase !== "idle" ||
+              controlsBusy ||
+              correction !== null ||
+              undo.isPending
+            }
             scoreDisabled={disabled}
             onScoreAdjust={() => handleOpenEvent({ kind: "score-adjustment" })}
           />
           <MatchControls
             match={snapshot.match}
+            powerplays={
+              events.data && !events.isError ? derivedState.powerplays : []
+            }
+            onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
             ownScore={
               events.data && !events.isError ? derivedState.ownScore : undefined
             }
@@ -124,7 +205,9 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                 ? derivedState.opponentScore
                 : undefined
             }
-            disabled={state.phase !== "idle" || undo.isPending}
+            disabled={
+              state.phase !== "idle" || correction !== null || undo.isPending
+            }
             onBusyChange={setControlsBusy}
           />
         </div>
@@ -167,6 +250,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               undoDisabled={
                 readOnly ||
                 controlsBusy ||
+                correction !== null ||
                 !candidate.data ||
                 undo.isPending ||
                 state.phase !== "idle"
@@ -204,10 +288,17 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           expanded={readOnly}
         />
       </div>
+      {correction && !readOnly && (
+        <PowerplayCorrectionDialog
+          match={snapshot.match}
+          penalties={correction}
+          onClose={() => setCorrection(null)}
+        />
+      )}
       {draft && !readOnly && (
         <EventEntryDialog
           draft={draft}
-          context={context}
+          context={draftContext}
           phase={state.phase}
           error={add.error}
           onAction={dispatch}

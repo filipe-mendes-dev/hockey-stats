@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { Shield } from "lucide-react";
 import { getAvailableEventKinds } from "../../../../domain/matches/matchRules";
@@ -41,12 +42,27 @@ export function RecorderPlayers({
   }
   return (
     <section className={st.section} aria-labelledby="recorder-players">
-      <h2 id="recorder-players" className={st.heading}>
-        {t("onField")}{" "}
-        <span>
+      <div className={st.lineupHeading}>
+        <h2 id="recorder-players" className={st.heading} tabIndex={-1}>
+          {t("onField")}
+        </h2>
+        {context.state.isPowerplay && (
+          <span className={st.powerplay}>{t("powerplayActiveShort")}</span>
+        )}
+        <span className={st.count}>
           {active.length}/{context.state.maxOnField}
         </span>
-      </h2>
+        {getAvailableEventKinds(context).includes("player-in") && (
+          <Button
+            size="sm"
+            variant="subtle"
+            disabled={disabled}
+            onClick={() => onPick({ kind: "player-in" })}
+          >
+            {t("player-in")}
+          </Button>
+        )}
+      </div>
       <ul className={st.field}>
         {active
           .filter((p) => p.role !== "goalkeeper")

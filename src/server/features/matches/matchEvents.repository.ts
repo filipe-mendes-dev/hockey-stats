@@ -19,6 +19,7 @@ export function mapMatchEvent(
     replacementMatchPlayerId,
     lineupEffect,
     startsPowerplay,
+    powerplayDurationMs,
     removedMatchPlayerId,
     powerplayCardEventId,
     entryReason,
@@ -40,6 +41,7 @@ export function mapMatchEvent(
     ...(replacementMatchPlayerId === null ? {} : { replacementMatchPlayerId }),
     ...(lineupEffect === null ? {} : { lineupEffect }),
     ...(startsPowerplay === null ? {} : { startsPowerplay }),
+    ...(powerplayDurationMs === null ? {} : { powerplayDurationMs }),
     ...(removedMatchPlayerId === null ? {} : { removedMatchPlayerId }),
     ...(powerplayCardEventId === null ? {} : { powerplayCardEventId }),
     ...(entryReason === null ? {} : { entryReason }),
@@ -82,7 +84,13 @@ function eventRow(event: MatchEvent): typeof matchEvents.$inferInsert {
     removedMatchPlayerId:
       event.kind === "card" ? (event.removedMatchPlayerId ?? null) : null,
     powerplayCardEventId:
-      event.kind === "powerplay-end" ? event.powerplayCardEventId : null,
+      event.kind === "powerplay-end" || event.kind === "powerplay-adjust"
+        ? event.powerplayCardEventId
+        : null,
+    powerplayDurationMs:
+      "powerplayDurationMs" in event
+        ? (event.powerplayDurationMs ?? null)
+        : null,
     entryReason:
       event.kind === "player-in" ? (event.entryReason ?? null) : null,
     subtype: "subtype" in event ? event.subtype : null,
