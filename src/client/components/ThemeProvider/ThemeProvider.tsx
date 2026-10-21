@@ -13,10 +13,12 @@ import {
   NativeSelect,
   PasswordInput,
   SegmentedControl,
+  Select,
+  Stepper,
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { YearPickerInput } from "@mantine/dates";
+import { DatePickerInput, YearPickerInput } from "@mantine/dates";
 import type { CSSVariablesResolver } from "@mantine/core";
 import type { ThemeProviderProps } from "./ThemeProvider.interfaces";
 import st from "./ThemeProvider.module.css";
@@ -107,6 +109,30 @@ const theme = createTheme({
     Autocomplete: Autocomplete.extend({
       defaultProps: { size: "md" },
       classNames: { dropdown: st.dropdown, option: st.option },
+    }),
+    Select: Select.extend({
+      defaultProps: { size: "md" },
+      classNames: { dropdown: st.dropdown, option: st.option },
+    }),
+    DatePickerInput: DatePickerInput.extend({
+      defaultProps: { size: "md" },
+      classNames: {
+        input: st.dateInput,
+        day: st.calendarDay,
+        calendarHeaderControl: st.calendarNavigation,
+        calendarHeaderLevel: st.calendarNavigation,
+      },
+    }),
+    Stepper: Stepper.extend({
+      defaultProps: { size: "sm", radius: "xl" },
+      classNames: {
+        step: st.step,
+        stepIcon: st.stepIcon,
+        stepCompletedIcon: st.stepCompletedIcon,
+        stepBody: st.stepBody,
+        stepLabel: st.stepLabel,
+        separator: st.stepSeparator,
+      },
     }),
     YearPickerInput: YearPickerInput.extend({ defaultProps: { size: "md" } }),
     Popover: Popover.extend({ classNames: { dropdown: st.dropdown } }),

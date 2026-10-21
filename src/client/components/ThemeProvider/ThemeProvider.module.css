@@ -192,3 +192,99 @@
   color: var(--color-action);
   background: var(--color-surface-action);
 }
+
+.dateInput {
+  text-box-trim: none;
+}
+.calendarDay,
+.calendarNavigation {
+  border-radius: var(--radius-control);
+}
+.calendarDay[data-weekend]:not([data-selected]):not([data-outside]):not(
+    :disabled
+  ) {
+  color: var(--color-calendar-weekend);
+  font-weight: 650;
+}
+.calendarDay[data-selected] {
+  color: var(--color-on-action);
+  background: var(--color-action);
+}
+.calendarDay:not([data-selected]):not(:disabled):hover,
+.calendarNavigation:not(:disabled):hover {
+  background: var(--color-surface-hover);
+}
+.step {
+  min-width: 0;
+}
+.stepIcon {
+  transition: transform 150ms ease;
+  border: 1px solid var(--color-border-subtle);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+.stepIcon[data-progress],
+.stepIcon[data-completed] {
+  border-color: var(--color-border-action);
+  background: var(--color-surface-action);
+  color: var(--color-action);
+}
+.stepIcon[data-progress] {
+  transform: scale(1.05);
+}
+.stepIcon[data-completed] {
+  border-color: transparent;
+  background: linear-gradient(
+    45deg,
+    var(--color-progress-start),
+    var(--color-progress-end)
+  );
+}
+.stepCompletedIcon {
+  color: var(--color-on-selection);
+}
+.stepLabel {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+.step[data-progress] .stepLabel {
+  color: var(--color-text);
+}
+.stepSeparator {
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-subtle);
+}
+.stepSeparator[data-active] {
+  background: linear-gradient(
+    45deg,
+    var(--color-progress-start),
+    var(--color-progress-end)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .stepIcon {
+    transition: none;
+    transform: none;
+  }
+}
+@media (max-width: 36rem) {
+  .step {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-self: flex-start;
+  }
+  .stepBody {
+    margin-inline-start: 0;
+    text-align: center;
+  }
+  .stepLabel {
+    font-size: 0.75rem;
+  }
+  .stepSeparator {
+    align-self: flex-start;
+    margin-top: 1.125rem;
+    margin-inline: 0.5rem;
+  }
+}

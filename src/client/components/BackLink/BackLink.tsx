@@ -6,7 +6,22 @@ import { ArrowLeft } from "lucide-react";
 import type { BackLinkProps } from "./BackLink.interfaces";
 import st from "./BackLink.module.css";
 
-export function BackLink({ href, label }: BackLinkProps) {
+export function BackLink({ href, label, disabled = false }: BackLinkProps) {
+  if (disabled)
+    return (
+      <Button
+        type="button"
+        disabled
+        variant="subtle"
+        size="sm"
+        className={st.link}
+        leftSection={
+          <ArrowLeft size={16} className={st.arrow} aria-hidden="true" />
+        }
+      >
+        {label}
+      </Button>
+    );
   return (
     <Button
       component={Link}

@@ -14,10 +14,14 @@ export function FormLayout({
   cancelLabel,
   cancelHref,
   onSubmit,
+  submitDisabled = false,
+  secondaryAction,
+  actionsLayout = "default",
 }: FormLayoutProps) {
   return (
     <form
       className={st.form}
+      data-actions-layout={actionsLayout}
       noValidate
       aria-label={label}
       aria-busy={pending}
@@ -30,15 +34,40 @@ export function FormLayout({
         </Alert>
       )}
       <div className={st.actions}>
-        <Button type="submit" size="sm" loading={pending} disabled={pending}>
+        <Button
+          className={st.submit}
+          type="submit"
+          size="sm"
+          loading={pending}
+          disabled={pending || submitDisabled}
+        >
           {submitLabel}
         </Button>
+        {secondaryAction && (
+          <Button
+            type="button"
+            variant="subtle"
+            size="sm"
+            disabled={pending}
+            className={st.secondary}
+            onClick={secondaryAction.onClick}
+          >
+            {secondaryAction.label}
+          </Button>
+        )}
         {pending ? (
-          <Button type="button" variant="subtle" size="sm" disabled>
+          <Button
+            className={st.cancel}
+            type="button"
+            variant="subtle"
+            size="sm"
+            disabled
+          >
             {cancelLabel}
           </Button>
         ) : (
           <Button
+            className={st.cancel}
             component={Link}
             href={cancelHref}
             prefetch={false}

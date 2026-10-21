@@ -8,6 +8,8 @@ export function SelectableEntityRow({
   title,
   avatar,
   checked,
+  description,
+  disabled = false,
   onChange,
 }: SelectableEntityRowProps) {
   return (
@@ -16,11 +18,21 @@ export function SelectableEntityRow({
         className={st.row}
         withBorder={false}
         checked={checked}
+        disabled={disabled}
         onChange={onChange}
         aria-label={title}
       >
         <span className={st.avatar}>{avatar}</span>
-        <span className={st.title}>{title}</span>
+        <span className={st.copy}>
+          <span className={st.title} title={title}>
+            {title}
+          </span>
+          {description && (
+            <span className={st.description} title={description}>
+              {description}
+            </span>
+          )}
+        </span>
         <Checkbox.Indicator className={st.indicator} aria-hidden="true" />
       </Checkbox.Card>
     </li>

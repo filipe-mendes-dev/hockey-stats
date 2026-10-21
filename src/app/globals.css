@@ -23,6 +23,11 @@
     0 16px 48px rgb(0 0 0 / 18%), inset 0 1px 0 var(--color-surface-highlight);
   --shadow-floating: 0 8px 24px rgb(0 0 0 / 24%);
   --surface-blur: 20px;
+  --app-header-control-height: 2.75rem;
+  --app-header-padding-block: 0.625rem;
+  --app-header-height: calc(
+    var(--app-header-control-height) + 2 * var(--app-header-padding-block) + 1px
+  );
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;
   --color-action-pressed: #a3c4b9;
@@ -30,6 +35,10 @@
   --color-selection-end: #96c5b5;
   --color-on-selection: var(--color-on-action);
   --color-surface-action: rgb(184 216 206 / 7%);
+  --color-surface-selection: rgb(184 216 206 / 3.5%);
+  --color-calendar-weekend: #75edbf;
+  --color-progress-start: var(--color-selection-start);
+  --color-progress-end: var(--color-selection-end);
   --color-border-action: rgb(184 216 206 / 24%);
   --color-on-action: #182421;
   --color-focus: #97d0ed;
@@ -61,4 +70,10 @@ body {
 :where(a, button, select, [tabindex]):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
+}
+
+@media (max-width: 36rem) {
+  :root {
+    --app-header-padding-block: 0.5rem;
+  }
 }

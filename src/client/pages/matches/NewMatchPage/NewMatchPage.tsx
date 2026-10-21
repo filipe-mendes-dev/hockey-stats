@@ -1,8 +1,9 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
-import { MatchForm } from "../../../features/matches/MatchForm/MatchForm";
+import { PageHeader } from "../../../components/PageHeader/PageHeader";
+import st from "./NewMatchPage.module.css";
+import { NewMatchWizard } from "../../../features/matches/NewMatchWizard/NewMatchWizard";
 import { useCreateMatch } from "../../../features/matches/mutations/matches.mutations";
 import { MatchReferencesUnavailableError } from "../../../features/matches/matches.service";
 export function NewMatchPage() {
@@ -10,27 +11,33 @@ export function NewMatchPage() {
   const router = useRouter();
   const creation = useCreateMatch();
   return (
-    <EntityPage
-      backHref="/app/matches"
-      backLabel={t("back")}
-      title={t("newTitle")}
-      description={t("newDescription")}
-      storageNotice={t("storageNotice")}
-    >
-      <MatchForm
+    <section className={st.page}>
+      <PageHeader
+        back={{
+          href: "/app/matches",
+          label: t("back"),
+          disabled: creation.isPending,
+        }}
+        title={t("newTitle")}
+        description={t("newDescription")}
+      />
+      <NewMatchWizard
         pending={creation.isPending}
-        failed={creation.isError}
-        failedLabel={
-          creation.error instanceof MatchReferencesUnavailableError
-            ? t("referencesUnavailable")
-            : t("saveFailed")
+        error={
+          creation.isError
+            ? creation.error instanceof MatchReferencesUnavailableError
+              ? t("referencesUnavailable")
+              : t("saveFailed")
+            : null
         }
-        submitLabel={t("create")}
+        onDraftChange={() => {
+          if (creation.isError) creation.reset();
+        }}
         onSave={async (input) => {
           const snapshot = await creation.mutateAsync(input);
           router.replace(`/app/matches/view?id=${snapshot.match.id}`);
         }}
       />
-    </EntityPage>
+    </section>
   );
 }

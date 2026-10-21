@@ -8,5 +8,8 @@ export interface FormLayoutProps {
   submitLabel: string;
   cancelLabel: string;
   cancelHref: string;
+  submitDisabled?: boolean;
+  actionsLayout?: "default" | "wizard";
+  secondaryAction?: { label: string; onClick(): void };
   onSubmit: (event: SubmitEvent<HTMLFormElement>) => void;
 }

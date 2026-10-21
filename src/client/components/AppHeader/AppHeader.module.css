@@ -15,7 +15,7 @@
   width: 100%;
   max-width: 84rem;
   margin-inline: auto;
-  padding: 0.625rem 1.5rem;
+  padding: var(--app-header-padding-block) 1.5rem;
 }
 
 .brand {
@@ -23,7 +23,7 @@
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
-  min-height: 2.75rem;
+  min-height: var(--app-header-control-height);
   max-width: 100%;
   color: var(--color-text);
   text-decoration: none;
@@ -79,7 +79,7 @@
 @media (max-width: 36rem) {
   .content {
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    padding: var(--app-header-padding-block) 1rem;
   }
 
   .brand {
@@ -105,7 +105,7 @@
   align-items: center;
   justify-content: center;
   min-width: 2.75rem;
-  min-height: 2.75rem;
+  min-height: var(--app-header-control-height);
   border-radius: var(--radius-control);
   color: var(--color-text);
 }
@@ -123,7 +123,7 @@
 }
 .drawerClose {
   min-width: 2.75rem;
-  min-height: 2.75rem;
+  min-height: var(--app-header-control-height);
   color: var(--color-text-muted);
 }
 .drawerBody {

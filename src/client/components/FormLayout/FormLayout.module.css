@@ -21,6 +21,13 @@
   padding-top: 1.25rem;
   border-top: 1px solid var(--color-border-subtle);
 }
+.form[data-actions-layout="wizard"] .actions {
+  border-top: 0;
+  padding-top: 0;
+}
+.form[data-actions-layout="wizard"] .cancel {
+  display: none;
+}
 @media (max-width: 36rem) {
   .actions {
     flex-direction: column;
@@ -29,5 +36,45 @@
   }
   .actions > * {
     width: 100%;
+  }
+}
+
+@media (max-width: 36rem) {
+  .form[data-actions-layout="wizard"] {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .form[data-actions-layout="wizard"] .fields {
+    padding-bottom: 1rem;
+  }
+  .form[data-actions-layout="wizard"] .actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 95;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    margin-inline: -1rem;
+    margin-top: auto;
+    border-top: 1px solid var(--color-border-subtle);
+    padding: 0.75rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+    background: var(--color-background);
+  }
+  .form[data-actions-layout="wizard"] .secondary {
+    order: 0;
+    width: auto;
+    flex-shrink: 0;
+  }
+  .form[data-actions-layout="wizard"] .submit {
+    order: 1;
+    width: auto;
+    flex: 1;
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .form[data-actions-layout="wizard"] .actions {
+      background: var(--color-surface-header);
+      backdrop-filter: blur(var(--surface-blur));
+    }
   }
 }
