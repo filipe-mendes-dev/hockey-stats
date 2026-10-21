@@ -4,7 +4,7 @@ import { Button, Tooltip } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { getEventDetail } from "../../../../domain/matches/matchEvent.schema";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
-import { formatMatchTime } from "../../../../domain/matches/matchControl";
+import { formatCountdown } from "../../../../domain/matches/matchControl";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
 import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
@@ -87,6 +87,8 @@ export function RecorderTimeline({
                       : "",
                 }),
               ];
+              if (event.kind === "ball-recovery" || event.kind === "ball-loss")
+                details.push(t(event.rinkHalf ?? "locationUnknown"));
               if (event.kind === "card") {
                 if (event.removedMatchPlayerId)
                   details.push(
@@ -111,9 +113,13 @@ export function RecorderTimeline({
                   );
               }
               const summary = details.join(" · ");
-              const time = event.gameTime
-                ? formatMatchTime(event.gameTime.elapsedMs)
-                : t("untimed");
+              const time =
+                formatCountdown(
+                  event.gameTime?.elapsedMs,
+                  snapshot.match.periods.find(
+                    (period) => period.number === event.period,
+                  )?.durationMs,
+                ) ?? t("untimed");
               const fullDescription = [
                 participant,
                 summary,

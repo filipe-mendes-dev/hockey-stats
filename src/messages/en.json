@@ -428,8 +428,8 @@
     "playerUnavailable": "Player unavailable",
     "eventSummary": "{kind} {detail}",
     "eventTime": "{period, plural, =1 {1st half} =2 {2nd half} other {Period #}} · {time}",
-    "untimed": "Untimed",
-    "newEvent": "Add event",
+    "untimed": "Time unavailable",
+    "newEvent": "New event",
     "selectedPlayer": "Player: {name}",
     "chooseAction": "Choose an action",
     "choosePlayer": "Choose a player",
@@ -457,7 +457,7 @@
     "controlFailed": "The Match changed or the action could not be saved. Check the current period and time, then try again.",
     "finishConfirmation": "End this Match? Tracking will close and the Match will become read-only.",
     "adjustElapsed": "Enter elapsed time in this period.",
-    "adjustRemaining": "Enter the time remaining on the game clock.",
+    "adjustRemaining": "Time remaining",
     "minutes": "Minutes",
     "seconds": "Seconds",
     "saveClock": "Save time",
@@ -531,7 +531,7 @@
     "cardQueuesPowerplay": "This card adds a powerplay penalty. The team stays at four until all penalties are completed.",
     "choosePowerplayRemoval": "Choose an active player to leave the field for this bench card. This starts powerplay.",
     "thirdBlueRed": "Third blue card: red-card exclusion. This player cannot return.",
-    "eventTimeRequired": "Enter elapsed time in this half before saving the event.",
+    "eventTimeRequired": "Enter the time remaining in this half.",
     "periodConfirmation": "End this period and prepare the next one? The clock will be paused.",
     "allEvents": "All events",
     "matchOptions": "Match options",
@@ -541,10 +541,16 @@
     "eventProgress": "Event progress",
     "back": "Back",
     "attackDirection": "Attack direction",
-    "attackLeft": "Left goal",
-    "attackRight": "Right goal",
+    "attackLeft": "← Left",
+    "attackRight": "Right →",
     "attackUnknown": "Unset",
-    "applyDirection": "Save direction"
+    "applyDirection": "Save direction",
+    "chooseHalf": "Where did it happen?",
+    "defensive": "Defensive half",
+    "attacking": "Attacking half",
+    "locationUnknown": "Location unknown",
+    "ourScore": "Our score",
+    "ownScoreReadOnly": "Our score comes from recorded shots."
   },
   "footer": {
     "label": "Application status",
@@ -569,5 +575,9 @@
     "players": "Players",
     "teams": "Teams",
     "matches": "Matches"
+  },
+  "controls": {
+    "increase": "Increase {label}",
+    "decrease": "Decrease {label}"
   }
 }

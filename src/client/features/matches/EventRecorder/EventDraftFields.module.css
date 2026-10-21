@@ -28,6 +28,14 @@
 .players li {
   min-width: 0;
 }
+.playerLabel {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .choices button,
 .players button {
   width: 100%;
@@ -37,23 +45,30 @@
   padding: 0.875rem 0.75rem;
   border-radius: var(--radius-button);
 }
-.fields label {
-  display: grid;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+.cardChoice[data-card-colour="yellow"] {
+  --card-accent: var(--color-card-yellow);
+  --card-surface: var(--color-card-yellow-surface);
+  --card-border: var(--color-card-yellow-border);
 }
-.fields input {
-  width: 100%;
-  min-width: 0;
-  min-height: 3rem;
-  padding: 0.625rem 0.875rem;
-  font: inherit;
-  color: var(--color-text);
-  background: var(--color-surface-input);
-  border: 1px solid var(--color-border-control);
-  border-radius: var(--radius-input);
+.cardChoice[data-card-colour="blue"] {
+  --card-accent: var(--color-card-blue);
+  --card-surface: var(--color-card-blue-surface);
+  --card-border: var(--color-card-blue-border);
 }
-.fields .error {
-  color: var(--color-error);
+.cardChoice[data-card-colour="red"] {
+  --card-accent: var(--color-card-red);
+  --card-surface: var(--color-card-red-surface);
+  --card-border: var(--color-card-red-border);
+}
+.fields .cardChoice[data-card-colour] {
+  color: var(--card-accent);
+  border-color: var(--card-border);
+  background: var(--card-surface);
+}
+@media (hover: hover) {
+  .fields .cardChoice[data-card-colour]:hover {
+    color: var(--card-accent);
+    border-color: var(--card-accent);
+    background: var(--card-surface);
+  }
 }

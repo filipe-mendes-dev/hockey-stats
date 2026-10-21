@@ -428,8 +428,8 @@
     "playerUnavailable": "Jogador indisponível",
     "eventSummary": "{kind} {detail}",
     "eventTime": "{period, plural, =1 {1.ª parte} =2 {2.ª parte} other {Período #}} · {time}",
-    "untimed": "Sem tempo",
-    "newEvent": "Adicionar evento",
+    "untimed": "Tempo indisponível",
+    "newEvent": "Novo evento",
     "selectedPlayer": "Jogador: {name}",
     "chooseAction": "Escolha uma ação",
     "choosePlayer": "Escolha um jogador",
@@ -457,7 +457,7 @@
     "controlFailed": "O jogo foi alterado ou não foi possível guardar a ação. Verifique o período e o tempo e tente novamente.",
     "finishConfirmation": "Terminar este jogo? O registo será encerrado e o jogo ficará disponível apenas para consulta.",
     "adjustElapsed": "Introduza o tempo decorrido neste período.",
-    "adjustRemaining": "Introduza o tempo restante no relógio do jogo.",
+    "adjustRemaining": "Tempo restante",
     "minutes": "Minutos",
     "seconds": "Segundos",
     "saveClock": "Guardar tempo",
@@ -531,7 +531,7 @@
     "cardQueuesPowerplay": "Este cartão acrescenta uma penalização de powerplay. A equipa mantém quatro jogadores até terminarem todas as penalizações.",
     "choosePowerplayRemoval": "Escolhe um jogador em campo para sair devido a este cartão no banco. Esta ação inicia o powerplay.",
     "thirdBlueRed": "Terceiro cartão azul: expulsão por cartão vermelho. Este jogador não pode regressar.",
-    "eventTimeRequired": "Introduza o tempo decorrido nesta parte antes de guardar o evento.",
+    "eventTimeRequired": "Introduza o tempo restante nesta parte.",
     "periodConfirmation": "Terminar esta parte e preparar a seguinte? O cronómetro ficará em pausa.",
     "allEvents": "Todos os eventos",
     "matchOptions": "Opções do jogo",
@@ -541,10 +541,16 @@
     "eventProgress": "Progresso do evento",
     "back": "Voltar",
     "attackDirection": "Sentido de ataque",
-    "attackLeft": "Baliza esquerda",
-    "attackRight": "Baliza direita",
+    "attackLeft": "← Esquerda",
+    "attackRight": "Direita →",
     "attackUnknown": "Por definir",
-    "applyDirection": "Guardar sentido"
+    "applyDirection": "Guardar sentido",
+    "chooseHalf": "Onde aconteceu?",
+    "defensive": "Meio-campo defensivo",
+    "attacking": "Meio-campo ofensivo",
+    "locationUnknown": "Local desconhecido",
+    "ourScore": "O nosso resultado",
+    "ownScoreReadOnly": "O nosso resultado vem dos remates registados."
   },
   "footer": {
     "label": "Estado da aplicação",
@@ -569,5 +575,9 @@
     "players": "Jogadores",
     "teams": "Equipas",
     "matches": "Jogos"
+  },
+  "controls": {
+    "increase": "Aumentar {label}",
+    "decrease": "Diminuir {label}"
   }
 }

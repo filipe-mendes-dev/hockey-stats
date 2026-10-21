@@ -9,6 +9,7 @@ import type {
   ShotOutcome,
   CardColour,
   RinkPosition,
+  RinkHalf,
 } from "../../../../domain/matches/matchEvent.schema";
 import { addMatchEventInputSchema } from "../../../../domain/matches/matchEvent.schema";
 
@@ -20,6 +21,7 @@ export interface EventDraft {
   capturedAt: number;
   gameTime?: MatchTime;
   position?: RinkPosition;
+  rinkHalf?: RinkHalf;
   matchPlayerId?: string;
   kind?: AddMatchEventInput["kind"];
   outgoingMatchPlayerId?: string;
@@ -61,6 +63,7 @@ export type EventDraftAction =
       removedId?: string;
     }
   | { type: "confirmPowerplayEnd"; cardEventId: string }
+  | { type: "selectHalf"; rinkHalf: RinkHalf }
   | { type: "selectSubtype"; subtype: RecoverySubtype }
   | { type: "selectReason"; reason: LossReason }
   | { type: "selectOutcome"; outcome: ShotOutcome }
@@ -109,6 +112,7 @@ export function transitionEventDraft(
     case "selectKind": {
       const draft = { ...state.draft, kind: action.kind };
       if (state.draft.kind !== action.kind) {
+        delete draft.rinkHalf;
         delete draft.subtype;
         delete draft.reason;
         delete draft.outcome;
@@ -182,6 +186,11 @@ export function transitionEventDraft(
                 : {}),
             },
           }
+        : state;
+    case "selectHalf":
+      return state.draft.kind === "ball-recovery" ||
+        state.draft.kind === "ball-loss"
+        ? { ...state, draft: { ...state.draft, rinkHalf: action.rinkHalf } }
         : state;
     case "selectSubtype":
       return state.draft.kind === "ball-recovery"

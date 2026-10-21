@@ -2,6 +2,7 @@ import type { EventDraft } from "./eventDraft";
 export type EventDraftStep =
   | "chooseAction"
   | "choosePlayer"
+  | "chooseHalf"
   | "chooseSubtype"
   | "chooseReason"
   | "chooseOutcome"
@@ -25,6 +26,11 @@ export function getEventDraftSteps(draft: EventDraft): EventDraftStep[] {
     ].includes(draft.kind)
   )
     steps.push("choosePlayer");
+  if (
+    (draft.kind === "ball-recovery" || draft.kind === "ball-loss") &&
+    !draft.rinkHalf
+  )
+    steps.push("chooseHalf");
   if (draft.kind === "ball-recovery" && !draft.subtype)
     steps.push("chooseSubtype");
   if (draft.kind === "ball-loss" && !draft.reason) steps.push("chooseReason");

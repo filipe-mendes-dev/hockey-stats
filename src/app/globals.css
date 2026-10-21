@@ -46,6 +46,15 @@
   --color-error-hover: #ffc2be;
   --color-on-error: #381211;
   --color-success: #a8d8b5;
+  --color-card-yellow: #f2d37d;
+  --color-card-yellow-surface: rgb(242 211 125 / 8%);
+  --color-card-yellow-border: rgb(242 211 125 / 40%);
+  --color-card-blue: #8dc7ff;
+  --color-card-blue-surface: rgb(141 199 255 / 8%);
+  --color-card-blue-border: rgb(141 199 255 / 40%);
+  --color-card-red: var(--color-error);
+  --color-card-red-surface: rgb(255 170 165 / 8%);
+  --color-card-red-border: rgb(255 170 165 / 40%);
   --radius-control: 0.875rem;
   --radius-input: 1.25rem;
   --radius-button: 1.25rem;

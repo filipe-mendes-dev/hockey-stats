@@ -2,13 +2,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  formatMatchTime,
+  formatCountdown,
+  getCountdownMs,
   getClockElapsed,
 } from "../../../../domain/matches/matchControl";
 import type { MatchControlAction } from "../../../../domain/matches/matchControl";
-import { ActionIcon, Button, NumberInput, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Tooltip } from "@mantine/core";
 import { Flag, Pause, Play, TimerReset } from "lucide-react";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
+import { DurationCounter } from "../../../components/DurationCounter/DurationCounter";
+import {
+  getDurationFields,
+  parseDurationFields,
+} from "../../../components/DurationCounter/durationFields";
+import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
 import st from "./MatchControls.module.css";
@@ -25,8 +32,10 @@ export function MatchControls({
   const [panel, setPanel] = useState<"adjust" | "finish" | "period" | null>(
     null,
   );
-  const [minutes, setMinutes] = useState<string | number>(0);
-  const [seconds, setSeconds] = useState<string | number>(0);
+  const [clockFields, setClockFields] = useState(() => getDurationFields(0));
+  const [capturedElapsed, setCapturedElapsed] = useState<number | undefined>(
+    undefined,
+  );
   const lastAutoPause = useRef<number | undefined>(undefined);
   const period = match.periods.find(
     (entry) => entry.number === match.currentPeriod,
@@ -73,14 +82,14 @@ export function MatchControls({
     );
   }
   function open(next: "adjust" | "finish" | "period"): void {
-    const current = remaining ?? elapsed ?? duration ?? 0;
-    setMinutes(Math.floor(current / 60_000));
-    setSeconds(Math.floor(current / 1000) % 60);
+    const current = getCountdownMs(elapsed, duration) ?? elapsed ?? 0;
+    setCapturedElapsed(elapsed);
+    setClockFields(getDurationFields(current));
     mutation.reset();
     setPanel(next);
   }
   if (match.status !== "live") return null;
-  const shownTime = remaining ?? elapsed;
+  const enteredTime = parseDurationFields(clockFields, duration);
   const finishLabel = t(
     match.currentPeriod === match.periods.length ? "endMatch" : "endPeriod",
   );
@@ -98,19 +107,11 @@ export function MatchControls({
           <output
             aria-live="off"
             className={st.clock}
-            aria-label={t(
-              duration === undefined ? "elapsedTime" : "remainingTime",
-            )}
+            aria-label={t("remainingTime")}
           >
             {running && now === 0
               ? "…"
-              : shownTime === undefined
-                ? t("untimed")
-                : formatMatchTime(
-                    duration === undefined
-                      ? shownTime
-                      : Math.ceil(shownTime / 1000) * 1000,
-                  )}
+              : (formatCountdown(elapsed, duration) ?? t("untimed"))}
           </output>
           <span className={st.status} data-running={running && remaining !== 0}>
             {t(running && remaining !== 0 ? "clockRunning" : "clockPaused")}
@@ -177,16 +178,7 @@ export function MatchControls({
         submitLabel={panel === "adjust" ? t("saveClock") : finishLabel}
         pending={mutation.isPending}
         error={mutation.isError ? t("controlFailed") : null}
-        submitDisabled={
-          panel === "adjust" &&
-          (!Number.isInteger(minutes) ||
-            Number(minutes) < 0 ||
-            !Number.isInteger(seconds) ||
-            Number(seconds) < 0 ||
-            Number(seconds) > 59 ||
-            (duration !== undefined &&
-              Number(minutes) * 60_000 + Number(seconds) * 1000 > duration))
-        }
+        submitDisabled={panel === "adjust" && enteredTime === null}
         onClose={() => setPanel(null)}
         onSubmit={(event) => {
           event.preventDefault();
@@ -194,48 +186,33 @@ export function MatchControls({
             control({ type: panel === "finish" ? "match.end" : "period.end" });
             return;
           }
-          const entered = Number(minutes) * 60_000 + Number(seconds) * 1000;
-          if (
-            !Number.isInteger(minutes) ||
-            Number(minutes) < 0 ||
-            !Number.isInteger(seconds) ||
-            Number(seconds) < 0 ||
-            Number(seconds) > 59 ||
-            (duration !== undefined && entered > duration)
-          )
-            return;
+          if (enteredTime === null) return;
           control({
             type: "clock.adjust",
-            elapsedMs: duration === undefined ? entered : duration - entered,
+            elapsedMs:
+              duration === undefined ? enteredTime : duration - enteredTime,
           });
         }}
       >
+        <RecorderContext
+          match={match}
+          period={match.currentPeriod}
+          elapsedMs={capturedElapsed}
+          primary={panel === "adjust" ? t("adjustClock") : finishLabel}
+        />
         {panel === "adjust" ? (
           <>
-            <p className={st.help}>
-              {t(duration === undefined ? "adjustElapsed" : "adjustRemaining")}
-            </p>
-            <div className={st.inputs}>
-              <NumberInput
-                label={t("minutes")}
-                value={minutes}
-                onChange={setMinutes}
-                min={0}
-                allowDecimal={false}
-                hideControls
-                disabled={mutation.isPending}
-              />
-              <NumberInput
-                label={t("seconds")}
-                value={seconds}
-                onChange={setSeconds}
-                min={0}
-                max={59}
-                allowDecimal={false}
-                hideControls
-                disabled={mutation.isPending}
-              />
-            </div>
+            {duration === undefined && (
+              <p className={st.help}>{t("adjustElapsed")}</p>
+            )}
+            <DurationCounter
+              value={clockFields}
+              onChange={setClockFields}
+              maxMs={duration}
+              minutesLabel={t("minutes")}
+              secondsLabel={t("seconds")}
+              disabled={mutation.isPending}
+            />
           </>
         ) : (
           <p className={st.help}>

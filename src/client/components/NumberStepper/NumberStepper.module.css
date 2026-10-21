@@ -1,0 +1,10 @@
+.wrapper {
+  min-width: 0;
+}
+.input {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-height: 3.5rem;
+}

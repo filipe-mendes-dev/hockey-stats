@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { SegmentedControl } from "@mantine/core";
 import { useTranslations } from "next-intl";
-import { matchPeriodSchema } from "../../../../domain/matches/match.schema";
+import st from "./RecorderDirectionDialog.module.css";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
+import { getClockElapsed } from "../../../../domain/matches/matchControl";
+import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RecorderDirectionDialogProps } from "./RecorderDirectionDialog.interfaces";
 export function RecorderDirectionDialog({
@@ -11,9 +13,12 @@ export function RecorderDirectionDialog({
   onClose,
 }: RecorderDirectionDialogProps) {
   const t = useTranslations("recorder");
-  const [direction, setDirection] = useState(
-    match.periods.find((period) => period.number === match.currentPeriod)
-      ?.attackDirection ?? "unknown",
+  const [capturedElapsed] = useState(() => getClockElapsed(match, Date.now()));
+  const storedDirection = match.periods.find(
+    (period) => period.number === match.currentPeriod,
+  )?.attackDirection;
+  const [direction, setDirection] = useState<"toward-x0" | "toward-x1">(
+    storedDirection === "toward-x0" ? "toward-x0" : "toward-x1",
   );
   const mutation = useControlMatch();
   return (
@@ -38,17 +43,24 @@ export function RecorderDirectionDialog({
         );
       }}
     >
+      <RecorderContext
+        match={match}
+        period={match.currentPeriod}
+        elapsedMs={capturedElapsed}
+        primary={t("attackDirection")}
+      />
       <SegmentedControl
         fullWidth
         radius="xl"
         value={direction}
-        onChange={(value) =>
-          setDirection(matchPeriodSchema.shape.attackDirection.parse(value))
-        }
+        onChange={(value) => {
+          if (value === "toward-x0" || value === "toward-x1")
+            setDirection(value);
+        }}
         disabled={mutation.isPending}
+        classNames={{ label: st.label }}
         data={[
           { value: "toward-x0", label: t("attackLeft") },
-          { value: "unknown", label: t("attackUnknown") },
           { value: "toward-x1", label: t("attackRight") },
         ]}
         aria-label={t("attackDirection")}

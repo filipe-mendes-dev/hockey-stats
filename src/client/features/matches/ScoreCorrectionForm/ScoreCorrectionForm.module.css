@@ -1,0 +1,25 @@
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+.ownScore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+.ownScore span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ownScore output {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.form p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
