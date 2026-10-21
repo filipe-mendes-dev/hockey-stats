@@ -219,6 +219,7 @@ export async function updateMatchControl(
     .set({
       status: match.status,
       currentPeriod: match.currentPeriod,
+      periods: match.periods,
       clock: match.clock ?? null,
       closedPeriods: match.closedPeriods,
       completedAt: match.completedAt ?? null,

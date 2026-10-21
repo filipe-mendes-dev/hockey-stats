@@ -1,0 +1,59 @@
+.section {
+  display: grid;
+  gap: 0.375rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 4.5rem;
+  padding: 0.625rem 0.375rem;
+  color: var(--color-text);
+  background: var(--color-surface-dialog-chrome);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.action svg {
+  color: var(--color-action);
+  flex-shrink: 0;
+}
+.action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+.secondary button {
+  min-width: 0;
+}
+.penalty {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border-subtle);
+  color: var(--color-action);
+  font-size: 0.75rem;
+}
+@media (hover: hover) {
+  .action:not(:disabled):hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-action);
+  }
+}

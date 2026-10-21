@@ -6,21 +6,27 @@ import {
   getClockElapsed,
 } from "../../../../domain/matches/matchControl";
 import type { MatchControlAction } from "../../../../domain/matches/matchControl";
-import { Button } from "../../../components/Button/Button";
-import { Modal } from "../../../components/Modal/Modal";
+import { ActionIcon, Button, NumberInput, Tooltip } from "@mantine/core";
+import { Flag, Pause, Play, TimerReset } from "lucide-react";
+import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
 import st from "./MatchControls.module.css";
 export function MatchControls({
   match,
+  ownScore,
+  opponentScore,
   disabled,
   onBusyChange,
 }: MatchControlsProps) {
   const t = useTranslations("recorder");
   const mutation = useControlMatch();
   const [now, setNow] = useState(0);
-  const [panel, setPanel] = useState<"adjust" | "finish" | null>(null);
-  const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
+  const [panel, setPanel] = useState<"adjust" | "finish" | "period" | null>(
+    null,
+  );
+  const [minutes, setMinutes] = useState<string | number>(0);
+  const [seconds, setSeconds] = useState<string | number>(0);
   const lastAutoPause = useRef<number | undefined>(undefined);
   const period = match.periods.find(
     (entry) => entry.number === match.currentPeriod,
@@ -66,40 +72,68 @@ export function MatchControls({
       { onSuccess: () => setPanel(null) },
     );
   }
-  function open(next: "adjust" | "finish"): void {
-    setReturnFocusTo(
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null,
-    );
+  function open(next: "adjust" | "finish" | "period"): void {
+    const current = remaining ?? elapsed ?? duration ?? 0;
+    setMinutes(Math.floor(current / 60_000));
+    setSeconds(Math.floor(current / 1000) % 60);
     mutation.reset();
     setPanel(next);
   }
   if (match.status !== "live") return null;
   const shownTime = remaining ?? elapsed;
+  const finishLabel = t(
+    match.currentPeriod === match.periods.length ? "endMatch" : "endPeriod",
+  );
   return (
-    <section className={st.controls} aria-label={t("clockTitle")}>
-      <strong>{t("periodNumber", { number: match.currentPeriod })}</strong>
-      <output
-        aria-live="off"
-        className={st.clock}
-        aria-label={t(duration === undefined ? "elapsedTime" : "remainingTime")}
-      >
-        {running && now === 0
-          ? "…"
-          : shownTime === undefined
-            ? t("untimed")
-            : formatMatchTime(
-                duration === undefined
-                  ? shownTime
-                  : Math.ceil(shownTime / 1000) * 1000,
-              )}
-      </output>
-      <span>
-        {t(running && remaining !== 0 ? "clockRunning" : "clockPaused")}
-      </span>
+    <section className={st.controls} aria-label={t("scoreTitle")}>
+      <div className={st.scoreboard}>
+        <div className={st.team}>
+          <span title={match.teamNameAtMatch}>{match.teamNameAtMatch}</span>
+          <strong>{ownScore ?? "…"}</strong>
+        </div>
+        <div className={st.time}>
+          <span className={st.period}>
+            {t("periodNumber", { number: match.currentPeriod })}
+          </span>
+          <output
+            aria-live="off"
+            className={st.clock}
+            aria-label={t(
+              duration === undefined ? "elapsedTime" : "remainingTime",
+            )}
+          >
+            {running && now === 0
+              ? "…"
+              : shownTime === undefined
+                ? t("untimed")
+                : formatMatchTime(
+                    duration === undefined
+                      ? shownTime
+                      : Math.ceil(shownTime / 1000) * 1000,
+                  )}
+          </output>
+          <span className={st.status} data-running={running && remaining !== 0}>
+            {t(running && remaining !== 0 ? "clockRunning" : "clockPaused")}
+          </span>
+        </div>
+        <div className={st.team}>
+          <span title={match.opponentName}>{match.opponentName}</span>
+          <strong>{opponentScore ?? "…"}</strong>
+        </div>
+      </div>
       <div className={st.actions}>
+        <Tooltip label={t("adjustClock")}>
+          <ActionIcon
+            variant="subtle"
+            aria-label={t("adjustClock")}
+            disabled={disabled || busy}
+            onClick={() => open("adjust")}
+          >
+            <TimerReset size={18} />
+          </ActionIcon>
+        </Tooltip>
         <Button
+          size="sm"
           disabled={
             disabled ||
             busy ||
@@ -108,122 +142,109 @@ export function MatchControls({
           onClick={() =>
             control({ type: running ? "clock.pause" : "clock.start" })
           }
+          leftSection={running ? <Pause size={16} /> : <Play size={16} />}
         >
           {t(running ? "pauseClock" : "startClock")}
         </Button>
-        <Button
-          variant="secondary"
-          disabled={disabled || busy}
-          onClick={() => open("adjust")}
-        >
-          {t("adjustClock")}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={disabled || busy}
-          onClick={() =>
-            match.currentPeriod === match.periods.length
-              ? open("finish")
-              : control({ type: "period.end" })
-          }
-        >
-          {t(
-            match.currentPeriod === match.periods.length
-              ? "endMatch"
-              : "endPeriod",
-          )}
-        </Button>
-      </div>
-      {duration === undefined && <p>{t("durationRequired")}</p>}
-      {mutation.isError && <p role="alert">{t("controlFailed")}</p>}
-      {panel && (
-        <Modal
-          title={t(panel === "finish" ? "endMatch" : "adjustClock")}
-          locked={mutation.isPending}
-          returnFocusTo={returnFocusTo}
-          onDismiss={() => setPanel(null)}
-        >
-          {panel === "finish" ? (
-            <div className={st.controls}>
-              <p>{t("finishConfirmation")}</p>
-              <Button
-                disabled={mutation.isPending}
-                onClick={() => control({ type: "match.end" })}
-              >
-                {t("endMatch")}
-              </Button>
-            </div>
-          ) : (
-            <form
-              className={st.controls}
-              action={(data) => {
-                const minutes = Number(data.get("minutes"));
-                const seconds = Number(data.get("seconds"));
-                if (
-                  !Number.isInteger(minutes) ||
-                  minutes < 0 ||
-                  !Number.isInteger(seconds) ||
-                  seconds < 0 ||
-                  seconds > 59
-                )
-                  return;
-                const entered = minutes * 60_000 + seconds * 1000;
-                control({
-                  type: "clock.adjust",
-                  elapsedMs:
-                    duration === undefined ? entered : duration - entered,
-                });
-              }}
-            >
-              <p>
-                {t(
-                  duration === undefined ? "adjustElapsed" : "adjustRemaining",
-                )}
-              </p>
-              <label>
-                {t("minutes")}
-                <input
-                  name="minutes"
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  defaultValue={Math.floor(
-                    (shownTime ?? duration ?? 0) / 60_000,
-                  )}
-                  disabled={mutation.isPending}
-                />
-              </label>
-              <label>
-                {t("seconds")}
-                <input
-                  name="seconds"
-                  type="number"
-                  min="0"
-                  max="59"
-                  step="1"
-                  required
-                  defaultValue={
-                    Math.floor((shownTime ?? duration ?? 0) / 1000) % 60
-                  }
-                  disabled={mutation.isPending}
-                />
-              </label>
-              <Button type="submit" disabled={mutation.isPending}>
-                {t("saveClock")}
-              </Button>
-            </form>
-          )}
-          {mutation.isError && <p role="alert">{t("controlFailed")}</p>}
-          <Button
-            variant="secondary"
-            disabled={mutation.isPending}
-            onClick={() => setPanel(null)}
+        <Tooltip label={finishLabel}>
+          <ActionIcon
+            variant="subtle"
+            aria-label={finishLabel}
+            disabled={disabled || busy}
+            onClick={() =>
+              open(
+                match.currentPeriod === match.periods.length
+                  ? "finish"
+                  : "period",
+              )
+            }
           >
-            {t("cancel")}
-          </Button>
-        </Modal>
+            <Flag size={18} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      {duration === undefined && <p role="status">{t("durationRequired")}</p>}
+      {mutation.isError && !panel && (
+        <p role="alert" className={st.error}>
+          {t("controlFailed")}
+        </p>
       )}
+      <ResponsiveFormDialog
+        opened={panel !== null}
+        title={panel === "adjust" ? t("adjustClock") : finishLabel}
+        closeLabel={t("cancel")}
+        cancelLabel={t("cancel")}
+        submitLabel={panel === "adjust" ? t("saveClock") : finishLabel}
+        pending={mutation.isPending}
+        error={mutation.isError ? t("controlFailed") : null}
+        submitDisabled={
+          panel === "adjust" &&
+          (!Number.isInteger(minutes) ||
+            Number(minutes) < 0 ||
+            !Number.isInteger(seconds) ||
+            Number(seconds) < 0 ||
+            Number(seconds) > 59 ||
+            (duration !== undefined &&
+              Number(minutes) * 60_000 + Number(seconds) * 1000 > duration))
+        }
+        onClose={() => setPanel(null)}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (panel !== "adjust") {
+            control({ type: panel === "finish" ? "match.end" : "period.end" });
+            return;
+          }
+          const entered = Number(minutes) * 60_000 + Number(seconds) * 1000;
+          if (
+            !Number.isInteger(minutes) ||
+            Number(minutes) < 0 ||
+            !Number.isInteger(seconds) ||
+            Number(seconds) < 0 ||
+            Number(seconds) > 59 ||
+            (duration !== undefined && entered > duration)
+          )
+            return;
+          control({
+            type: "clock.adjust",
+            elapsedMs: duration === undefined ? entered : duration - entered,
+          });
+        }}
+      >
+        {panel === "adjust" ? (
+          <>
+            <p className={st.help}>
+              {t(duration === undefined ? "adjustElapsed" : "adjustRemaining")}
+            </p>
+            <div className={st.inputs}>
+              <NumberInput
+                label={t("minutes")}
+                value={minutes}
+                onChange={setMinutes}
+                min={0}
+                allowDecimal={false}
+                hideControls
+                disabled={mutation.isPending}
+              />
+              <NumberInput
+                label={t("seconds")}
+                value={seconds}
+                onChange={setSeconds}
+                min={0}
+                max={59}
+                allowDecimal={false}
+                hideControls
+                disabled={mutation.isPending}
+              />
+            </div>
+          </>
+        ) : (
+          <p className={st.help}>
+            {t(
+              panel === "finish" ? "finishConfirmation" : "periodConfirmation",
+            )}
+          </p>
+        )}
+      </ResponsiveFormDialog>
     </section>
   );
 }

@@ -12,6 +12,8 @@ export function LiveMatchPage() {
   const params = useSearchParams();
   const query = useMatch(params.get("id") ?? undefined);
   const snapshot = query.data;
+  if (snapshot?.match.status === "live")
+    return <EventRecorder key={snapshot.match.id} snapshot={snapshot} />;
   return (
     <EntityPage
       backHref={

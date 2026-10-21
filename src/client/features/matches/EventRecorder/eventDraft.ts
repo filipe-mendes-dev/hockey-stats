@@ -46,6 +46,7 @@ export type EventDraftState =
     };
 export type EventDraftAction =
   | { type: "open"; draft: EventDraft }
+  | { type: "restoreChoices"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
   | {
       type: "selectKind";
@@ -89,6 +90,20 @@ export function transitionEventDraft(
       : state;
   if (state.phase !== "collecting") return state;
   switch (action.type) {
+    case "restoreChoices":
+      return {
+        phase: "collecting",
+        draft: {
+          ...action.draft,
+          id: state.draft.id,
+          operationId: state.draft.operationId,
+          matchId: state.draft.matchId,
+          period: state.draft.period,
+          capturedAt: state.draft.capturedAt,
+          ...(state.draft.gameTime ? { gameTime: state.draft.gameTime } : {}),
+        },
+      };
+
     case "selectPlayer":
       return { ...state, draft: { ...state.draft, matchPlayerId: action.id } };
     case "selectKind": {

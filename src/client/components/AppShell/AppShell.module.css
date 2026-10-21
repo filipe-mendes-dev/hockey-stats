@@ -66,3 +66,14 @@
   color: var(--color-error);
   line-height: 1.5;
 }
+
+.shell[data-recorder="true"]:has([data-live-recorder="true"]) .main {
+  max-width: none;
+  padding: 0;
+}
+@media (max-width: 63.999rem) {
+  .shell[data-recorder="true"]:has([data-live-recorder="true"]) > header,
+  .shell[data-recorder="true"]:has([data-live-recorder="true"]) > footer {
+    display: none;
+  }
+}

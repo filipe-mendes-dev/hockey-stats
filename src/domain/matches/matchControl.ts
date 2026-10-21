@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { matchSchema } from "./match.schema";
+import { matchSchema, matchPeriodSchema } from "./match.schema";
 import type { Match } from "./match.schema";
 
 export const matchControlActionSchema = z.discriminatedUnion("type", [
@@ -8,6 +8,10 @@ export const matchControlActionSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("clock.adjust"),
     elapsedMs: z.int().nonnegative(),
+  }),
+  z.strictObject({
+    type: z.literal("period.direction"),
+    attackDirection: matchPeriodSchema.shape.attackDirection,
   }),
   z.strictObject({ type: z.literal("period.end") }),
   z.strictObject({ type: z.literal("match.end") }),
@@ -88,6 +92,13 @@ export function applyMatchControl(
           ? { runningSince: now }
           : {}),
       };
+      break;
+    case "period.direction":
+      next.periods = match.periods.map((entry) =>
+        entry.number === match.currentPeriod
+          ? { ...entry, attackDirection: action.attackDirection }
+          : entry,
+      );
       break;
     case "period.end":
     case "match.end": {

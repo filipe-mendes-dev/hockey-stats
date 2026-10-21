@@ -84,7 +84,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className={st.shell}>
+    <div className={st.shell} data-recorder={pathname === "/app/matches/live"}>
       <a className={st.skipLink} href="#main-content">
         {t("shell.skipToContent")}
       </a>

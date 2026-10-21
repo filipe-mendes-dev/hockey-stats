@@ -6,6 +6,7 @@ import {
   lossReasonSchema,
   shotOutcomeSchema,
   cardColourSchema,
+  playerEventKindSchema,
 } from "../../../../domain/matches/matchEvent.schema";
 import {
   getAvailableEventKinds,
@@ -16,7 +17,8 @@ import {
   getCardRemovalPlayers,
 } from "../../../../domain/matches/matchRules";
 import type { MatchPlayer } from "../../../../domain/matches/match.schema";
-import { Button } from "../../../components/Button/Button";
+import { Button } from "@mantine/core";
+import { getEventDraftSteps } from "./eventDraftSteps";
 import type { EventDraftFieldsProps } from "./EventDraftFields.interfaces";
 import st from "./EventDraftFields.module.css";
 export function EventDraftFields({
@@ -34,6 +36,7 @@ export function EventDraftFields({
   function playerLabel(player: MatchPlayer): string {
     return `${player.jerseyNumber ? `#${player.jerseyNumber} · ` : ""}${player.playerNameAtMatch}`;
   }
+  const step = getEventDraftSteps(draft)[0];
   const needsTime =
     draft.kind === "substitution" ||
     draft.kind === "player-in" ||
@@ -46,7 +49,7 @@ export function EventDraftFields({
     : [];
   return (
     <div className={st.fields}>
-      {!draft.kind && (
+      {step === "chooseAction" && (
         <section>
           <h3>{t("chooseAction")}</h3>
           <div className={st.choices}>
@@ -77,51 +80,50 @@ export function EventDraftFields({
           </div>
         </section>
       )}
-      {!draft.matchPlayerId &&
-        draft.kind !== "opponent-goal" &&
-        draft.kind !== "score-adjustment" &&
-        draft.kind !== "substitution" &&
-        draft.kind !== "powerplay-end" && (
-          <section>
-            <h3>{t("choosePlayer")}</h3>
-            <ul className={st.players}>
-              {(draft.kind
-                ? getEligiblePlayers(context, draft.kind)
-                : snapshot.players
-              )
-                .filter(
-                  (player) =>
-                    draft.kind !== "card" ||
-                    !draft.colour ||
-                    getCardLineupEffect(context, player.id, draft.colour) !==
-                      null,
+      {step === "choosePlayer" && (
+        <section>
+          <h3>{t("choosePlayer")}</h3>
+          <ul className={st.players}>
+            {(draft.kind
+              ? getEligiblePlayers(
+                  context,
+                  playerEventKindSchema.parse(draft.kind),
                 )
-                .map((player) => (
-                  <li key={player.id}>
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        onAction({
-                          type: "selectPlayer",
-                          id: player.id,
-                        })
-                      }
-                    >
-                      {playerLabel(player)}
-                    </Button>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        )}
-      {draft.kind === "ball-recovery" && !draft.subtype && (
+              : snapshot.players
+            )
+              .filter(
+                (player) =>
+                  draft.kind !== "card" ||
+                  !draft.colour ||
+                  getCardLineupEffect(context, player.id, draft.colour) !==
+                    null,
+              )
+              .map((player) => (
+                <li key={player.id}>
+                  <Button
+                    variant="default"
+                    onClick={() =>
+                      onAction({
+                        type: "selectPlayer",
+                        id: player.id,
+                      })
+                    }
+                  >
+                    {playerLabel(player)}
+                  </Button>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
+      {step === "chooseSubtype" && (
         <section>
           <h3>{t("chooseSubtype")}</h3>
           <div className={st.choices}>
             {recoverySubtypeSchema.options.map((subtype) => (
               <Button
                 key={subtype}
-                variant="secondary"
+                variant="default"
                 onClick={() => onAction({ type: "selectSubtype", subtype })}
               >
                 {t(subtype)}
@@ -130,14 +132,14 @@ export function EventDraftFields({
           </div>
         </section>
       )}
-      {draft.kind === "ball-loss" && !draft.reason && (
+      {step === "chooseReason" && (
         <section>
           <h3>{t("chooseReason")}</h3>
           <div className={st.choices}>
             {lossReasonSchema.options.map((reason) => (
               <Button
                 key={reason}
-                variant="secondary"
+                variant="default"
                 onClick={() => onAction({ type: "selectReason", reason })}
               >
                 {t(reason)}
@@ -146,14 +148,14 @@ export function EventDraftFields({
           </div>
         </section>
       )}
-      {draft.kind === "shot" && !draft.outcome && (
+      {step === "chooseOutcome" && (
         <section>
           <h3>{t("chooseOutcome")}</h3>
           <div className={st.choices}>
             {shotOutcomeSchema.options.map((outcome) => (
               <Button
                 key={outcome}
-                variant="secondary"
+                variant="default"
                 onClick={() => onAction({ type: "selectOutcome", outcome })}
               >
                 {t(outcome)}
@@ -162,7 +164,7 @@ export function EventDraftFields({
           </div>
         </section>
       )}
-      {draft.kind === "card" && !draft.colour && (
+      {step === "chooseColour" && (
         <section>
           <h3>{t("chooseColour")}</h3>
           <div className={st.choices}>
@@ -183,7 +185,7 @@ export function EventDraftFields({
               .map((colour) => (
                 <Button
                   key={colour}
-                  variant="secondary"
+                  variant="default"
                   onClick={() => onAction({ type: "selectColour", colour })}
                 >
                   {t(colour)}
@@ -198,16 +200,11 @@ export function EventDraftFields({
             side === "outgoing"
               ? draft.outgoingMatchPlayerId
               : draft.incomingMatchPlayerId;
-          if (selected)
-            return (
-              <p key={side}>
-                {t(side === "outgoing" ? "outgoingPlayer" : "incomingPlayer", {
-                  name:
-                    snapshot.players.find((player) => player.id === selected)
-                      ?.playerNameAtMatch ?? t("playerUnavailable"),
-                })}
-              </p>
-            );
+          if (
+            selected ||
+            step !== (side === "outgoing" ? "chooseOutgoing" : "chooseIncoming")
+          )
+            return null;
           const options = snapshot.players.filter((player) =>
             side === "outgoing"
               ? activePlayerIds.has(player.id) &&
@@ -240,7 +237,7 @@ export function EventDraftFields({
                 {options.map((player) => (
                   <Button
                     key={player.id}
-                    variant="secondary"
+                    variant="default"
                     onClick={() =>
                       onAction({
                         type: "selectSubstitute",
@@ -256,7 +253,8 @@ export function EventDraftFields({
             </section>
           );
         })}
-      {draft.kind === "card" &&
+      {step === "confirmCard" &&
+        draft.kind === "card" &&
         draft.colour &&
         draft.matchPlayerId &&
         draft.lineupEffect === undefined && (
@@ -341,7 +339,7 @@ export function EventDraftFields({
             )}
           </section>
         )}
-      {draft.kind === "powerplay-end" && !draft.powerplayConfirmed && (
+      {step === "confirmPowerplayEnd" && (
         <section>
           <p>
             {t(
@@ -361,7 +359,7 @@ export function EventDraftFields({
           </Button>
         </section>
       )}
-      {needsTime && !draft.gameTime && (
+      {step === "eventTimeRequired" && needsTime && !draft.gameTime && (
         <form
           className={st.fields}
           action={(data) => {
@@ -407,7 +405,7 @@ export function EventDraftFields({
           <Button type="submit">{t("useTime")}</Button>
         </form>
       )}
-      {draft.kind === "score-adjustment" && (
+      {step === "saveScore" && (
         <form
           className={st.fields}
           action={(data) => {
