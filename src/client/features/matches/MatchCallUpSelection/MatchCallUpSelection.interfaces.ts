@@ -1,4 +1,9 @@
-import type { MatchPlayerChoice } from "../MatchPlayerSelection/MatchPlayerSelection.interfaces";
+import type { MatchPlayer } from "../../../../domain/matches/match.schema";
+
+export interface MatchPlayerChoice {
+  jerseyNumber: string;
+  role: MatchPlayer["role"];
+}
 
 export interface MatchCallUpPlayer extends MatchPlayerChoice {
   playerId: string;

@@ -9,6 +9,7 @@ export function PageHeader({
   title,
   avatar,
   actions,
+  stackActionsOnMobile = false,
   description,
   eyebrow,
   back,
@@ -16,7 +17,7 @@ export function PageHeader({
   return (
     <header className={st.header} data-with-back={Boolean(back)}>
       {back && <BackLink {...back} />}
-      <div className={st.headingRow}>
+      <div className={st.headingRow} data-stack-actions={stackActionsOnMobile}>
         {avatar && <div className={st.avatar}>{avatar}</div>}
         <div className={st.copy}>
           {eyebrow && <Text className={st.eyebrow}>{eyebrow}</Text>}

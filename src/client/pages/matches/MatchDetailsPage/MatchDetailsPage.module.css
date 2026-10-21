@@ -1,46 +1,79 @@
-.content {
-  display: grid;
-  gap: 1.5rem;
+.page {
+  width: 100%;
+  max-width: 60rem;
   min-width: 0;
-  overflow-wrap: anywhere;
+  margin-inline: auto;
+  padding-block: 0.5rem 2.5rem;
 }
-.details {
+.headerActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.callUp {
   display: grid;
   gap: 1rem;
-  margin: 0;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
-}
-.details div {
-  display: grid;
-  gap: 0.35rem;
   min-width: 0;
 }
-.details dt {
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--color-action);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.mobileAction {
+  display: none;
+}
+.unavailable {
+  display: grid;
+  gap: 0.75rem;
   color: var(--color-text-muted);
 }
-.details dd {
-  margin: 0;
+.unavailable h2 {
+  color: var(--color-text);
+  font-size: 1.125rem;
 }
-.players {
-  display: grid;
-  gap: 0.75rem;
-  list-style: none;
-  padding: 0;
-}
-.players li {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+@media (max-width: 36rem) {
+  .page {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding-block: 0;
+  }
+  .desktopAction {
+    display: none;
+  }
+  .headerActions {
+    gap: 0;
+  }
+  .callUp {
+    padding-bottom: 1rem;
+  }
+  .mobileAction {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    z-index: 95;
+    margin-inline: -1rem;
+    margin-top: auto;
+    padding: 0.75rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border-subtle);
+    background: var(--color-background);
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .mobileAction {
+      background: var(--color-surface-header);
+      backdrop-filter: blur(var(--surface-blur));
+    }
+  }
 }

@@ -386,7 +386,13 @@
     "selectedCompact": "{count, plural, one {# selecionado} other {# selecionados}}",
     "fieldCountCompact": "Campo {count, number}/8",
     "keeperCountCompact": "GR {count, number}/2",
-    "editDetails": "Editar detalhes"
+    "editDetails": "Editar detalhes",
+    "prepare": "Preparar jogo",
+    "editCallUp": "Editar convocatória",
+    "addCallUpPlayers": "Adicionar jogadores",
+    "saveDetails": "Guardar detalhes",
+    "saveCallUp": "Guardar convocatória",
+    "setupProgress": "Progresso da configuração do jogo"
   },
   "recorder": {
     "period": "Período",

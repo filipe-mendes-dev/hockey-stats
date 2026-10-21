@@ -13,7 +13,7 @@ import st from "./MatchCallUpReview.module.css";
 
 export function MatchCallUpReview({
   players,
-  disabled,
+  disabled = false,
   onChange,
 }: MatchCallUpReviewProps) {
   const t = useTranslations("matches");
@@ -43,17 +43,19 @@ export function MatchCallUpReview({
                     .join(" · ")}
                 </span>
               </div>
-              <Tooltip label={t("editCallUpPlayer")}>
-                <ActionIcon
-                  type="button"
-                  disabled={disabled}
-                  aria-label={t("editCallUpName", { name: player.name })}
-                  aria-haspopup="dialog"
-                  onClick={() => setDraft(player)}
-                >
-                  <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
+              {onChange && (
+                <Tooltip label={t("editCallUpPlayer")}>
+                  <ActionIcon
+                    type="button"
+                    disabled={disabled}
+                    aria-label={t("editCallUpName", { name: player.name })}
+                    aria-haspopup="dialog"
+                    onClick={() => setDraft(player)}
+                  >
+                    <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
+                  </ActionIcon>
+                </Tooltip>
+              )}
             </li>
           ))}
         </ul>
@@ -70,7 +72,7 @@ export function MatchCallUpReview({
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          if (!draft || disabled) return;
+          if (!draft || disabled || !onChange) return;
           onChange({ ...draft, jerseyNumber: draft.jerseyNumber.trim() });
           setDraft(null);
         }}

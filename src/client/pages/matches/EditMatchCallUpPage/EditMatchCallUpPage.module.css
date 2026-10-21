@@ -1,0 +1,43 @@
+.page {
+  width: 100%;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-block: 0.5rem 2.5rem;
+  min-width: 0;
+}
+.flow {
+  max-width: 36rem;
+  min-width: 0;
+}
+.step {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.heading {
+  margin: 0;
+  color: var(--color-action);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.notice {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+@media (max-width: 36rem) {
+  .page,
+  .flow {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .page {
+    padding-block: 0;
+  }
+  .heading {
+    scroll-margin-top: calc(var(--app-header-height) + 7rem);
+  }
+}

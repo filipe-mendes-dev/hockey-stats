@@ -58,4 +58,14 @@
   .actions {
     gap: 0;
   }
+  .headingRow[data-stack-actions="true"] {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+  }
+  .headingRow[data-stack-actions="true"] .copy {
+    flex-basis: 100%;
+  }
+  .headingRow[data-stack-actions="true"] .actions {
+    width: 100%;
+  }
 }

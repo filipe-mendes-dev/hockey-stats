@@ -386,7 +386,13 @@
     "selectedCompact": "{count, plural, one {# selected} other {# selected}}",
     "fieldCountCompact": "Field {count, number}/8",
     "keeperCountCompact": "GK {count, number}/2",
-    "editDetails": "Edit details"
+    "editDetails": "Edit details",
+    "prepare": "Prepare match",
+    "editCallUp": "Edit call-up",
+    "addCallUpPlayers": "Add players",
+    "saveDetails": "Save details",
+    "saveCallUp": "Save call-up",
+    "setupProgress": "Match setup progress"
   },
   "recorder": {
     "period": "Period",

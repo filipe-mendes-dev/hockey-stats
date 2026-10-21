@@ -19,7 +19,8 @@
   .main {
     padding-top: 0.75rem;
   }
-  .main:has(form[data-actions-layout="wizard"]) {
+  .main:has(form[data-actions-layout="wizard"]),
+  .main:has([data-mobile-actions]) {
     display: flex;
     flex-direction: column;
     padding-bottom: 0;

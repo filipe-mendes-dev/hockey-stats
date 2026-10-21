@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import Link from "next/link";
-import { Alert, Button, Stepper } from "@mantine/core";
+import { Alert, Button } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import {
   createMatchInputSchema,
@@ -17,6 +17,8 @@ import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/R
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { usePlayers } from "../../players/queries/players.queries";
 import { useTeams, useTeamPlayers } from "../../teams/queries/teams.queries";
+import { MatchFlowProgress } from "../MatchFlowProgress/MatchFlowProgress";
+import { getMatchCallUpCandidates } from "../getMatchCallUpCandidates";
 import { MatchDetailsFields } from "../MatchDetailsFields/MatchDetailsFields";
 import type { MatchDetailsValues } from "../MatchDetailsFields/MatchDetailsFields.interfaces";
 import { MatchCallUpSelection } from "../MatchCallUpSelection/MatchCallUpSelection";
@@ -60,23 +62,10 @@ export function NewMatchWizard({
   const previousStep = useRef(step);
   const team = teams.data?.find((entry) => entry.id === fields.teamId);
   const collator = new Intl.Collator(locale, { sensitivity: "base" });
-  const available = (memberships.data ?? [])
-    .flatMap<MatchCallUpPlayer>((membership) => {
-      const player = players.data?.find(
-        (entry) => entry.id === membership.playerId,
-      );
-      return player
-        ? [
-            {
-              playerId: player.id,
-              name: player.name,
-              jerseyNumber: membership.jerseyNumber ?? "",
-              role: membership.role,
-            },
-          ]
-        : [];
-    })
-    .sort((a, b) => collator.compare(a.name, b.name));
+  const available = getMatchCallUpCandidates(
+    memberships.data ?? [],
+    players.data ?? [],
+  ).sort((a, b) => collator.compare(a.name, b.name));
   const chosen = Object.values(selected).sort((a, b) =>
     collator.compare(a.name, b.name),
   );
@@ -209,39 +198,14 @@ export function NewMatchWizard({
 
   return (
     <div className={st.wizard}>
-      <Stepper
-        iconSize={32}
-        className={st.progress}
-        classNames={{
-          steps: st.steps,
-          step: st.step,
-          stepBody: st.stepBody,
-          separator: st.separator,
-        }}
+      <MatchFlowProgress
+        labels={labels}
+        compactLabels={compactLabels}
         active={step}
-        onStepClick={(next) => {
-          if (next <= visited) move(next);
-        }}
-        aria-label={t("creationProgress")}
-      >
-        {labels.map((label, index) => (
-          <Stepper.Step
-            key={index}
-            label={
-              <>
-                <span className={st.fullStepLabel}>{label}</span>
-                <span className={st.compactStepLabel}>
-                  {compactLabels[index]}
-                </span>
-              </>
-            }
-            aria-label={label}
-            aria-current={step === index ? "step" : undefined}
-            disabled={pending || index > visited}
-            allowStepSelect={!pending && index <= visited}
-          />
-        ))}
-      </Stepper>
+        visited={visited}
+        disabled={pending}
+        onStepChange={move}
+      />
       <FormLayout
         actionsLayout="wizard"
         label={t("newTitle")}

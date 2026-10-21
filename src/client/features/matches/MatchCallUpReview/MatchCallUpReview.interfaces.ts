@@ -2,6 +2,6 @@ import type { MatchCallUpPlayer } from "../MatchCallUpSelection/MatchCallUpSelec
 
 export interface MatchCallUpReviewProps {
   players: readonly MatchCallUpPlayer[];
-  disabled: boolean;
-  onChange(player: MatchCallUpPlayer): void;
+  disabled?: boolean;
+  onChange?(player: MatchCallUpPlayer): void;
 }

@@ -1,4 +1,4 @@
-import type { MatchPlayerChoice } from "../MatchPlayerSelection/MatchPlayerSelection.interfaces";
+import type { MatchPlayerChoice } from "../MatchCallUpSelection/MatchCallUpSelection.interfaces";
 
 export interface MatchCallUpSummaryProps {
   players: readonly MatchPlayerChoice[];
