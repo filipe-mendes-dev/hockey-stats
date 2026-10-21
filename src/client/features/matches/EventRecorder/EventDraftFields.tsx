@@ -22,6 +22,7 @@ import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
 import { EventTimeForm } from "../EventTimeForm/EventTimeForm";
 import { Shield, Swords, Square } from "lucide-react";
 import { getEventDraftSteps } from "./eventDraftSteps";
+import { supportsRinkPosition } from "../../../../domain/matches/rinkPosition";
 import type { EventDraftFieldsProps } from "./EventDraftFields.interfaces";
 import st from "./EventDraftFields.module.css";
 export function EventDraftFields({
@@ -46,8 +47,9 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseAction")}</h3>
           <div className={st.choices}>
-            {getAvailableEventKinds(context, draft.matchPlayerId).map(
-              (kind) => (
+            {getAvailableEventKinds(context, draft.matchPlayerId)
+              .filter((kind) => !draft.position || supportsRinkPosition(kind))
+              .map((kind) => (
                 <Button
                   key={kind}
                   variant="default"
@@ -70,8 +72,7 @@ export function EventDraftFields({
                       : kind,
                   )}
                 </Button>
-              ),
-            )}
+              ))}
           </div>
         </section>
       )}

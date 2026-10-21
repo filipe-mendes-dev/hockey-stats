@@ -2,7 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useTranslations } from "next-intl";
-import type { AddMatchEventInput } from "../../../../domain/matches/matchEvent.schema";
+import type {
+  AddMatchEventInput,
+  RinkPosition,
+} from "../../../../domain/matches/matchEvent.schema";
+import { toTeamPosition } from "../../../../domain/matches/rinkPosition";
+import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
+import { RecorderRink } from "../RecorderRink/RecorderRink";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import { getAvailableEventKinds } from "../../../../domain/matches/matchRules";
 import type { PowerplayPenalty } from "../../../../domain/matches/powerplay";
@@ -34,6 +40,15 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const state = useStore(store, (entry) => entry.state);
   const [controlsBusy, setControlsBusy] = useState(false);
+  const [rinkPicking, setRinkPicking] = useState(false);
+  const [rinkGesture, setRinkGesture] = useState(false);
+  const [rinkElapsedMs, setRinkElapsedMs] = useState<number>();
+  const [rinkDirection, setRinkDirection] = useState<RinkAttackDirection>();
+  const [history, setHistory] = useState<EventDraft[]>([]);
+  const pendingRink = useRef<{
+    draft: EventDraft;
+    direction: RinkAttackDirection;
+  } | null>(null);
   const [correction, setCorrection] = useState<
     readonly PowerplayPenalty[] | null
   >(null);
@@ -51,6 +66,17 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const add = useAddMatchEvent();
   const undo = useUndoMatchEvent();
   const draft = state.phase === "idle" ? null : state.draft;
+  const storedDirection = snapshot.match.periods.find(
+    (period) =>
+      period.number === (draft?.period ?? snapshot.match.currentPeriod),
+  )?.attackDirection;
+  const currentDirection =
+    storedDirection === "toward-x0" || storedDirection === "toward-x1"
+      ? storedDirection
+      : undefined;
+  const selectedDirection = draft?.position
+    ? (rinkDirection ?? currentDirection)
+    : currentDirection;
   const draftContext = draft
     ? { snapshot, state: deriveMatchState(snapshot, events.data ?? [], draft) }
     : context;
@@ -74,6 +100,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       readOnly ||
       state.phase !== "idle" ||
       controlsBusy ||
+      rinkPicking ||
+      rinkGesture ||
       correction ||
       undo.isPending ||
       !events.data ||
@@ -95,6 +123,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     readOnly,
     state.phase,
     controlsBusy,
+    rinkPicking,
+    rinkGesture,
     correction,
     undo.isPending,
     events.data,
@@ -106,6 +136,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   useEffect(() => {
     if (
       state.phase !== "idle" ||
+      rinkPicking ||
+      rinkGesture ||
       store.getState().state.phase !== "idle" ||
       !returnFocusTo.current
     )
@@ -116,7 +148,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       if (trigger.isConnected) trigger.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [state.phase, store]);
+  }, [state.phase, store, rinkPicking, rinkGesture]);
   function save(input: AddMatchEventInput): void {
     void add
       .mutateAsync(input)
@@ -128,6 +160,19 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       });
   }
   function dispatch(action: EventDraftAction): void {
+    const previous = store.getState().state;
+    if (action.type === "cancel") {
+      pendingRink.current = null;
+      setRinkPicking(false);
+      setRinkGesture(false);
+      setHistory([]);
+    } else if (
+      previous.phase === "collecting" &&
+      action.type !== "setPosition" &&
+      action.type !== "restoreChoices"
+    ) {
+      setHistory((entries) => [...entries, previous.draft]);
+    }
     store.getState().dispatch(action);
     const next = store.getState().state;
     if (next.phase !== "collecting") return;
@@ -143,6 +188,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       store.getState().state.phase !== "idle" ||
       undo.isPending ||
       controlsBusy ||
+      rinkPicking ||
+      rinkGesture ||
       correction !== null ||
       !events.data ||
       events.isError ||
@@ -154,6 +201,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         ? document.activeElement
         : null;
     add.reset();
+    setHistory([]);
+    setRinkDirection(undefined);
     dispatch({
       type: "open",
       draft: captureEventDraft(
@@ -164,6 +213,86 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     });
   }
 
+  function openRink(): void {
+    if (disabled || readOnly) return;
+    returnFocusTo.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setHistory([]);
+    add.reset();
+    setRinkPicking(true);
+  }
+
+  function startRinkGesture(): void {
+    if (
+      draft ||
+      !currentDirection ||
+      readOnly ||
+      controlsBusy ||
+      undo.isPending ||
+      !events.data ||
+      events.isError
+    )
+      return;
+    if (!pendingRink.current) {
+      pendingRink.current = {
+        draft: captureEventDraft(snapshot.match, {}),
+        direction: currentDirection,
+      };
+      if (!rinkPicking)
+        returnFocusTo.current =
+          document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+    }
+    setRinkElapsedMs(pendingRink.current.draft.gameTime?.elapsedMs);
+    setRinkGesture(true);
+  }
+
+  function cancelRinkGesture(): void {
+    pendingRink.current = null;
+    setRinkGesture(false);
+  }
+
+  function selectRinkPosition(point: RinkPosition): void {
+    if (draft) {
+      if (state.phase !== "collecting" || !selectedDirection) return;
+      dispatch({
+        type: "setPosition",
+        position: toTeamPosition(point, selectedDirection),
+      });
+    } else {
+      const captured = pendingRink.current;
+      if (!captured || store.getState().state.phase !== "idle") return;
+      add.reset();
+      setHistory([]);
+      setRinkDirection(captured.direction);
+      dispatch({
+        type: "open",
+        draft: {
+          ...captured.draft,
+          position: toTeamPosition(point, captured.direction),
+        },
+      });
+    }
+    pendingRink.current = null;
+    setRinkGesture(false);
+    setRinkPicking(false);
+  }
+
+  function back(): void {
+    if (rinkPicking) {
+      cancelRinkGesture();
+      setRinkPicking(false);
+      return;
+    }
+    const previous = history.at(-1);
+    if (!previous) return;
+    store.getState().dispatch({ type: "restoreChoices", draft: previous });
+    setHistory((entries) => entries.slice(0, -1));
+  }
+
   function retry(): void {
     const current = store.getState().state;
     if (current.phase !== "failed") return;
@@ -172,11 +301,30 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   }
   const disabled =
     state.phase !== "idle" ||
+    rinkPicking ||
+    rinkGesture ||
     controlsBusy ||
     correction !== null ||
     undo.isPending ||
     !events.data ||
     events.isError;
+  const rinkProps = {
+    match: snapshot.match,
+    period: snapshot.match.currentPeriod,
+    direction: currentDirection,
+    disabled:
+      state.phase !== "idle" ||
+      rinkPicking ||
+      controlsBusy ||
+      correction !== null ||
+      undo.isPending ||
+      !events.data ||
+      events.isError,
+    onOpen: openRink,
+    onStart: startRinkGesture,
+    onSelect: selectRinkPosition,
+    onCancelGesture: cancelRinkGesture,
+  };
   return (
     <div className={st.recorder} data-live-recorder={!readOnly}>
       {!readOnly && (
@@ -186,6 +334,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               match={snapshot.match}
               disabled={
                 state.phase !== "idle" ||
+                rinkPicking ||
+                rinkGesture ||
                 controlsBusy ||
                 correction !== null ||
                 undo.isPending
@@ -218,7 +368,11 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           <MatchControls
             match={snapshot.match}
             disabled={
-              state.phase !== "idle" || correction !== null || undo.isPending
+              state.phase !== "idle" ||
+              rinkPicking ||
+              rinkGesture ||
+              correction !== null ||
+              undo.isPending
             }
             onBusyChange={setControlsBusy}
           />
@@ -230,6 +384,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
               undoDisabled={
                 readOnly ||
                 controlsBusy ||
+                rinkPicking ||
+                rinkGesture ||
                 correction !== null ||
                 !candidate.data ||
                 undo.isPending ||
@@ -244,6 +400,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
                   });
               }}
             />
+            <RecorderRink {...rinkProps} presentation="compact" />
             <RecorderPlayers
               context={context}
               disabled={disabled}
@@ -288,15 +445,18 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           )}
         </section>
       )}
-      <RecorderTimeline
-        snapshot={snapshot}
-        events={events.data}
-        loading={events.isPending}
-        failed={events.isError}
-        onRetry={() => void events.refetch()}
-        expanded={readOnly}
-        scrollable={!readOnly}
-      />
+      <div className={st.review}>
+        {!readOnly && <RecorderRink {...rinkProps} presentation="desktop" />}
+        <RecorderTimeline
+          snapshot={snapshot}
+          events={events.data}
+          loading={events.isPending}
+          failed={events.isError}
+          onRetry={() => void events.refetch()}
+          expanded={readOnly}
+          scrollable={!readOnly}
+        />
+      </div>
       {correction && !readOnly && (
         <PowerplayCorrectionDialog
           match={snapshot.match}
@@ -304,7 +464,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           onClose={() => setCorrection(null)}
         />
       )}
-      {draft && !readOnly && (
+      {(draft || rinkPicking) && !readOnly && (
         <EventEntryDialog
           draft={draft}
           context={draftContext}
@@ -312,6 +472,17 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           error={add.error}
           onAction={dispatch}
           onRetry={retry}
+          liveElapsedMs={rinkGesture ? rinkElapsedMs : elapsedMs}
+          rink={{
+            picking: rinkPicking,
+            direction: selectedDirection,
+            canGoBack: Boolean(draft?.position) && history.length > 0,
+            onStart: startRinkGesture,
+            onSelect: selectRinkPosition,
+            onCancelGesture: cancelRinkGesture,
+            onEdit: () => setRinkPicking(true),
+            onBack: back,
+          }}
         />
       )}
     </div>

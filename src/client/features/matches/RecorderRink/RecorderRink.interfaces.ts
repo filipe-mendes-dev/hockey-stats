@@ -1,0 +1,33 @@
+import type { Match } from "../../../../domain/matches/match.schema";
+import type { RinkPosition } from "../../../../domain/matches/matchEvent.schema";
+import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
+
+export interface RecorderRinkPickerProps {
+  match: Match;
+  period: number;
+  direction: RinkAttackDirection | undefined;
+  position?: RinkPosition | undefined;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  compactHint?: boolean;
+  onStart: () => void;
+  onSelect: (position: RinkPosition) => void;
+  onCancelGesture: () => void;
+  onDirectionPending?: (pending: boolean) => void;
+}
+
+export interface RecorderRinkProps extends RecorderRinkPickerProps {
+  onOpen: () => void;
+  presentation: "compact" | "desktop";
+}
+
+export interface RecorderRinkSession {
+  picking: boolean;
+  direction: RinkAttackDirection | undefined;
+  canGoBack: boolean;
+  onStart: () => void;
+  onSelect: (position: RinkPosition) => void;
+  onCancelGesture: () => void;
+  onEdit: () => void;
+  onBack: () => void;
+}

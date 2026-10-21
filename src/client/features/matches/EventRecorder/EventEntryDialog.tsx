@@ -8,6 +8,9 @@ import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { MatchEventUnavailableError } from "../matchEvents.service";
 import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
 import { EventDraftFields } from "./EventDraftFields";
+import { HockeyRink } from "../../../components/HockeyRink/HockeyRink";
+import { RecorderRinkPicker } from "../RecorderRink/RecorderRinkPicker";
+import { toViewPosition } from "../../../../domain/matches/rinkPosition";
 import { getEventDraftSteps } from "./eventDraftSteps";
 import type { EventEntryDialogProps } from "./EventEntryDialog.interfaces";
 import st from "./EventEntryDialog.module.css";
@@ -18,45 +21,48 @@ export function EventEntryDialog({
   error,
   onAction,
   onRetry,
+  rink,
+  liveElapsedMs,
 }: EventEntryDialogProps) {
   const t = useTranslations("recorder");
-  const locked = phase === "saving";
+  const [directionPending, setDirectionPending] = useState(false);
+  const locked = phase === "saving" || directionPending;
   const scoreFormId = useId();
   const [opponentScore, setOpponentScore] = useState<number | string>(
     context.state.opponentScore,
   );
-  const scoreCorrection = draft.kind === "score-adjustment";
+  const scoreCorrection = draft?.kind === "score-adjustment";
   const validScore =
     typeof opponentScore === "number" &&
     Number.isInteger(opponentScore) &&
     opponentScore >= 0 &&
     Math.abs(opponentScore - context.state.opponentScore) <= 2147483647 &&
     opponentScore !== context.state.opponentScore;
-  const remaining = getEventDraftSteps(draft);
+  const remaining = draft ? getEventDraftSteps(draft) : [];
   const heading = useRef<HTMLHeadingElement>(null);
   const step = remaining[0];
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-  }, [step]);
+  }, [step, rink.picking]);
   const player = context.snapshot.players.find(
-    (entry) => entry.id === draft.matchPlayerId,
+    (entry) => entry.id === draft?.matchPlayerId,
   );
   const outgoing = context.snapshot.players.find(
-    (entry) => entry.id === draft.outgoingMatchPlayerId,
+    (entry) => entry.id === draft?.outgoingMatchPlayerId,
   );
   const incoming = context.snapshot.players.find(
-    (entry) => entry.id === draft.incomingMatchPlayerId,
+    (entry) => entry.id === draft?.incomingMatchPlayerId,
   );
   const selectionDetails = [
-    draft.kind ? t(draft.kind) : undefined,
-    draft.rinkHalf ? t(draft.rinkHalf) : undefined,
-    draft.colour ? t(draft.colour) : undefined,
+    draft?.kind ? t(draft.kind) : undefined,
+    draft?.rinkHalf ? t(draft.rinkHalf) : undefined,
+    draft?.colour ? t(draft.colour) : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
   return (
     <RecorderDialog
-      title={t("newEvent")}
+      title={t(rink.picking ? "recordOnRink" : "newEvent")}
       pending={locked}
       onClose={() => onAction({ type: "cancel" })}
       footer={
@@ -69,6 +75,11 @@ export function EventEntryDialog({
           >
             {t("cancel")}
           </Button>
+          {phase === "collecting" && (rink.picking || rink.canGoBack) && (
+            <Button size="sm" variant="subtle" onClick={rink.onBack}>
+              {t("back")}
+            </Button>
+          )}
           {scoreCorrection && phase === "collecting" && (
             <Button
               type="submit"
@@ -86,46 +97,78 @@ export function EventEntryDialog({
       <div className={st.content}>
         <RecorderContext
           match={context.snapshot.match}
-          period={draft.period}
-          elapsedMs={draft.gameTime?.elapsedMs}
+          period={draft?.period ?? context.snapshot.match.currentPeriod}
+          elapsedMs={draft ? draft.gameTime?.elapsedMs : liveElapsedMs}
           primary={
             player?.playerNameAtMatch ??
             (outgoing
               ? [outgoing.playerNameAtMatch, incoming?.playerNameAtMatch]
                   .filter(Boolean)
                   .join(" → ")
-              : draft.kind
+              : draft?.kind
                 ? t(draft.kind)
                 : t("newEvent"))
           }
           secondary={player || outgoing ? selectionDetails : undefined}
-          kind={draft.kind}
+          kind={draft?.kind}
         />
-        {phase === "collecting" && !scoreCorrection && (
-          <>
-            <h2 ref={heading} className={st.heading} tabIndex={-1}>
-              {step === "eventTimeRequired" &&
-              context.snapshot.match.periods.find(
-                (period) => period.number === draft.period,
-              )?.durationMs === undefined
-                ? t("elapsedTime")
-                : step
-                  ? t(step)
-                  : t("saving")}
-            </h2>
-            <EventDraftFields
-              draft={draft}
-              context={context}
-              durationMs={
+        {rink.picking && (
+          <RecorderRinkPicker
+            autoFocus
+            match={context.snapshot.match}
+            period={draft?.period ?? context.snapshot.match.currentPeriod}
+            direction={rink.direction}
+            position={draft?.position}
+            onStart={rink.onStart}
+            onSelect={rink.onSelect}
+            onCancelGesture={rink.onCancelGesture}
+            onDirectionPending={setDirectionPending}
+          />
+        )}
+        {!rink.picking && draft?.position && rink.direction && (
+          <div className={st.positionPreview}>
+            <HockeyRink
+              label={t("rinkSelected")}
+              position={toViewPosition(draft.position, rink.direction)}
+            />
+            <Button
+              variant="subtle"
+              size="sm"
+              disabled={phase !== "collecting"}
+              onClick={rink.onEdit}
+            >
+              {t("rinkChangePosition")}
+            </Button>
+          </div>
+        )}
+        {!rink.picking &&
+          draft &&
+          phase === "collecting" &&
+          !scoreCorrection && (
+            <>
+              <h2 ref={heading} className={st.heading} tabIndex={-1}>
+                {step === "eventTimeRequired" &&
                 context.snapshot.match.periods.find(
                   (period) => period.number === draft.period,
-                )?.durationMs
-              }
-              onAction={onAction}
-            />
-          </>
-        )}
-        {phase === "collecting" && scoreCorrection && (
+                )?.durationMs === undefined
+                  ? t("elapsedTime")
+                  : step
+                    ? t(step)
+                    : t("saving")}
+              </h2>
+              <EventDraftFields
+                draft={draft}
+                context={context}
+                durationMs={
+                  context.snapshot.match.periods.find(
+                    (period) => period.number === draft.period,
+                  )?.durationMs
+                }
+                onAction={onAction}
+              />
+            </>
+          )}
+        {!rink.picking && phase === "collecting" && scoreCorrection && (
           <ScoreCorrectionForm
             formId={scoreFormId}
             ownName={context.snapshot.match.teamNameAtMatch}

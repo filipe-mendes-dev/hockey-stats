@@ -26,3 +26,8 @@
 .error {
   color: var(--color-error);
 }
+@media (min-width: 64rem) {
+  .controls {
+    padding-block: 0.25rem;
+  }
+}

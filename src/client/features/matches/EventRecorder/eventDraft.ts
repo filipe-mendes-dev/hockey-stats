@@ -13,6 +13,7 @@ import type {
   RinkHalf,
 } from "../../../../domain/matches/matchEvent.schema";
 import { addMatchEventInputSchema } from "../../../../domain/matches/matchEvent.schema";
+import { getPositionHalf } from "../../../../domain/matches/rinkPosition";
 
 export interface EventDraft {
   id: string;
@@ -51,6 +52,7 @@ export type EventDraftAction =
   | { type: "open"; draft: EventDraft }
   | { type: "restoreChoices"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
+  | { type: "setPosition"; position: RinkPosition }
   | {
       type: "selectKind";
       kind: AddMatchEventInput["kind"];
@@ -99,6 +101,16 @@ export function transitionEventDraft(
         phase: "collecting",
         draft: {
           ...action.draft,
+          ...(state.draft.position ? { position: state.draft.position } : {}),
+          ...((action.draft.kind === "ball-recovery" ||
+            action.draft.kind === "ball-loss") &&
+          state.draft.position
+            ? {
+                rinkHalf:
+                  getPositionHalf(state.draft.position) ??
+                  action.draft.rinkHalf,
+              }
+            : {}),
           id: state.draft.id,
           operationId: state.draft.operationId,
           matchId: state.draft.matchId,
@@ -110,6 +122,15 @@ export function transitionEventDraft(
 
     case "selectPlayer":
       return { ...state, draft: { ...state.draft, matchPlayerId: action.id } };
+    case "setPosition": {
+      const draft = { ...state.draft, position: action.position };
+      if (draft.kind === "ball-recovery" || draft.kind === "ball-loss") {
+        const half = getPositionHalf(action.position);
+        if (half) draft.rinkHalf = half;
+        else delete draft.rinkHalf;
+      }
+      return { ...state, draft };
+    }
     case "selectKind": {
       const draft = { ...state.draft, kind: action.kind };
       if (state.draft.kind !== action.kind) {
@@ -138,6 +159,13 @@ export function transitionEventDraft(
       }
       if (action.kind === "substitution" || action.kind === "player-in")
         delete draft.position;
+      if (
+        (action.kind === "ball-recovery" || action.kind === "ball-loss") &&
+        draft.position
+      ) {
+        const half = getPositionHalf(draft.position);
+        if (half) draft.rinkHalf = half;
+      }
       if (
         action.kind === "opponent-goal" ||
         action.kind === "score-adjustment" ||

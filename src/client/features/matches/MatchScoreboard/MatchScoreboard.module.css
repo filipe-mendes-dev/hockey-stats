@@ -68,6 +68,9 @@
   color: var(--color-action);
 }
 @media (min-width: 64rem) {
+  .teamHeading {
+    min-height: 2rem;
+  }
   .clock {
     font-size: 2.5rem;
   }
