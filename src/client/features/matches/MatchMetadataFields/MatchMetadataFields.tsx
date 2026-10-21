@@ -9,6 +9,7 @@ import { useLanguage } from "../../../i18n/LanguageProvider";
 import "dayjs/locale/pt";
 import { createMatchInputSchema } from "../../../../domain/matches/match.schema";
 import type { MatchMetadataFieldsProps } from "./MatchMetadataFields.interfaces";
+import { MatchDurationField } from "../MatchDurationField/MatchDurationField";
 import st from "./MatchMetadataFields.module.css";
 
 export function MatchMetadataFields({
@@ -41,6 +42,12 @@ export function MatchMetadataFields({
         onChange={(event) =>
           onChange({ ...values, opponentName: event.currentTarget.value })
         }
+      />
+      <MatchDurationField
+        value={values.durationMinutes}
+        disabled={disabled}
+        invalid={invalid}
+        onChange={(durationMinutes) => onChange({ ...values, durationMinutes })}
       />
       <div className={st.optional}>
         <DatePickerInput

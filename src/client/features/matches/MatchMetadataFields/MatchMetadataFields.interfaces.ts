@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 
 export interface MatchMetadataValues {
+  durationMinutes: string;
   opponentName: string;
   scheduledDate: string;
   venueRole: string;

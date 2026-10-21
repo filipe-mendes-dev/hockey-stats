@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { createMatchInputSchema } from "../../../../domain/matches/match.schema";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { MatchMetadataFields } from "../MatchMetadataFields/MatchMetadataFields";
+import { getMatchMetadataInput } from "../MatchMetadataFields/getMatchMetadataInput";
+import { getHalfDurationMinutes } from "../../../../domain/matches/matchFormat";
 import type { MatchMetadataValues } from "../MatchMetadataFields/MatchMetadataFields.interfaces";
 import { useUpdateMatchSetup } from "../mutations/matches.mutations";
 import {
@@ -23,6 +25,9 @@ export function EditMatchDetailsDialog({
     opponentName: initial.match.opponentName,
     scheduledDate: initial.match.scheduledDate ?? "",
     venueRole: initial.match.venueRole ?? "",
+    durationMinutes: String(
+      getHalfDurationMinutes(initial.match.periods) ?? "",
+    ),
   });
   const [invalid, setInvalid] = useState(false);
   const update = useUpdateMatchSetup();
@@ -32,11 +37,16 @@ export function EditMatchDetailsDialog({
   async function save(): Promise<void> {
     if (submitting.current || update.isPending) return;
     const result = createMatchInputSchema
-      .pick({ opponentName: true, scheduledDate: true, venueRole: true })
-      .safeParse(fields);
+      .pick({
+        opponentName: true,
+        scheduledDate: true,
+        venueRole: true,
+        periods: true,
+      })
+      .safeParse(getMatchMetadataInput(fields));
     if (!result.success) {
       setInvalid(true);
-      opponentInput.current?.focus();
+      if (!fields.opponentName.trim()) opponentInput.current?.focus();
       return;
     }
     submitting.current = true;

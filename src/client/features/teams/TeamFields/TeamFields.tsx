@@ -6,7 +6,7 @@ import type { TeamFieldsProps } from "./TeamFields.interfaces";
 import { SeasonPicker } from "../SeasonPicker/SeasonPicker";
 import st from "./TeamFields.module.css";
 
-const categories = ["Senior", "U-19", "U-17", "U-15", "Veteran"];
+const categories = ["Senior", "U-19", "U-17", "U-15", "U-13", "Veteran"];
 
 export function TeamFields({
   values,

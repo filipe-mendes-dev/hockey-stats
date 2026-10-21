@@ -12,6 +12,7 @@ export function MatchReviewSummary({
   opponent,
   scheduledDate,
   venueRole,
+  durationMinutes,
 }: MatchReviewSummaryProps) {
   const t = useTranslations("matches");
   const { locale } = useLanguage();
@@ -31,7 +32,7 @@ export function MatchReviewSummary({
         })}
       </h3>
       {teamContext && <p className={st.context}>{teamContext}</p>}
-      {(scheduledDate || venue) && (
+      {
         <Group gap="md" className={st.context}>
           {scheduledDate && (
             <time dateTime={scheduledDate}>
@@ -39,8 +40,9 @@ export function MatchReviewSummary({
             </time>
           )}
           {venue && <span>{venue}</span>}
+          <span>{t("matchFormat", { minutes: durationMinutes })}</span>
         </Group>
-      )}
+      }
     </section>
   );
 }

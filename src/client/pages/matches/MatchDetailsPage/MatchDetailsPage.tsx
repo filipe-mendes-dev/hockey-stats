@@ -17,6 +17,7 @@ import { EditMatchDetailsDialog } from "../../../features/matches/EditMatchDetai
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { useMatch } from "../../../features/matches/queries/matches.queries";
 import { formatMatchDate } from "../../../features/matches/date";
+import { getHalfDurationMinutes } from "../../../../domain/matches/matchFormat";
 import { EditMatchCallUpPage } from "../EditMatchCallUpPage/EditMatchCallUpPage";
 import { CompletedMatchDetails } from "./CompletedMatchDetails";
 import st from "./MatchDetailsPage.module.css";
@@ -62,9 +63,11 @@ export function MatchDetailsPage() {
   const destination = `/app/matches/${setup ? "start" : "live"}?id=${encodeURIComponent(match.id)}`;
   const editHref = `/app/matches/view?id=${encodeURIComponent(match.id)}&edit=call-up`;
   const action = t(setup ? "prepare" : "resume");
+  const duration = getHalfDurationMinutes(match.periods);
   const description = [
     match.scheduledDate ? formatMatchDate(match.scheduledDate, locale) : null,
     match.venueRole ? t(match.venueRole) : null,
+    duration !== undefined ? t("matchFormat", { minutes: duration }) : null,
   ]
     .filter(Boolean)
     .join(" · ");

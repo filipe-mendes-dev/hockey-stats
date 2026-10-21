@@ -18,6 +18,8 @@ import { useLanguage } from "../../../i18n/LanguageProvider";
 import { usePlayers } from "../../players/queries/players.queries";
 import { useTeams, useTeamPlayers } from "../../teams/queries/teams.queries";
 import { MatchFlowProgress } from "../MatchFlowProgress/MatchFlowProgress";
+import { getDefaultHalfDuration } from "../../../../domain/matches/matchFormat";
+import { getMatchMetadataInput } from "../MatchMetadataFields/getMatchMetadataInput";
 import { getMatchCallUpCandidates } from "../getMatchCallUpCandidates";
 import { MatchDetailsFields } from "../MatchDetailsFields/MatchDetailsFields";
 import type { MatchDetailsValues } from "../MatchDetailsFields/MatchDetailsFields.interfaces";
@@ -45,6 +47,7 @@ export function NewMatchWizard({
     opponentName: "",
     scheduledDate: "",
     venueRole: "",
+    durationMinutes: "",
   });
   const memberships = useTeamPlayers(fields.teamId);
   const [selected, setSelected] = useState<Record<string, MatchCallUpPlayer>>(
@@ -92,7 +95,10 @@ export function NewMatchWizard({
   function validateDetails(): boolean {
     const valid =
       Boolean(team) &&
-      createMatchInputSchema.omit({ players: true }).safeParse(fields).success;
+      createMatchInputSchema
+        .omit({ players: true })
+        .safeParse({ teamId: fields.teamId, ...getMatchMetadataInput(fields) })
+        .success;
     setInvalid(!valid);
     if (!valid) {
       if (!team) teamInput.current?.focus();
@@ -116,7 +122,14 @@ export function NewMatchWizard({
   }
 
   function applyTeam(teamId: string): void {
-    setFields((current) => ({ ...current, teamId }));
+    const duration = getDefaultHalfDuration(
+      teams.data?.find((entry) => entry.id === teamId)?.category,
+    );
+    setFields((current) => ({
+      ...current,
+      teamId,
+      durationMinutes: duration === undefined ? "" : String(duration),
+    }));
     setSelected({});
     setSearch("");
     setVisited(0);
@@ -144,7 +157,8 @@ export function NewMatchWizard({
       return;
     }
     const input = createMatchInputSchema.safeParse({
-      ...fields,
+      teamId: fields.teamId,
+      ...getMatchMetadataInput(fields),
       players: chosen.map(({ playerId, jerseyNumber, role }) => ({
         playerId,
         jerseyNumber,
@@ -261,6 +275,7 @@ export function NewMatchWizard({
                   opponent={fields.opponentName}
                   scheduledDate={fields.scheduledDate}
                   venueRole={fields.venueRole}
+                  durationMinutes={Number(fields.durationMinutes)}
                 />
               )}
               <MatchCallUpSummary players={chosen} />

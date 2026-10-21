@@ -44,6 +44,7 @@ export function MatchDetailsFields({
         onChange={(value) => onTeamChange(value ?? "")}
       />
       <MatchMetadataFields
+        key={values.teamId}
         values={values}
         disabled={disabled}
         invalid={invalid}

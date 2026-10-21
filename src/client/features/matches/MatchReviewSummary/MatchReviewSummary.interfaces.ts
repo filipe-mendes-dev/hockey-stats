@@ -5,4 +5,5 @@ export interface MatchReviewSummaryProps {
   opponent: string;
   scheduledDate: string;
   venueRole: string;
+  durationMinutes: number;
 }

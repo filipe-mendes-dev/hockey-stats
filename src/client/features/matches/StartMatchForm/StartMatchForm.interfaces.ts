@@ -1,7 +1,11 @@
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
+import type {
+  MatchSnapshot,
+  StartMatchInput,
+} from "../../../../domain/matches/match.schema";
+
 export interface StartMatchFormProps {
   snapshot: MatchSnapshot;
-}
-export interface PeriodDraft {
-  duration: string;
+  pending: boolean;
+  error: string | null;
+  onStart(input: StartMatchInput): Promise<void>;
 }

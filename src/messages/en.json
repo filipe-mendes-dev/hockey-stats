@@ -392,7 +392,21 @@
     "addCallUpPlayers": "Add players",
     "saveDetails": "Save details",
     "saveCallUp": "Save call-up",
-    "setupProgress": "Match setup progress"
+    "setupProgress": "Match setup progress",
+    "halfDuration": "Duration per half",
+    "chooseDuration": "Choose a duration",
+    "customDuration": "Custom",
+    "customDurationMinutes": "Minutes per half",
+    "durationRequired": "Choose a positive duration for each half.",
+    "twoHalvesDescription": "Two halves with the same duration.",
+    "matchFormat": "2 × {minutes, number} min",
+    "prepareTitle": "Prepare match",
+    "starterGroupField": "Field players",
+    "starterGroupKeeper": "Goalkeepers",
+    "starterGroupCount": "{count, number}/{limit, number} selected",
+    "callUpInsufficient": "The call-up needs at least four field players and one goalkeeper before this match can start.",
+    "formatMissing": "Set the match duration in Edit details before starting.",
+    "configureDuration": "Set match duration"
   },
   "recorder": {
     "period": "Period",

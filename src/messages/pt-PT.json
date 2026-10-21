@@ -392,7 +392,21 @@
     "addCallUpPlayers": "Adicionar jogadores",
     "saveDetails": "Guardar detalhes",
     "saveCallUp": "Guardar convocatória",
-    "setupProgress": "Progresso da configuração do jogo"
+    "setupProgress": "Progresso da configuração do jogo",
+    "halfDuration": "Duração por parte",
+    "chooseDuration": "Escolha uma duração",
+    "customDuration": "Personalizada",
+    "customDurationMinutes": "Minutos por parte",
+    "durationRequired": "Escolha uma duração positiva para cada parte.",
+    "twoHalvesDescription": "Duas partes com a mesma duração.",
+    "matchFormat": "2 × {minutes, number} min",
+    "prepareTitle": "Preparar jogo",
+    "starterGroupField": "Jogadores de campo",
+    "starterGroupKeeper": "Guarda-redes",
+    "starterGroupCount": "{count, number}/{limit, number} selecionados",
+    "callUpInsufficient": "A convocatória precisa de pelo menos quatro jogadores de campo e um guarda-redes para iniciar o jogo.",
+    "formatMissing": "Defina a duração do jogo em Editar detalhes antes de iniciar.",
+    "configureDuration": "Definir duração do jogo"
   },
   "recorder": {
     "period": "Período",
