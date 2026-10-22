@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray, lte } from "drizzle-orm";
+import { and, eq, inArray, lte, isNull } from "drizzle-orm";
 import {
   matchPlayerSchema,
   matchSchema,
@@ -55,6 +55,7 @@ export async function hasOwnedMatchReferences(
   transaction: DatabaseTransaction,
   ownerUserId: string,
   snapshot: MatchSnapshot,
+  allowArchivedTeam = false,
 ): Promise<boolean> {
   const team = await transaction
     .select({ id: teams.id })
@@ -62,9 +63,11 @@ export async function hasOwnedMatchReferences(
     .where(
       and(
         eq(teams.id, snapshot.match.teamId),
+        ...(allowArchivedTeam ? [] : [isNull(teams.archivedAt)]),
         eq(teams.ownerUserId, ownerUserId),
       ),
-    );
+    )
+    .for("share");
   if (team.length !== 1) return false;
   if (snapshot.players.length === 0) return true;
   const assigned = await transaction
@@ -75,6 +78,7 @@ export async function hasOwnedMatchReferences(
       and(
         eq(players.id, teamPlayers.playerId),
         eq(players.ownerUserId, ownerUserId),
+        isNull(players.archivedAt),
       ),
     )
     .where(
@@ -86,7 +90,8 @@ export async function hasOwnedMatchReferences(
           snapshot.players.map((player) => player.playerId),
         ),
       ),
-    );
+    )
+    .for("share");
   return assigned.length === snapshot.players.length;
 }
 export async function insertMatchSnapshot(
