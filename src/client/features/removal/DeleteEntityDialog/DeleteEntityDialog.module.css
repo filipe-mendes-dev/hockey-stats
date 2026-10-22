@@ -1,0 +1,10 @@
+.name {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.description {
+  margin: 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteEntityAction } from "../../../features/removal/DeleteEntityAction/DeleteEntityAction";
 import { useRef, useState } from "react";
 import type { Team } from "../../../../domain/teams/team.schema";
 import { EditTeamDialog } from "../../../features/teams/EditTeamDialog/EditTeamDialog";
@@ -32,7 +33,8 @@ export function TeamDetailsPage() {
   const teamQuery = useTeam(teamId);
   const [editing, setEditing] = useState<Team | null>(null);
   const editButton = useRef<HTMLButtonElement>(null);
-  const team = teamQuery.isError ? null : teamQuery.data;
+  const team =
+    teamQuery.isError || teamQuery.data?.archivedAt ? null : teamQuery.data;
 
   function closeEditor(): void {
     setEditing(null);
@@ -54,6 +56,15 @@ export function TeamDetailsPage() {
           team ? (
             <>
               <DeliveryStatus compact kind="team.create" entityId={team.id} />
+              <DeleteEntityAction
+                target={{
+                  feature: "teams",
+                  id: team.id,
+                  expectedRevision: team.revision,
+                  name: team.name,
+                }}
+                redirectHref="/app/teams"
+              />
               <Tooltip label={t("edit")}>
                 <ActionIcon
                   ref={editButton}

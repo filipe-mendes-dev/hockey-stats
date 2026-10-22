@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, lte, isNull } from "drizzle-orm";
 import type { TeamPlayer } from "../../../domain/teams/teamPlayer.schema";
 import { db } from "../../db/client.ts";
 import type { DatabaseTransaction } from "../../db/client.ts";
@@ -40,11 +40,17 @@ export async function hasOwnedMembershipParents(
       and(
         eq(players.id, membership.playerId),
         eq(players.ownerUserId, ownerUserId),
+        isNull(players.archivedAt),
       ),
     )
     .where(
-      and(eq(teams.id, membership.teamId), eq(teams.ownerUserId, ownerUserId)),
-    );
+      and(
+        eq(teams.id, membership.teamId),
+        eq(teams.ownerUserId, ownerUserId),
+        isNull(teams.archivedAt),
+      ),
+    )
+    .for("share");
   return rows.length === 1;
 }
 export async function insertTeamPlayer(

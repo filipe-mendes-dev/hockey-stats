@@ -126,6 +126,8 @@ async function openDatabase(): Promise<Dexie> {
     matchHistory: "id, matchId",
   });
 
+  connection.version(10).stores({ entityDeletions: "&[feature+id],feature" });
+
   connection.on("blocked", () => setStatus("blocked"));
   connection.on("versionchange", (event) => {
     opening = undefined;

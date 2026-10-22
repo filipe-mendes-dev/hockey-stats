@@ -11,6 +11,21 @@ export const createPlayerCommandSchema = z.object({
 });
 export type CreatePlayerCommand = z.infer<typeof createPlayerCommandSchema>;
 
+export const updatePlayerCommandSchema = z
+  .object({
+    version: z.literal(1),
+    operationId: z.uuidv4(),
+    kind: z.literal("player.update"),
+    expectedRevision: z.int().positive(),
+    player: playerSchema,
+  })
+  .refine(
+    (command) =>
+      command.player.revision === command.expectedRevision + 1 &&
+      command.player.archivedAt === undefined,
+  );
+export type UpdatePlayerCommand = z.infer<typeof updatePlayerCommandSchema>;
+
 export const playerAcknowledgementSchema = z.object({
   version: z.literal(1),
   ownerUserId: z.string().min(1),

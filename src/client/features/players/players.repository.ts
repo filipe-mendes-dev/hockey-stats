@@ -32,3 +32,13 @@ export async function putPlayer(player: Player): Promise<void> {
   const database = await getDatabase();
   await database.table<Player, string>("players").put(player);
 }
+
+export async function updatePlayerRecord(player: Player): Promise<void> {
+  const database = await getDatabase();
+  if (
+    (await database
+      .table<Player, string>("players")
+      .update(player.id, player)) !== 1
+  )
+    throw new Error("Player unavailable.");
+}

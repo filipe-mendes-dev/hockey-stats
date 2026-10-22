@@ -110,10 +110,15 @@ export async function applyMatchCommand(
         !current.players.some((entry) => entry.playerId === player.playerId),
     );
     if (
-      !(await hasOwnedMatchReferences(transaction, ownerUserId, {
-        match: command.match,
-        players: added,
-      }))
+      !(await hasOwnedMatchReferences(
+        transaction,
+        ownerUserId,
+        {
+          match: command.match,
+          players: added,
+        },
+        true,
+      ))
     )
       throw new SyncConflictError("reference_unavailable");
   } else {

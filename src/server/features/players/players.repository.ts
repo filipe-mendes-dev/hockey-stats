@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq, lte, isNull } from "drizzle-orm";
 import type { Player } from "../../../domain/players/player.schema";
 import { db } from "../../db/client.ts";
 import type { DatabaseTransaction } from "../../db/client.ts";
@@ -15,10 +15,14 @@ export async function listPlayersForOwner(
       revision: players.revision,
       createdAt: players.createdAt,
       updatedAt: players.updatedAt,
+      archivedAt: players.archivedAt,
     })
     .from(players)
     .where(eq(players.ownerUserId, ownerUserId));
-  return rows;
+  return rows.map((row) => ({
+    ...row,
+    archivedAt: row.archivedAt ?? undefined,
+  }));
 }
 
 export async function insertPlayer(
@@ -37,6 +41,33 @@ export async function insertPlayer(
       updatedAt: player.updatedAt,
     })
     .onConflictDoNothing({ target: players.id })
+    .returning({ id: players.id });
+  return rows.length === 1;
+}
+
+export async function updatePlayer(
+  transaction: DatabaseTransaction,
+  ownerUserId: string,
+  player: Player,
+  expectedRevision: number,
+): Promise<boolean> {
+  const rows = await transaction
+    .update(players)
+    .set({
+      name: player.name,
+      revision: player.revision,
+      updatedAt: player.updatedAt,
+    })
+    .where(
+      and(
+        eq(players.id, player.id),
+        eq(players.ownerUserId, ownerUserId),
+        eq(players.revision, expectedRevision),
+        eq(players.createdAt, player.createdAt),
+        lte(players.updatedAt, player.updatedAt),
+        isNull(players.archivedAt),
+      ),
+    )
     .returning({ id: players.id });
   return rows.length === 1;
 }

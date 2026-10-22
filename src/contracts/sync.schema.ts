@@ -1,4 +1,13 @@
 import {
+  deletePlayerCommandSchema,
+  deleteTeamCommandSchema,
+  deleteTeamPlayerCommandSchema,
+  deleteMatchCommandSchema,
+  deletionAcknowledgementSchema,
+  deletionsDownloadSchema,
+  getDeletionFeature,
+} from "./entity-deletions.schema";
+import {
   createMatchEventCommandSchema,
   undoMatchEventCommandSchema,
   matchEventAcknowledgementSchema,
@@ -14,6 +23,7 @@ import {
 import { z } from "zod";
 import {
   createPlayerCommandSchema,
+  updatePlayerCommandSchema,
   playerAcknowledgementSchema,
   playersDownloadSchema,
 } from "./players-sync.schema";
@@ -29,7 +39,12 @@ import {
 } from "./teams-sync.schema";
 
 export const syncCommandSchema = z.discriminatedUnion("kind", [
+  deletePlayerCommandSchema,
+  deleteTeamCommandSchema,
+  deleteTeamPlayerCommandSchema,
+  deleteMatchCommandSchema,
   createPlayerCommandSchema,
+  updatePlayerCommandSchema,
   createTeamCommandSchema,
   updateTeamCommandSchema,
   createTeamPlayerCommandSchema,
@@ -43,6 +58,7 @@ export const syncCommandSchema = z.discriminatedUnion("kind", [
 ]);
 export type SyncCommand = z.infer<typeof syncCommandSchema>;
 export const syncAcknowledgementSchema = z.union([
+  deletionAcknowledgementSchema,
   playerAcknowledgementSchema,
   teamAcknowledgementSchema,
   teamPlayerAcknowledgementSchema,
@@ -51,6 +67,7 @@ export const syncAcknowledgementSchema = z.union([
 ]);
 export type SyncAcknowledgement = z.infer<typeof syncAcknowledgementSchema>;
 export type SyncDownload =
+  | z.infer<typeof deletionsDownloadSchema>
   | z.infer<typeof playersDownloadSchema>
   | z.infer<typeof teamsDownloadSchema>
   | z.infer<typeof teamPlayersDownloadSchema>
@@ -58,6 +75,11 @@ export type SyncDownload =
 
 export function getCommandEntity(command: SyncCommand) {
   switch (command.kind) {
+    case "player.delete":
+    case "team.delete":
+    case "teamPlayer.delete":
+    case "match.delete":
+      return { id: command.id };
     case "matchEvent.create":
     case "matchEvent.undo":
       return { id: command.event.matchId };
@@ -67,6 +89,7 @@ export function getCommandEntity(command: SyncCommand) {
     case "match.control":
       return command.match;
     case "player.create":
+    case "player.update":
       return command.player;
     case "team.create":
     case "team.update":
@@ -81,6 +104,22 @@ export function parseAcknowledgement(
   command: SyncCommand,
   value: unknown,
 ): SyncAcknowledgement {
+  if ("deletedAt" in command) {
+    const result = deletionAcknowledgementSchema.parse(value);
+    const primary = result.deletions.find(
+      (entry) =>
+        entry.feature === getDeletionFeature(command) &&
+        entry.id === command.id,
+    );
+    if (
+      result.operationId !== command.operationId ||
+      !primary ||
+      primary.revision !== command.expectedRevision + 1 ||
+      primary.deletedAt !== command.deletedAt
+    )
+      throw new Error("Unexpected deletion acknowledgement.");
+    return result;
+  }
   if ("event" in command) {
     const result = matchEventAcknowledgementSchema.parse(value);
     if (
@@ -129,6 +168,7 @@ export const syncErrorSchema = z.object({
     "revision_conflict",
     "membership_conflict",
     "reference_unavailable",
+    "record_deleted",
     "unavailable",
   ]),
 });
@@ -137,6 +177,14 @@ export function getCommandFeature(
   command: Pick<SyncCommand, "kind">,
 ): "players" | "teams" | "teamPlayers" | "matches" {
   switch (command.kind) {
+    case "player.delete":
+      return "players";
+    case "team.delete":
+      return "teams";
+    case "teamPlayer.delete":
+      return "teamPlayers";
+    case "match.delete":
+      return "matches";
     case "matchEvent.create":
     case "matchEvent.undo":
     case "match.create":
@@ -145,6 +193,7 @@ export function getCommandFeature(
     case "match.control":
       return "matches";
     case "player.create":
+    case "player.update":
       return "players";
     case "team.create":
     case "team.update":

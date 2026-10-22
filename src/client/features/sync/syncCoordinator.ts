@@ -1,3 +1,4 @@
+import { deletionsDownloadSchema } from "../../../contracts/entity-deletions.schema";
 import { matchesDownloadSchema } from "../../../contracts/matches-sync.schema";
 import { playersDownloadSchema } from "../../../contracts/players-sync.schema";
 import { parseAcknowledgement } from "../../../contracts/sync.schema";
@@ -137,6 +138,17 @@ async function synchronize(signal: AbortSignal): Promise<void> {
           throw error;
         }
       }
+      await mergeDownloadedEntities(
+        identity.ownerUserId,
+        deletionsDownloadSchema.parse(
+          await syncRequest(
+            "/api/sync/deletions",
+            identity.ownerUserId,
+            signal,
+          ),
+        ),
+        signal,
+      );
       const download = playersDownloadSchema.parse(
         await syncRequest("/api/sync/players", identity.ownerUserId, signal),
       );

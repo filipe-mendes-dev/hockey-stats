@@ -121,7 +121,11 @@
     "membershipsEmpty": "This player does not belong to any teams yet.",
     "membershipTeamUnavailable": "Team unavailable",
     "membershipTeamMissing": "Team details are not stored on this device.",
-    "membershipNumber": "No. {number}"
+    "membershipNumber": "No. {number}",
+    "editTitle": "Edit player",
+    "save": "Save",
+    "changed": "This player changed or was removed. Cancel and reopen to load the latest version.",
+    "updateFailed": "The player name could not be saved. Your changes are still here. Try saving again."
   },
   "appHome": {
     "title": "Home",
@@ -271,7 +275,8 @@
     "continue": "Continue",
     "addCount": "{count, plural, one {Add # player} other {Add # players}}",
     "backToSelection": "Back",
-    "noAvailable": "No players available to add. All players are already in this team, or none have been created."
+    "noAvailable": "No players available to add. All players are already in this team, or none have been created.",
+    "createPlayer": "Create player"
   },
   "matches": {
     "title": "Matches",
@@ -795,5 +800,25 @@
       "enable": "Allow {username} to sign in and sync again.",
       "delete": "Confirm permanent deletion of {username}."
     }
+  },
+  "removal": {
+    "actions": {
+      "players": "Delete player",
+      "teams": "Delete team",
+      "teamPlayers": "Remove from team",
+      "matches": "Delete match"
+    },
+    "descriptions": {
+      "players": "Remove this player from Players and all team rosters. Existing match call-ups, events and statistics will be preserved. This cannot be undone.",
+      "teams": "Remove this team from Teams and future match selection. Existing matches and reusable players will be preserved. This cannot be undone.",
+      "teamPlayers": "Remove this player from this team. The player remains in Players and existing match call-ups stay unchanged. This cannot be undone.",
+      "matches": "Delete this match, its call-up, recorded events and Undo history. The team and players will remain available. This cannot be undone."
+    },
+    "discardLive": "Discard live match",
+    "liveDescription": "Discard this live match and all its recorded events. Recording will stop on this device, without completing the match. The team and players will remain available. This cannot be undone.",
+    "cancel": "Cancel",
+    "actionFor": "{action}: {name}",
+    "changed": "This record changed or was removed. Cancel and reopen to load the latest version.",
+    "failed": "Could not save the removal on this device. Try again."
   }
 }

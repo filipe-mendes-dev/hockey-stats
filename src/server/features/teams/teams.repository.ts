@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, lte, isNull } from "drizzle-orm";
 import type { Team } from "../../../domain/teams/team.schema";
 import { db } from "../../db/client.ts";
 import type { DatabaseTransaction } from "../../db/client.ts";
@@ -15,11 +15,13 @@ export async function listTeamsForOwner(ownerUserId: string): Promise<Team[]> {
       revision: teams.revision,
       createdAt: teams.createdAt,
       updatedAt: teams.updatedAt,
+      archivedAt: teams.archivedAt,
     })
     .from(teams)
     .where(eq(teams.ownerUserId, ownerUserId));
   return rows.map((row) => ({
     ...row,
+    archivedAt: row.archivedAt ?? undefined,
     category: row.category ?? undefined,
     season: row.season ?? undefined,
   }));
@@ -65,6 +67,7 @@ export async function updateTeam(
     .where(
       and(
         eq(teams.id, team.id),
+        isNull(teams.archivedAt),
         eq(teams.ownerUserId, ownerUserId),
         eq(teams.revision, expectedRevision),
         eq(teams.createdAt, team.createdAt),
