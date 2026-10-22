@@ -62,6 +62,7 @@ export function NewTeamPage() {
         submitLabel={t(creation.isPending ? "saving" : "create")}
         cancelLabel={t("cancel")}
         cancelHref="/app/teams"
+        actionsLayout="creation"
         onSubmit={submit}
       >
         <TeamFields

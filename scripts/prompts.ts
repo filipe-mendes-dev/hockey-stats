@@ -1,4 +1,5 @@
 import { isCancel, password, text } from "@clack/prompts";
+import { userPasswordSchema } from "../src/contracts/admin-users.schema.ts";
 
 async function answer(result: Promise<string | symbol>): Promise<string> {
   const value = await result;
@@ -43,7 +44,15 @@ export async function readPassword(message: string): Promise<string> {
 }
 
 export async function readNewPassword(): Promise<string> {
-  const value = await readPassword("Initial password");
+  const value = await answer(
+    password({
+      message: "Initial password",
+      validate: (value) =>
+        userPasswordSchema.safeParse(value).success
+          ? undefined
+          : "Use 12 to 128 characters; the password cannot be blank.",
+    }),
+  );
   await answer(
     password({
       message: "Confirm initial password",

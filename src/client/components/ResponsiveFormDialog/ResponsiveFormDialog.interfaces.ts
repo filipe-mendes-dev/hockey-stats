@@ -14,6 +14,7 @@ export interface ResponsiveFormDialogProps {
   pending: boolean;
   layout?: "compact" | "flow";
   submitDisabled?: boolean;
+  destructive?: boolean;
   secondaryAction?: DialogSecondaryAction;
   error: string | null;
   children: ReactNode;

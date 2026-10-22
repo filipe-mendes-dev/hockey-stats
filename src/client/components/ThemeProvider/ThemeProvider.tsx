@@ -101,6 +101,7 @@ const theme = createTheme({
     PasswordInput: PasswordInput.extend({
       defaultProps: {
         size: "md",
+        radius: "var(--radius-input)",
         visibilityToggleFocusable: true,
         rightSectionWidth: 48,
       },

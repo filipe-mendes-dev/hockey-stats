@@ -7,12 +7,17 @@ import { AppMenu } from "../../components/AppMenu/AppMenu";
 import { NavigationCard } from "../../components/NavigationCard/NavigationCard";
 import type { AppMenuItem } from "../../components/AppMenu/AppMenu.interfaces";
 import { PageHeader } from "../../components/PageHeader/PageHeader";
-import { navigationDestinations } from "../../components/AppNavigation/navigation";
+import { getNavigationDestinations } from "../../components/AppNavigation/navigation";
+import { authClient } from "../../features/auth/auth-client";
 import st from "./AppHomePage.module.css";
 
 export function AppHomePage() {
   const t = useTranslations("appHome");
-  const items: AppMenuItem[] = navigationDestinations.flatMap(
+  const { data: session } = authClient.useSession();
+  const destinations = getNavigationDestinations(
+    session?.user.role === "admin" && !session.user.banned,
+  );
+  const items: AppMenuItem[] = destinations.flatMap(
     ({ id, href, icon: Icon }) => {
       if (id === "home") return [];
       return [
