@@ -18,6 +18,8 @@ The canonical entity name is Match. Event attribution uses its MatchPlayer snaps
 
 ## Offline and accounts
 
+Closed-beta accounts are created by administrators without public signup or email workflows. The online-only Users page supports account creation, display-name editing, password replacement, disable/enable and explicit permanent deletion of disabled normal users. Creation uses a dedicated page. New/replacement passwords require 12–128 characters, cannot be blank-only and require matching confirmation. Admin accounts are protected; usernames and roles cannot be edited. Disabling retains server hockey data. Permanent deletion removes the account and its server data, while remote local data remains outside the administrator's control.
+
 Require one successful online sign-in to establish the owner of the local dataset. After setup, all current hockey workflows use IndexedDB online and offline. Session expiry pauses synchronization without blocking local use. Guest functionality is deferred.
 
 A match can be created offline using locally available team/player data, including prerequisites created offline. No per-match server preparation or server-issued ID is required. Data never downloaded or created on the device is unavailable there.
@@ -58,6 +60,6 @@ The implementation should support these scenarios in a production build:
 
 ## Deferred scope
 
-Cross-match analytics, heatmaps, arbitrary historical editing/deletion, redo, reopening completed matches, official foul rules, individual temporary suspensions, conflict resolution, simultaneous multi-device recording, backup/export, guest accounts and account-management UI remain in the [Backlog](backlog.md). The approved completed-match summary uses recorded event positions without inferring missing locations or opponent action statistics.
+Cross-match analytics, heatmaps, arbitrary historical editing/deletion, redo, reopening completed matches, official foul rules, individual temporary suspensions, conflict resolution, simultaneous multi-device recording, backup/export, guest accounts, self-service password changes and admin-role management remain in the [Backlog](backlog.md). The approved completed-match summary uses recorded event positions without inferring missing locations or opponent action statistics.
 
 The [Development plan](development-plan.md) distinguishes implemented features, verification evidence and outstanding release checks. Deferred goals are not current acceptance claims.

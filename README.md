@@ -85,15 +85,17 @@ npm run dev
 
 Bootstrap prompts for your admin username, display name and initial password. Password input is masked. It refuses to create another admin when one exists and never modifies or promotes an existing user. Open `/sign-in` to log in. `/` requires a valid session and contains the sign-out button.
 
-To create a normal user before the admin screen exists:
+Sign in as an admin and open Users in the navigation to create normal accounts, edit display names, replace passwords and disable/enable access. Permanent deletion requires a disabled normal account and username confirmation, and removes its server hockey data. Admin accounts are protected. Create user opens a dedicated page; creation and password replacement require matching password confirmation. User management requires an internet connection; public signup and email workflows remain disabled.
+
+The terminal helper remains available:
 
 ```sh
 npm run auth:create-user
 ```
 
-The command prompts for your admin credentials, then the new user's username, display name and initial password. It authenticates the administrator, delegates creation to Better Auth and revokes its temporary admin session afterward. A normal user cannot create users or assign roles. The admin currently has only the user-creation permission. Share the initial password outside the application; password-change UI and recovery remain backlog items.
+The command prompts for your admin credentials, then the new user's username, display name and initial password. It authenticates the administrator, delegates creation to Better Auth and revokes its temporary admin session afterward. A normal user cannot manage accounts or assign roles. Share initial/replacement passwords outside the application; self-service password changes remain in the backlog.
 
-Usernames contain 3 to 30 letters, numbers, underscores or dots and are normalized to lowercase. Passwords contain 8 to 128 characters. Better Auth generates a hidden internal email value for compatibility; users never provide an email and no messages are sent. Authentication tables and password hashes remain server-only. All sync endpoints authorize every request against the session and expected local owner.
+Usernames contain 3 to 30 letters, numbers, underscores or dots and are normalized to lowercase. New and replacement passwords contain 12 to 128 characters and cannot be blank-only. Existing passwords remain valid for sign-in. Better Auth generates a hidden internal email value for compatibility; users never provide an email and no messages are sent. Authentication tables and password hashes remain server-only. All sync endpoints authorize every request against the session and expected local owner.
 
 For schema changes:
 

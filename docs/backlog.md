@@ -40,8 +40,9 @@ This file contains deferred work, not instructions to implement it. Current beha
 
 ## Accounts and additional product scope
 
-- Signed-in password change, administrator-assisted recovery and any initial-password-change requirement.
-- Permission-gated admin navigation and user-management UI. Terminal helpers currently create users.
+- Signed-in password change and any initial-password-change requirement. Administrator-assisted password replacement belongs to the closed-beta Users page.
+- A dedicated user detail page with account information, owned-data counts and activity/synchronization metrics. Keep this deferred while the account directory is sufficient.
+- Admin-role management, invitations and broader administration. The closed-beta Users page manages normal accounts only and protects admin accounts.
 - Guest use without initial online sign-in and explicit adoption rules.
 - Offline-only data clearing and delayed server-session revocation, if required. Current sign-out reports network failure and retains local data when server sign-out fails.
 - Shared-device unlock/encryption, device management and a different local retention policy if personal-device assumptions change.
