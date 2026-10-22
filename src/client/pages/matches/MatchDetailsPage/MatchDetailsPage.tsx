@@ -57,7 +57,9 @@ export function MatchDetailsPage() {
   if (params.get("edit") === "call-up")
     return <EditMatchCallUpPage key={snapshot.match.id} snapshot={snapshot} />;
   if (snapshot.match.status === "completed")
-    return <CompletedMatchDetails snapshot={snapshot} />;
+    return (
+      <CompletedMatchDetails key={snapshot.match.id} snapshot={snapshot} />
+    );
   const { match } = snapshot;
   const setup = match.status === "setup";
   const destination = `/app/matches/${setup ? "start" : "live"}?id=${encodeURIComponent(match.id)}`;

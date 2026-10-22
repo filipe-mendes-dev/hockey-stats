@@ -1,0 +1,77 @@
+.rink {
+  position: relative;
+  aspect-ratio: 1016 / 516;
+  min-width: 0;
+}
+.marker {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-action);
+  cursor: pointer;
+  z-index: 1;
+  transition: opacity 150ms;
+}
+.marker[data-tone="blue"] {
+  color: var(--color-card-blue);
+}
+.marker[data-tone="muted"] {
+  color: var(--color-text-muted);
+}
+.marker[data-tone="yellow"] {
+  color: var(--color-card-yellow);
+}
+.marker[data-tone="red"] {
+  color: var(--color-card-red);
+}
+.marker[data-dimmed="true"] {
+  opacity: 0.2;
+}
+.marker[data-active="true"],
+.marker:focus-visible {
+  z-index: 2;
+}
+.symbol {
+  width: 1.75rem;
+  height: 1.75rem;
+  overflow: visible;
+  fill: currentColor;
+}
+.goalRing,
+.activeRing,
+.cross {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.activeRing {
+  opacity: 0;
+  stroke: var(--color-text);
+  transition: opacity 150ms;
+}
+.marker[data-active="true"] .activeRing {
+  opacity: 1;
+}
+.cross {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+@media (pointer: coarse) {
+  .marker {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marker,
+  .activeRing {
+    transition: none;
+  }
+}

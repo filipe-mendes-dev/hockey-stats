@@ -1,40 +1,59 @@
-.content {
-  display: grid;
-  gap: 1.5rem;
+.page {
+  width: 100%;
+  max-width: 64rem;
   min-width: 0;
+  margin-inline: auto;
+  padding-block: 0.5rem 1rem;
   overflow-wrap: anywhere;
 }
-.details {
-  display: grid;
+.navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  margin: 0;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
 }
-.details div {
-  display: grid;
-  gap: 0.35rem;
+.team {
+  margin-top: 2rem;
   min-width: 0;
 }
-.details dt {
-  color: var(--color-text-muted);
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
-.details dd {
+.heading h2 {
   margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
 }
-.players {
-  display: grid;
-  gap: 0.75rem;
-  list-style: none;
-  padding: 0;
+.heading p {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
 }
-.players li {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
+.periods {
+  width: 22rem;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+.analysisAnchor {
+  scroll-margin-top: 6rem;
+}
+.readOnly {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  margin: 1.75rem 0 0;
+}
+@media (max-width: 36rem) {
+  .page {
+    padding-block: 0;
+  }
+  .periods {
+    width: 100%;
+  }
+  .heading {
+    gap: 1rem;
+  }
 }

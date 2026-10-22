@@ -1,0 +1,66 @@
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.heading h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.heading > span {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.track {
+  display: flex;
+  gap: 0.1875rem;
+  background: var(--color-surface-elevated);
+}
+.labels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+}
+.labels > div {
+  min-width: 0;
+}
+.labels dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.labels dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.swatch {
+  display: inline-block;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--color-action);
+  margin-inline-end: 0.375rem;
+}
+.swatch[data-tone="blue"] {
+  background: var(--color-card-blue);
+}
+.swatch[data-tone="muted"] {
+  background: var(--color-text-muted);
+}
+.swatch[data-tone="yellow"] {
+  background: var(--color-card-yellow);
+}
+.swatch[data-tone="red"] {
+  background: var(--color-card-red);
+}
+@media (prefers-reduced-motion: reduce) {
+  .track * {
+    transition: none;
+  }
+}

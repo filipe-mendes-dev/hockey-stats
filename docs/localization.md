@@ -2,6 +2,8 @@
 
 Support English (`en`) and European Portuguese (`pt-PT`) through next-intl. English is the fallback. Application locale does not change the instruction to communicate with the developer in English.
 
+The `statistics` catalog namespace covers the completed summary, metric definitions, period/category controls, event selection, sortable player columns, card counts and unavailable timing. Numeric counts and percentages use locale formatting; playing time remains a duration. Existing recorder translations describe canonical event kinds/details. The team on-target total includes goals; individual non-goal on-target outcomes have a separate explicit label in both languages.
+
 ## Files and bootstrap
 
 - `src/messages/en.json` and `src/messages/pt-PT.json` contain matching keys and interpolation arguments.
@@ -38,4 +40,4 @@ Recorder timestamps use the shared countdown formatter with event-specific half 
 
 Powerplay indicators, active/queued status, remaining-time correction and retry feedback are translated in both catalogs. Indicator accessibility labels include the outstanding count and total remaining time across all penalties. Automatic Player in uses the existing translated picker.
 
-Rink entry labels, attack direction, position feedback and keyboard/touch instructions are bundled in both catalogs. Attack and Defence labels describe the recorded team's halves inside the displayed rink; separate heading and team goal labels are omitted. Assistive position feedback announces the selected half without visible coordinate percentages; stored coordinates remain team-relative. The selected point and captured draft survive language changes.
+Rink entry labels, attack direction, position feedback and keyboard/touch instructions are bundled in both catalogs. Coarse pointers show a short tap/hold/drag instruction without keyboard references. Fine pointers retain keyboard guidance. Direction previews announce the selected Left/Right choice. Attack and Defence labels describe the recorded team's halves inside the displayed rink; separate heading and team goal labels are omitted. Assistive position feedback announces the selected half without visible coordinate percentages; stored coordinates remain team-relative. The selected point and captured draft survive language changes.

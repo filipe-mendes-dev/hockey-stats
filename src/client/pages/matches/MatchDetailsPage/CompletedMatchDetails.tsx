@@ -1,11 +1,18 @@
 "use client";
 
+import { useId, useMemo, useRef, useState } from "react";
+import { SegmentedControl } from "@mantine/core";
 import { useTranslations } from "next-intl";
-import { useLanguage } from "../../../i18n/LanguageProvider";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
+import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
+import { getMatchStatistics } from "../../../../domain/matches/matchStatistics";
+import { BackLink } from "../../../components/BackLink/BackLink";
+import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
 import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
-import { EventRecorder } from "../../../features/matches/EventRecorder/EventRecorder";
-import { formatMatchDate } from "../../../features/matches/date";
+import { useMatchEvents } from "../../../features/matches/queries/matchEvents.queries";
+import { MatchResult } from "../../../features/matches/MatchResult/MatchResult";
+import { TeamStatistics } from "../../../features/statistics/TeamStatistics/TeamStatistics";
+import { MatchEventAnalysis } from "../../../features/statistics/MatchEventAnalysis/MatchEventAnalysis";
+import { PlayerStatistics } from "../../../features/statistics/PlayerStatistics/PlayerStatistics";
 import type { CompletedMatchDetailsProps } from "./CompletedMatchDetails.interfaces";
 import st from "./CompletedMatchDetails.module.css";
 
@@ -13,81 +20,121 @@ export function CompletedMatchDetails({
   snapshot,
 }: CompletedMatchDetailsProps) {
   const t = useTranslations("matches");
-  const assignment = useTranslations("teamPlayers");
-  const syncText = useTranslations("sync");
-  const { locale } = useLanguage();
-  const collator = new Intl.Collator(locale, { sensitivity: "base" });
+  const statisticsText = useTranslations("statistics");
+  const recorder = useTranslations("recorder");
+  const events = useMatchEvents(snapshot.match.id);
+  const [period, setPeriod] = useState<number>();
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>();
+  const analysisId = useId();
+  const teamHeading = useId();
+  const analysisRef = useRef<HTMLDivElement>(null);
+  const statistics = useMemo(
+    () =>
+      events.data
+        ? getMatchStatistics(snapshot, events.data, period)
+        : undefined,
+    [snapshot, events.data, period],
+  );
+  const score = useMemo(() => {
+    if (!events.data) return undefined;
+    const state = deriveMatchState(snapshot, events.data);
+    return { own: state.ownScore, opponent: state.opponentScore };
+  }, [snapshot, events.data]);
+  const ready =
+    !events.isPending && !events.isError && statistics && events.data;
+  const periodLabel =
+    period === undefined
+      ? statisticsText("allMatch")
+      : t("periodLabel", { number: period });
+
+  function selectPlayer(id: string): void {
+    setSelectedPlayerId(selectedPlayerId === id ? undefined : id);
+    if (selectedPlayerId !== id)
+      analysisRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+  }
+
   return (
-    <EntityPage
-      backHref="/app/matches"
-      backLabel={t("back")}
-      title={t("summaryTitle")}
-      storageNotice={t("storageNotice")}
-    >
-      <div className={st.content}>
-        <dl className={st.details}>
-          <div>
-            <dt>{t("team")}</dt>
-            <dd>{snapshot.match.teamNameAtMatch}</dd>
-          </div>
-          <div>
-            <dt>{t("opponent")}</dt>
-            <dd>{snapshot.match.opponentName}</dd>
-          </div>
-          {snapshot.match.scheduledDate && (
-            <div>
-              <dt>{t("date")}</dt>
-              <dd>{formatMatchDate(snapshot.match.scheduledDate, locale)}</dd>
-            </div>
-          )}
-          {snapshot.match.venueRole && (
-            <div>
-              <dt>{t("venueRole")}</dt>
-              <dd>{t(snapshot.match.venueRole)}</dd>
-            </div>
-          )}
-          <div>
-            <dt>{t("status")}</dt>
-            <dd>{t(snapshot.match.status)}</dd>
-          </div>
-          <div>
-            <dt>{syncText("title")}</dt>
-            <dd>
-              <DeliveryStatus
-                kind="match.create"
-                entityId={snapshot.match.id}
-              />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("matchId")}</dt>
-            <dd>{snapshot.match.id}</dd>
-          </div>
-        </dl>
-        <section>
-          <h2>{t("callUp")}</h2>
-          {snapshot.players.length === 0 ? (
-            <p>{t("emptyCallUp")}</p>
-          ) : (
-            <ul className={st.players}>
-              {[...snapshot.players]
-                .sort((a, b) =>
-                  collator.compare(a.playerNameAtMatch, b.playerNameAtMatch),
-                )
-                .map((player) => (
-                  <li key={player.id}>
-                    <strong>{player.playerNameAtMatch}</strong>
-                    <span>
-                      {assignment(player.role)}
-                      {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ""}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </section>
-        <EventRecorder key={snapshot.match.id} snapshot={snapshot} />
+    <div className={st.page}>
+      <div className={st.navigation}>
+        <BackLink href="/app/matches" label={t("back")} />
+        <DeliveryStatus
+          compact
+          kind="match.create"
+          entityId={snapshot.match.id}
+        />
       </div>
-    </EntityPage>
+      <MatchResult
+        match={snapshot.match}
+        score={events.isError ? undefined : score}
+        periods={events.isError ? undefined : statistics?.periodScores}
+      />
+      {!ready ? (
+        <EntityDataStatus
+          loadingLabel={recorder("loading")}
+          failedLabel={recorder("loadFailed")}
+          retryLabel={recorder("retry")}
+          failed={events.isError}
+          onRetry={() => {
+            void events.refetch();
+          }}
+        />
+      ) : (
+        <>
+          <section className={st.team} aria-labelledby={teamHeading}>
+            <div className={st.heading}>
+              <div>
+                <h2 id={teamHeading}>{statisticsText("teamTitle")}</h2>
+                <p>{snapshot.match.teamNameAtMatch}</p>
+              </div>
+              <SegmentedControl
+                className={st.periods}
+                fullWidth={false}
+                aria-label={statisticsText("periodFilter")}
+                value={period === undefined ? "all" : String(period)}
+                onChange={(value) =>
+                  setPeriod(
+                    snapshot.match.periods.find(
+                      (entry) => String(entry.number) === value,
+                    )?.number,
+                  )
+                }
+                data={[
+                  { value: "all", label: statisticsText("allMatch") },
+                  ...snapshot.match.periods.map((entry) => ({
+                    value: String(entry.number),
+                    label: t("periodLabel", { number: entry.number }),
+                  })),
+                ]}
+              />
+            </div>
+            <TeamStatistics statistics={statistics.team} />
+            <div ref={analysisRef} className={st.analysisAnchor}>
+              <MatchEventAnalysis
+                id={analysisId}
+                snapshot={snapshot}
+                events={events.data}
+                period={period}
+                selectedPlayerId={selectedPlayerId}
+                onClearPlayer={() => setSelectedPlayerId(undefined)}
+              />
+            </div>
+          </section>
+          <PlayerStatistics
+            statistics={statistics.players}
+            team={statistics.team}
+            periodLabel={periodLabel}
+            selectedPlayerId={selectedPlayerId}
+            onSelectPlayer={selectPlayer}
+            analysisId={analysisId}
+          />
+          <p className={st.readOnly}>{statisticsText("readOnly")}</p>
+        </>
+      )}
+    </div>
   );
 }
