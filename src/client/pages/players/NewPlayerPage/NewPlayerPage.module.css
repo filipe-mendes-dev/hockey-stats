@@ -6,6 +6,10 @@
 }
 @media (max-width: 36rem) {
   .page {
-    padding-block: 0 1rem;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding-block: 0;
   }
 }

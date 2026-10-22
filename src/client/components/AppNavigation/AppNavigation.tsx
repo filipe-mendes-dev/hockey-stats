@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { navigationDestinations } from "./navigation";
+import { authClient } from "../../features/auth/auth-client";
+import { getNavigationDestinations } from "./navigation";
 import type { AppNavigationProps } from "./AppNavigation.interfaces";
 import st from "./AppNavigation.module.css";
 
@@ -13,6 +14,10 @@ export function AppNavigation({
 }: AppNavigationProps) {
   const pathname = usePathname();
   const t = useTranslations("navigation");
+  const { data: session } = authClient.useSession();
+  const destinations = getNavigationDestinations(
+    session?.user.role === "admin" && !session.user.banned,
+  );
 
   return (
     <nav
@@ -20,7 +25,7 @@ export function AppNavigation({
       className={st.navigation}
       data-vertical={vertical}
     >
-      {navigationDestinations.map(({ id, href, icon: Icon }) => {
+      {destinations.map(({ id, href, icon: Icon }) => {
         const active =
           pathname === href ||
           (id !== "home" && pathname.startsWith(`${href}/`));

@@ -16,6 +16,7 @@ export function ResponsiveFormDialog({
   pending,
   layout = "compact",
   submitDisabled = false,
+  destructive = false,
   secondaryAction,
   error,
   children,
@@ -112,6 +113,8 @@ export function ResponsiveFormDialog({
           </Button>
           <Button
             type="submit"
+            {...(destructive ? { color: "red" } : {})}
+            data-destructive={destructive || undefined}
             size="sm"
             loading={pending}
             disabled={pending || submitDisabled}

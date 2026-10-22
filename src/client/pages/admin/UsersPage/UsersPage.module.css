@@ -1,0 +1,31 @@
+.page {
+  width: 100%;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-block: 0.5rem 2.5rem;
+}
+.feedback {
+  margin-top: 1rem;
+}
+.count {
+  margin-block: 1.25rem 0.5rem;
+}
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding-block: 3rem;
+}
+.empty {
+  padding-block: 3rem;
+  text-align: center;
+}
+.pagination {
+  margin-top: 1.5rem;
+}
+@media (max-width: 36rem) {
+  .page {
+    padding-block: 0 1rem;
+  }
+}

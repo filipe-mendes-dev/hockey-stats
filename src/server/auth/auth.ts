@@ -8,6 +8,11 @@ import { db } from "../db/client.ts";
 import * as schema from "../db/schema.ts";
 import { getAuthEnvironment } from "../environment.ts";
 import { accessControl, roles } from "./permissions.ts";
+import {
+  maximumUserPasswordLength,
+  minimumUserPasswordLength,
+  userPasswordSchema,
+} from "../../contracts/admin-users.schema.ts";
 
 export const auth = betterAuth({
   ...getAuthEnvironment(),
@@ -16,7 +21,12 @@ export const auth = betterAuth({
   session: { modelName: "auth_session", cookieCache: { enabled: false } },
   account: { modelName: "auth_account" },
   verification: { modelName: "auth_verification" },
-  emailAndPassword: { enabled: true, disableSignUp: true },
+  emailAndPassword: {
+    enabled: true,
+    disableSignUp: true,
+    minPasswordLength: minimumUserPasswordLength,
+    maxPasswordLength: maximumUserPasswordLength,
+  },
   disabledPaths: [
     "/sign-up/email",
     "/sign-in/email",
@@ -28,6 +38,20 @@ export const auth = betterAuth({
     "/delete-user",
     "/update-user",
     "/is-username-available",
+    "/admin/create-user",
+    "/admin/list-users",
+    "/admin/get-user",
+    "/admin/update-user",
+    "/admin/set-role",
+    "/admin/ban-user",
+    "/admin/unban-user",
+    "/admin/set-user-password",
+    "/admin/remove-user",
+    "/admin/list-user-sessions",
+    "/admin/revoke-user-session",
+    "/admin/revoke-user-sessions",
+    "/admin/impersonate-user",
+    "/admin/stop-impersonating",
   ],
   plugins: [
     username({ immutableUsername: true, displayUsername: false }),
@@ -42,13 +66,10 @@ export const auth = betterAuth({
             typeof body === "object" && body !== null && "password" in body
               ? body.password
               : undefined;
-          if (
-            typeof password !== "string" ||
-            password.length < 8 ||
-            password.length > 128
-          ) {
+          if (!userPasswordSchema.safeParse(password).success) {
             throw new APIError("BAD_REQUEST", {
-              message: "Password must contain 8 to 128 characters.",
+              message:
+                "Password must contain 12 to 128 characters and cannot be blank.",
             });
           }
           const value: unknown = "username" in user ? user.username : undefined;

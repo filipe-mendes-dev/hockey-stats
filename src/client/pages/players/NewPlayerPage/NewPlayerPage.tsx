@@ -57,6 +57,7 @@ export function NewPlayerPage() {
         submitLabel={t(creation.isPending ? "saving" : "create")}
         cancelLabel={t("cancel")}
         cancelHref="/app/players"
+        actionsLayout="creation"
         onSubmit={submit}
       >
         <TextInput
