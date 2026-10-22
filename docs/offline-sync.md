@@ -10,7 +10,7 @@ IndexedDB is the working store online and offline. PostgreSQL is authoritative f
 
 ## Local database
 
-`benchline-stats` uses Dexie schema version 9. Stores are players, teams, teamPlayers, matches, matchPlayers, matchEvents, matchHistory, metadata and outbox. Keys/indexes are declared in `src/client/storage/database.ts`; record properties are validated by Zod at input/read/transport boundaries.
+`benchline-stats` uses Dexie schema version 10. Stores are players, teams, teamPlayers, matches, matchPlayers, matchEvents, matchHistory, metadata, outbox and entityDeletions. Keys/indexes are declared in `src/client/storage/database.ts`; record properties are validated by Zod at input/read/transport boundaries.
 
 Earlier upgrades preserve prototype Players, remove workspace fields, migrate outbox playerId to entityId, remove obsolete membership status and add entity/event stores. Do not alter applied versions or reset storage on failure. Validate existing values; let invalid upgrades abort visibly without deleting data.
 
@@ -38,9 +38,19 @@ Entity/setup/control commands use version 1; current event create/Undo commands 
 
 The server reserves an owner/operation receipt in the same SQL transaction as the mutation. Concurrent duplicate reservations wait and replay the committed result. Reusing an ID with different content conflicts. Failed workflows roll back receipt and data together. Match event/control workflows lock the owned Match and check revision/domain rules.
 
+## Entity removal protocol
+
+Version-1 player.delete, team.delete, teamPlayer.delete and match.delete commands carry the entity UUID, expected revision and captured deletedAt. SQL migration 0014 adds Player/Team archived_at and an owner-scoped entity_deletion ledger. Dexie version 10 adds the corresponding compound-keyed marker store without rewriting previous migrations.
+
+Local services atomically retain Player/Team identities or remove Match/membership data, save all cascade markers and enqueue the primary command. Earlier related membership/create/setup operations must upload before parent deletion. Do not drop unsent or blocked commands. The server authenticates ownership, serializes writes for each owner/feature/ID with a transaction-scoped advisory lock, rechecks revision and records cascade results with the receipt in the same transaction. Reference checks share-lock active parents against concurrent removal. Old receipt replay remains exact and never recreates a server row; a new command for a removed ID is rejected as record_deleted.
+
+GET /api/sync/deletions returns the complete owner-scoped marker collection with no-store headers. The coordinator applies it before ordinary entity downloads. Downloads and acknowledgements consult local markers before writing rows, including while a local deletion is pending. A downloaded parent removal also removes device-only memberships. Remote removal closes deleted Match views and their recorder drafts through query invalidation. Conflicting local commands remain in the outbox as blocked with record_deleted; no conflict is silently rebased or discarded. Deleted Match local Undo history is removed with the recording.
+
+Player/Team archived rows and delivery receipts retain historical data. Match/membership data is physically removed while terminal markers remain. This feature does not implement secure erasure, restore or automatic conflict resolution. Deploy the API/migration and current client together. Older cached clients do not consume deletion markers and must update; the server still rejects new writes for removed IDs. Other devices observe removal when they next synchronize, not while offline.
+
 ## Foreground delivery
 
-One coordinator cycle pushes pending operations, durably applies each acknowledgement, then downloads Players, Teams, memberships and Matches. Web Locks serialize cycles across same-origin tabs. The existing lock name remains `benchline.players-sync` for compatibility with older open tabs; it protects all command kinds.
+One coordinator cycle pushes pending operations, durably applies each acknowledgement, then downloads deletion markers, Players, Teams, memberships and Matches. Web Locks serialize cycles across same-origin tabs. The existing lock name remains `benchline.players-sync` for compatibility with older open tabs; it protects all command kinds.
 
 Trigger delivery after local writes/import, startup, successful authentication, reconnection, focus/visibility and manual retry. Refresh every 60 seconds while visible. Requests have a 15-second timeout. Transient retries back off from one second to at most 60 seconds, respecting bounded server Retry-After values. Browser online status is only a hint.
 
@@ -50,7 +60,7 @@ Authentication failure pauses sync; mismatch preserves local data and reports th
 
 Apply acknowledgement data and remove only its outbox operation in one IndexedDB transaction. Recheck owner and abort state inside the transaction. A failed local acknowledgement leaves the operation available for safe receipt replay. Do not overwrite a higher local entity/event/Match revision with an older acknowledgement.
 
-Downloads merge complete records without deleting local entities absent from the response. Pending and blocked entities are protected. A pending Match protects its entire snapshot/event history. Replace accepted Match snapshot and events together only when its revision is not older and no local Match commands remain. The local Undo journal stays local.
+Downloads merge complete records without inferring deletion from absence. Explicit deletion markers remove records independently of collection absence. Pending and blocked entities are protected. A pending Match protects its entire snapshot/event history. Replace accepted Match snapshot and events together only when its revision is not older and no local Match commands remain. The local Undo journal stays local.
 
 The shared footer shows compact sync state and pending/blocked counts. Full account, retry, storage and installation explanations remain available through Details. These display components subscribe to existing state; the single SyncLifecycle still owns startup, invalidation and teardown beneath initialized account setup.
 
@@ -95,3 +105,5 @@ Version 5 adds saved team-penalty durations and powerplay-adjust events. SQL mig
 ## Administrative account changes
 
 The online-only Users page and `/api/admin/users` are excluded from service-worker document/API caching and from the outbox. Disabling an account revokes its server sessions and blocks new login and synchronization while retaining hockey data. Permanent deletion removes its server records. Neither action clears remote IndexedDB or changes the existing personal-device offline-access policy.
+
+Version-1 player.update carries the complete active Player and expectedRevision. Its revision must be expectedRevision + 1. Local rename and command insertion share one IndexedDB transaction; ordinary Player acknowledgements/downloads handle the result. Same-Player outbox ordering, durable receipt replay, owner scoping, terminal deletion guards and pending-download protection apply unchanged. Expired sessions still permit local rename and defer delivery. No SQL or Dexie migration is added for name editing.

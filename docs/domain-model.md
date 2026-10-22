@@ -21,6 +21,14 @@ A Player may belong to multiple Teams with different numbers/roles. MatchPlayer 
 
 SQL records use authenticated ownership and relational constraints. Local entities share one owner-bound dataset. UUIDs and capture/creation timestamps originate on the client; server receipt acceptance time is separate.
 
+## Removal and historical references
+
+Player and Team logical deletion sets archivedAt, advances revision and removes their current TeamPlayer memberships. SQL retains the identity rows, so existing Match.teamId and MatchPlayer.playerId references remain valid. Existing setup call-ups can retain removed Players and start from their snapshots; future selection excludes removed identities. Existing setup metadata edits remain valid after Team removal. A membership can be added again with a fresh UUID after removal, while its old ID stays terminal.
+
+Match deletion removes the entire recording: events, MatchPlayers and local Undo history. Delete the event graph before SQL cascades remove MatchPlayers with restrictive references. Teams and Players remain intact. A live Match is discarded explicitly rather than marked completed.
+
+An owner-scoped entity_deletion ledger and local entityDeletions store record feature, UUID, next revision and removal time. These markers are terminal and downloaded explicitly. They have no foreign key to the removed entity and survive physical Match/membership cleanup. A deletion command has a stable operation ID, expected revision and captured removal time. Services own cascade decisions and transactions; repositories perform the stored-row operations. Restore and permanent purging are deferred.
+
 ## Match setup and lifecycle
 
 Call-ups allow at most eight field players and two goalkeepers, ten total. Setup may be incomplete. Only setup Matches can edit metadata/call-up. Existing selected MatchPlayer IDs and historical names are retained through pre-start edits.
@@ -109,3 +117,5 @@ Undo targets the latest non-deleted event only when this browser retains its loc
 New event/Undo commands use version 5 for timed cards and powerplay correction. Versions 1–4 remain readable; pre-v5 writes conflict once timed-powerplay events exist, while accepted receipts still replay. Version 4 requires recovery/loss half and opponent-only score corrections. Pre-v4 writes also conflict once rink-half events exist. Older stored independent movements, cards and suspension-end events remain readable; old suspension-end records no longer impose temporary availability state. New cards carry startsPowerplay explicitly so historical cards are not silently converted into unfinished penalties. Legacy delivery rules are described in [Offline and sync](offline-sync.md).
 
 Future historical corrections must preview downstream contradictions and never silently rewrite another event. They require a separate agreed protocol before implementation.
+
+Player name edits advance the reusable Player revision and preserve its ID/creation time. Duplicate names remain valid. New match selections use the current Player name, while already captured MatchPlayer names remain unchanged in setup, live and completed Matches. Rename never changes TeamPlayer membership numbers/roles or event history.

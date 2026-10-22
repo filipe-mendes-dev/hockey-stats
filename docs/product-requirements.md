@@ -4,9 +4,9 @@ Benchline Stats is a responsive rink-hockey application for an observer managing
 
 ## Current prototype scope
 
-- Players: create, search, list and view details, including locally available team memberships, jersey numbers and roles. Duplicate names are valid.
-- Teams: create, edit name/category/season, view details, assign multiple existing players and edit their optional jersey numbers and field-player/goalkeeper roles.
-- Team forms offer Senior, U-19, U-17, U-15, U-13 and Veteran as category presets, while accepting custom category text. A year picker stores seasons as 2026/27; existing nonstandard season text stays editable. Both fields remain optional.
+- Players: create, edit names, logically delete, search, list and view details, including locally available team memberships, jersey numbers and roles. Duplicate names are valid.
+- Teams: create, logically delete, edit name/category/season, view details, assign multiple existing players or create missing Players from the assignment dialog, and edit their optional jersey numbers and field-player/goalkeeper roles. Creating a Player saves it immediately; cancelling assignment keeps that Player. Removing membership keeps the reusable Player and existing Match snapshots.
+- Team forms offer Senior, U-19, U-17, U-15, U-13 and Veteran as category presets, while accepting custom category text. A year picker stores seasons as 2026/27; existing nonstandard season text stays editable. Both fields remain optional. New Teams default Season to the device's current starting year, such as 2026/27; it remains editable and clearable. Editing preserves saved values.
 - Matches: choose a team, opponent and call-up; optionally specify date and venue; configure two equal halves during creation; save an incomplete call-up; edit details/call-up before starting.
 - Start with exactly four field players and one goalkeeper, using the saved duration. Category defaults per half are 25 minutes for Senior/U-19/Veteran, 20 for U-17/U-15 and 18 for U-13. Duration remains editable during creation and pre-start detail editing; missing/custom categories require a choice. Existing records remain readable. The recorder can set attack direction for the current live period; cup-specific extra periods remain deferred.
 - Live tracking: recovery, loss, shot, player-attributed foul, yellow/blue/red card, paired substitution, clock-linked powerplay expiry/correction, fifth-player entry, opponent goal and score correction.
@@ -15,6 +15,12 @@ Benchline Stats is a responsive rink-hockey application for an observer managing
 - English and European Portuguese throughout, including offline use.
 
 The canonical entity name is Match. Event attribution uses its MatchPlayer snapshot. See [Domain model](domain-model.md) for exact rules and [Recorder UX](recorder-ux.md) for entry behavior.
+
+## Entity removal
+
+Player and Team deletion removes them from active lists and future selection while retaining their identities and existing Match history. Their current memberships are removed. Match deletion removes its call-up, events and local Undo history, retaining its Team and Players. Live Matches use an explicit discard confirmation; they are never silently completed. Membership removal only detaches a Player from one Team.
+
+All removals require confirmation, expected revisions, atomic local writes and durable synchronization markers. Removed IDs cannot be reused or restored by stale uploads, acknowledgements or downloads. Pending commands remain visible if blocked; deletion does not silently discard them. Historical snapshots retain their original names, numbers, roles and statistics. This is operational removal, not erasure of retained historical identities or delivery receipts. Restore and permanent purging remain deferred.
 
 ## Offline and accounts
 

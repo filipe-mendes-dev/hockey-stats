@@ -2,16 +2,15 @@
 
 This file contains deferred work, not instructions to implement it. Current behavior is described in [Product requirements](product-requirements.md), [Domain model](domain-model.md) and [Offline and sync](offline-sync.md).
 
-## Next branch: player actions
+## Player lifecycle follow-ups
 
-- Implement player name editing and activate the designed Edit action, including local persistence, validation and synchronization.
-- Decide and implement player deletion versus archiving, historical references, confirmation and sync tombstones before activating Delete. The revamp only shows unavailable action controls.
+- Restore and permanent purging of logically deleted Players/Teams, including delivery-receipt retention. Current deletion work preserves historical identities and uses synchronization tombstones.
 
 ## Next product work
 
 - Recorder UI/UX refinement: control placement, faster selection, long timelines, touch ergonomics and observer feedback.
 - Cross-match spatial filters, heatmaps and analytics. The approved completed-match summary includes saved-event overlays and linked marker/timeline selection using the shared rink renderer and stored normalized team-relative x/y; missing coordinates remain unknown.
-- Explicit delete/archive behavior for other entities, including historical references and sync tombstones.
+- Recovery and permanent purging policies beyond the approved Player/Team logical deletion, Match deletion and membership removal workflows.
 - Arbitrary historical event editing/deletion, redo, historical placement and starter correction. Preview downstream contradictions without silently rewriting events.
 - Reopening completed Matches and correcting period/lifecycle transitions.
 - Cup-specific extra periods/extra time and the corresponding preparation and lifecycle UI. The redesigned preparation flow assumes two regulation halves; cup formats remain deferred.
