@@ -17,10 +17,15 @@ export function NewTeamPage() {
   const creation = useCreateTeam();
   const router = useRouter();
   const t = useTranslations("teams");
-  const [fields, setFields] = useState<TeamFieldValues>({
-    name: "",
-    category: "",
-    season: "",
+  const [fields, setFields] = useState<TeamFieldValues>(() => {
+    const year = new Date().getFullYear();
+    return {
+      name: "",
+      category: "",
+      season: `${year}/${String(year + 1)
+        .slice(-2)
+        .padStart(2, "0")}`,
+    };
   });
   const [invalid, setInvalid] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
