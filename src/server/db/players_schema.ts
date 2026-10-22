@@ -19,6 +19,7 @@ export const players = pgTable(
     revision: integer("revision").notNull(),
     createdAt: bigint("created_at", { mode: "number" }).notNull(),
     updatedAt: bigint("updated_at", { mode: "number" }).notNull(),
+    archivedAt: bigint("archived_at", { mode: "number" }),
   },
   (table) => [index("player_owner_idx").on(table.ownerUserId)],
 );

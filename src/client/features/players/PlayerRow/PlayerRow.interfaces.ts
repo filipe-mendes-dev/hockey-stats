@@ -1,3 +1,5 @@
+import type { Player } from "../../../../domain/players/player.schema";
+
 export interface PlayerRowProps {
-  player: { id: string; name: string };
+  player: Player;
 }

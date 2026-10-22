@@ -121,7 +121,11 @@
     "membershipsEmpty": "Este jogador ainda não pertence a nenhuma equipa.",
     "membershipTeamUnavailable": "Equipa indisponível",
     "membershipTeamMissing": "Os dados da equipa não estão guardados neste dispositivo.",
-    "membershipNumber": "N.º {number}"
+    "membershipNumber": "N.º {number}",
+    "editTitle": "Editar jogador",
+    "save": "Guardar",
+    "changed": "Este jogador foi alterado ou removido. Cancele e volte a abrir para carregar a versão mais recente.",
+    "updateFailed": "Não foi possível guardar o nome do jogador. As alterações foram mantidas. Tente guardar novamente."
   },
   "appHome": {
     "title": "Início",
@@ -271,7 +275,8 @@
     "continue": "Continuar",
     "addCount": "{count, plural, one {Adicionar # jogador} other {Adicionar # jogadores}}",
     "backToSelection": "Voltar",
-    "noAvailable": "Não há jogadores disponíveis para adicionar. Todos os jogadores já pertencem a esta equipa ou ainda não foram criados jogadores."
+    "noAvailable": "Não há jogadores disponíveis para adicionar. Todos os jogadores já pertencem a esta equipa ou ainda não foram criados jogadores.",
+    "createPlayer": "Criar jogador"
   },
   "matches": {
     "title": "Jogos",
@@ -795,5 +800,25 @@
       "enable": "Permita que {username} volte a iniciar sessão e sincronizar.",
       "delete": "Confirme a eliminação permanente de {username}."
     }
+  },
+  "removal": {
+    "actions": {
+      "players": "Eliminar jogador",
+      "teams": "Eliminar equipa",
+      "teamPlayers": "Remover da equipa",
+      "matches": "Eliminar jogo"
+    },
+    "descriptions": {
+      "players": "Remover este jogador de Jogadores e de todos os plantéis. As convocatórias, os eventos e as estatísticas dos jogos existentes serão preservados. Esta ação não pode ser anulada.",
+      "teams": "Remover esta equipa de Equipas e da seleção de novos jogos. Os jogos existentes e os jogadores serão preservados. Esta ação não pode ser anulada.",
+      "teamPlayers": "Remover este jogador desta equipa. O jogador permanece em Jogadores e as convocatórias existentes não são alteradas. Esta ação não pode ser anulada.",
+      "matches": "Eliminar este jogo, a convocatória, os eventos registados e o histórico de anulação. A equipa e os jogadores permanecem disponíveis. Esta ação não pode ser anulada."
+    },
+    "discardLive": "Descartar jogo em curso",
+    "liveDescription": "Descartar este jogo em curso e todos os eventos registados. O registo termina neste dispositivo, sem concluir o jogo. A equipa e os jogadores permanecem disponíveis. Esta ação não pode ser anulada.",
+    "cancel": "Cancelar",
+    "actionFor": "{action}: {name}",
+    "changed": "Este registo foi alterado ou removido. Cancele e volte a abrir para carregar a versão mais recente.",
+    "failed": "Não foi possível guardar a remoção neste dispositivo. Tente novamente."
   }
 }

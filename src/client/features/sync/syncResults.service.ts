@@ -1,3 +1,8 @@
+import {
+  getEntityDeletion,
+  deletionStores,
+} from "../removal/deletions.repository";
+import { applyDownloadedDeletions } from "../removal/deletionsSync.service";
 import { matchEventSchema } from "../../../domain/matches/matchEvent.schema";
 import {
   updateMatchEvent,
@@ -42,11 +47,32 @@ export async function acknowledgeOperation(
   signal.throwIfAborted();
   if (acknowledgement.ownerUserId !== expectedOwner)
     throw new AccountMismatchError();
+  if ("deletions" in acknowledgement) {
+    const database = await getDatabase();
+    await database.transaction("rw", deletionStores, async () => {
+      await requireOwner(expectedOwner, signal);
+      const operation = await getOutboxOperation(acknowledgement.operationId);
+      if (!operation || !("deletedAt" in operation.command)) return;
+      const feature = getCommandFeature(operation.command);
+      if (
+        !acknowledgement.deletions.some(
+          (entry) =>
+            entry.feature === feature && entry.id === operation.entityId,
+        )
+      )
+        throw new Error("Acknowledgement refers to another deletion.");
+      await applyDownloadedDeletions(acknowledgement.deletions);
+      signal.throwIfAborted();
+      await deleteOutboxOperation(operation.operationId);
+    });
+    notifyLocalDataChanged("sync", "all");
+    return;
+  }
   if ("event" in acknowledgement) {
     const database = await getDatabase();
     await database.transaction(
       "rw",
-      ["metadata", "matches", "matchEvents", "outbox"],
+      ["metadata", "matches", "matchEvents", "outbox", "entityDeletions"],
       async () => {
         await requireOwner(expectedOwner, signal);
         const operation = await getOutboxOperation(acknowledgement.operationId);
@@ -57,6 +83,10 @@ export async function acknowledgeOperation(
           operation.command.event.id !== acknowledgement.event.id
         )
           throw new Error("Acknowledgement refers to another event.");
+        if (await getEntityDeletion("matches", acknowledgement.matchId)) {
+          await deleteOutboxOperation(operation.operationId);
+          return;
+        }
         const row = await database
           .table<unknown, string>("matches")
           .get(acknowledgement.matchId);
@@ -89,7 +119,7 @@ export async function acknowledgeOperation(
     const database = await getDatabase();
     await database.transaction(
       "rw",
-      ["metadata", "matches", "matchPlayers", "outbox"],
+      ["metadata", "matches", "matchPlayers", "outbox", "entityDeletions"],
       async () => {
         await requireOwner(expectedOwner, signal);
         const operation = await getOutboxOperation(acknowledgement.operationId);
@@ -99,6 +129,10 @@ export async function acknowledgeOperation(
           operation.entityId !== acknowledgement.match.id
         )
           throw new Error("Acknowledgement refers to another Match.");
+        if (await getEntityDeletion("matches", acknowledgement.match.id)) {
+          await deleteOutboxOperation(operation.operationId);
+          return;
+        }
         const row = await database
           .table<unknown, string>("matches")
           .get(acknowledgement.match.id);
@@ -132,7 +166,7 @@ export async function acknowledgeOperation(
   const database = await getDatabase();
   await database.transaction(
     "rw",
-    ["metadata", feature, "outbox"],
+    ["metadata", feature, "outbox", "entityDeletions"],
     async () => {
       await requireOwner(expectedOwner, signal);
       const operation = await getOutboxOperation(acknowledgement.operationId);
@@ -146,7 +180,10 @@ export async function acknowledgeOperation(
       const row = await table.get(entity.id);
       const current = row === undefined ? null : schema.parse(row);
       signal.throwIfAborted();
-      if (!current || current.revision <= entity.revision)
+      if (
+        !(await getEntityDeletion(feature, entity.id)) &&
+        (!current || current.revision <= entity.revision)
+      )
         await table.put(entity);
       await deleteOutboxOperation(operation.operationId);
     },
@@ -161,11 +198,28 @@ export async function mergeDownloadedEntities(
 ): Promise<void> {
   signal.throwIfAborted();
   if (download.ownerUserId !== expectedOwner) throw new AccountMismatchError();
+  if ("deletions" in download) {
+    const database = await getDatabase();
+    await database.transaction("rw", deletionStores, async () => {
+      await requireOwner(expectedOwner, signal);
+      await applyDownloadedDeletions(download.deletions);
+      signal.throwIfAborted();
+    });
+    notifyLocalDataChanged("sync", "all");
+    return;
+  }
   if ("matches" in download) {
     const database = await getDatabase();
     await database.transaction(
       "rw",
-      ["metadata", "matches", "matchPlayers", "matchEvents", "outbox"],
+      [
+        "metadata",
+        "matches",
+        "matchPlayers",
+        "matchEvents",
+        "outbox",
+        "entityDeletions",
+      ],
       async () => {
         await requireOwner(expectedOwner, signal);
         const pending = new Set(
@@ -175,7 +229,11 @@ export async function mergeDownloadedEntities(
         );
         for (const snapshot of download.matches) {
           signal.throwIfAborted();
-          if (pending.has(snapshot.match.id)) continue;
+          if (
+            pending.has(snapshot.match.id) ||
+            (await getEntityDeletion("matches", snapshot.match.id))
+          )
+            continue;
           const row = await database
             .table<unknown, string>("matches")
             .get(snapshot.match.id);
@@ -210,7 +268,7 @@ export async function mergeDownloadedEntities(
   const database = await getDatabase();
   await database.transaction(
     "rw",
-    ["metadata", feature, "outbox"],
+    ["metadata", feature, "outbox", "entityDeletions"],
     async () => {
       await requireOwner(expectedOwner, signal);
       const pendingIds = new Set(
@@ -221,7 +279,11 @@ export async function mergeDownloadedEntities(
       const table = database.table<unknown, string>(feature);
       for (const entity of records) {
         signal.throwIfAborted();
-        if (pendingIds.has(entity.id)) continue;
+        if (
+          pendingIds.has(entity.id) ||
+          (await getEntityDeletion(feature, entity.id))
+        )
+          continue;
         const row = await table.get(entity.id);
         const current = row === undefined ? null : schema.parse(row);
         if (!current || current.revision <= entity.revision)

@@ -1,4 +1,5 @@
 "use client";
+import { DeleteEntityAction } from "../../removal/DeleteEntityAction/DeleteEntityAction";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { TeamPlayer } from "../../../../domain/teams/teamPlayer.schema";
@@ -66,19 +67,29 @@ export function TeamMembership({
           />
         }
         actions={
-          <Tooltip label={t("edit")}>
-            <ActionIcon
-              aria-label={t("editPlayer", { name: playerName })}
-              aria-haspopup="dialog"
-              aria-expanded={Boolean(draft)}
-              onClick={() => {
-                setDraft(membership);
-                update.reset();
+          <>
+            <DeleteEntityAction
+              target={{
+                feature: "teamPlayers",
+                id: membership.id,
+                expectedRevision: membership.revision,
+                name: playerName,
               }}
-            >
-              <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
-            </ActionIcon>
-          </Tooltip>
+            />
+            <Tooltip label={t("edit")}>
+              <ActionIcon
+                aria-label={t("editPlayer", { name: playerName })}
+                aria-haspopup="dialog"
+                aria-expanded={Boolean(draft)}
+                onClick={() => {
+                  setDraft(membership);
+                  update.reset();
+                }}
+              >
+                <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
+              </ActionIcon>
+            </Tooltip>
+          </>
         }
       >
         {duplicateNumber && (

@@ -8,7 +8,8 @@ export class SyncConflictError extends Error {
       | "event_conflict"
       | "membership_conflict"
       | "revision_conflict"
-      | "reference_unavailable",
+      | "reference_unavailable"
+      | "record_deleted",
   ) {
     super(code);
     this.name = "SyncConflictError";

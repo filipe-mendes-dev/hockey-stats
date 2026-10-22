@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteEntityAction } from "../../../features/removal/DeleteEntityAction/DeleteEntityAction";
 import { useState } from "react";
 import Link from "next/link";
 import { ActionIcon, Button, Group, Text, Title, Tooltip } from "@mantine/core";
@@ -95,6 +96,16 @@ export function MatchDetailsPage() {
         actions={
           <div className={st.headerActions}>
             <Group gap="xs" wrap="nowrap">
+              <DeleteEntityAction
+                target={{
+                  feature: "matches",
+                  id: match.id,
+                  expectedRevision: match.revision,
+                  name: `${match.teamNameAtMatch} · ${match.opponentName}`,
+                  live: match.status === "live",
+                }}
+                redirectHref="/app/matches"
+              />
               <MatchStatusBadge status={match.status} />
               <DeliveryStatus compact kind="match.create" entityId={match.id} />
               {setup && (

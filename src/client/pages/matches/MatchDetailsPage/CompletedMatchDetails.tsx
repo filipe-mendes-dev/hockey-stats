@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteEntityAction } from "../../../features/removal/DeleteEntityAction/DeleteEntityAction";
 import { useId, useMemo, useRef, useState } from "react";
 import { SegmentedControl } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -62,11 +63,22 @@ export function CompletedMatchDetails({
     <div className={st.page}>
       <div className={st.navigation}>
         <BackLink href="/app/matches" label={t("back")} />
-        <DeliveryStatus
-          compact
-          kind="match.create"
-          entityId={snapshot.match.id}
-        />
+        <div className={st.deliveryActions}>
+          <DeleteEntityAction
+            target={{
+              feature: "matches",
+              id: snapshot.match.id,
+              expectedRevision: snapshot.match.revision,
+              name: `${snapshot.match.teamNameAtMatch} · ${snapshot.match.opponentName}`,
+            }}
+            redirectHref="/app/matches"
+          />
+          <DeliveryStatus
+            compact
+            kind="match.create"
+            entityId={snapshot.match.id}
+          />
+        </div>
       </div>
       <MatchResult
         match={snapshot.match}

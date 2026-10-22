@@ -15,6 +15,35 @@ export function getBlockingOperation(
     )
       return true;
     if (
+      "deletedAt" in operation.command &&
+      (entry.sequence ?? 0) < (operation.sequence ?? 0)
+    ) {
+      const deletion = operation.command;
+      const candidate = entry.command;
+      if (
+        deletion.kind === "player.delete" ||
+        deletion.kind === "team.delete"
+      ) {
+        if (
+          "teamPlayer" in candidate &&
+          (deletion.kind === "player.delete"
+            ? candidate.teamPlayer.playerId === deletion.id
+            : candidate.teamPlayer.teamId === deletion.id)
+        )
+          return true;
+        if (
+          (candidate.kind === "match.create" ||
+            candidate.kind === "match.updateSetup") &&
+          (deletion.kind === "team.delete"
+            ? candidate.match.teamId === deletion.id
+            : candidate.players.some(
+                (player) => player.playerId === deletion.id,
+              ))
+        )
+          return true;
+      }
+    }
+    if (
       operation.command.kind === "match.create" ||
       operation.command.kind === "match.updateSetup"
     ) {

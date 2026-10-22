@@ -1,3 +1,6 @@
+import type { Player } from "../../../../domain/players/player.schema";
+
 export interface PlayerActionsMenuProps {
-  name: string;
+  player: Player;
+  onDeleted?(): void;
 }

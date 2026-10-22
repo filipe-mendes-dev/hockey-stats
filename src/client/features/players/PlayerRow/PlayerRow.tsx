@@ -15,7 +15,7 @@ export function PlayerRow({ player }: PlayerRowProps) {
       meta={
         <DeliveryStatus compact kind="player.create" entityId={player.id} />
       }
-      actions={<PlayerActionsMenu name={player.name} />}
+      actions={<PlayerActionsMenu player={player} />}
     />
   );
 }

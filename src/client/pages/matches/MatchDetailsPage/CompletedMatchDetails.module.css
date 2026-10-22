@@ -58,3 +58,10 @@
     gap: 1rem;
   }
 }
+
+.deliveryActions {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  flex-shrink: 0;
+}

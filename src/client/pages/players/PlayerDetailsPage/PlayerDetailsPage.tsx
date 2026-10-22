@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, Button, Loader, Text, Title } from "@mantine/core";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "../../../components/PageHeader/PageHeader";
 import { PlayerActionsMenu } from "../../../features/players/PlayerActionsMenu/PlayerActionsMenu";
@@ -13,13 +13,17 @@ import st from "./PlayerDetailsPage.module.css";
 
 export function PlayerDetailsPage() {
   const t = useTranslations("players");
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const playerId =
     searchParams.get("id") ??
     (typeof params.id === "string" ? params.id : undefined);
   const playerQuery = usePlayer(playerId);
-  const player = playerQuery.isError ? null : playerQuery.data;
+  const player =
+    playerQuery.isError || playerQuery.data?.archivedAt
+      ? null
+      : playerQuery.data;
 
   return (
     <section className={st.page}>
@@ -35,7 +39,10 @@ export function PlayerDetailsPage() {
                 kind="player.create"
                 entityId={player.id}
               />
-              <PlayerActionsMenu name={player.name} />
+              <PlayerActionsMenu
+                player={player}
+                onDeleted={() => router.replace("/app/players")}
+              />
             </>
           ) : null
         }

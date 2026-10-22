@@ -44,3 +44,8 @@ export async function updateTeamPlayerRecord(
   )
     throw new Error("Membership unavailable.");
 }
+
+export async function deleteTeamPlayerRecord(id: string): Promise<void> {
+  const database = await getDatabase();
+  await database.table<TeamPlayer, string>("teamPlayers").delete(id);
+}

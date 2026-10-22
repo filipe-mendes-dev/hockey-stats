@@ -99,6 +99,13 @@
       "when": 1792591436032,
       "tag": "0013_timed_powerplay",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792684846125,
+      "tag": "0014_entity_deletions",
+      "breakpoints": true
     }
   ]
 }

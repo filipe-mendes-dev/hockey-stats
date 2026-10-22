@@ -75,3 +75,14 @@ export async function updateMatch(match: Match): Promise<void> {
   const database = await getDatabase();
   await database.table<Match, string>("matches").put(match);
 }
+
+export async function deleteMatchRecording(id: string): Promise<void> {
+  const database = await getDatabase();
+  for (const store of ["matchEvents", "matchPlayers", "matchHistory"])
+    await database
+      .table<unknown, string>(store)
+      .where("matchId")
+      .equals(id)
+      .delete();
+  await database.table<Match, string>("matches").delete(id);
+}
