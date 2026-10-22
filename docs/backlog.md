@@ -2,20 +2,30 @@
 
 This file contains deferred work, not instructions to implement it. Current behavior is described in [Product requirements](product-requirements.md), [Domain model](domain-model.md) and [Offline and sync](offline-sync.md).
 
+## Next branch: player actions
+
+- Implement player name editing and activate the designed Edit action, including local persistence, validation and synchronization.
+- Decide and implement player deletion versus archiving, historical references, confirmation and sync tombstones before activating Delete. The revamp only shows unavailable action controls.
+
 ## Next product work
 
 - Recorder UI/UX refinement: control placement, faster selection, long timelines, touch ergonomics and observer feedback.
-- Optional SVG rink interaction and field-first entry. Reuse normalized team-relative x/y and keep position optional. Verify scaling/rotation/letterboxing and ignore outside-rink clicks.
-- Player editing and explicit delete/archive behavior across entities, including historical references and sync tombstones.
+- Cross-match spatial filters, heatmaps and analytics. The approved completed-match summary includes saved-event overlays and linked marker/timeline selection using the shared rink renderer and stored normalized team-relative x/y; missing coordinates remain unknown.
+- Explicit delete/archive behavior for other entities, including historical references and sync tombstones.
 - Arbitrary historical event editing/deletion, redo, historical placement and starter correction. Preview downstream contradictions without silently rewriting events.
 - Reopening completed Matches and correcting period/lifecycle transitions.
+- Cup-specific extra periods/extra time and the corresponding preparation and lifecycle UI. The redesigned preparation flow assumes two regulation halves; cup formats remain deferred.
+- Live duration correction with explicit clock/event-history rules. Match duration is configured during creation and editable before starting; changing it during recording is lower priority.
 - Official foul thresholds/resets, competition presets and regulation edge cases.
 - Goalkeeper-specific events and possession metrics; assists and opponent Player tracking.
-- Game-clock-linked powerplay timers, individual temporary suspension expiry and automatic return prompts. Manual team penalty completion and fifth-player entry already exist.
+- Individual temporary suspension expiry. Team powerplay timers, remaining-time correction and automatic fifth-player prompts are implemented in the current increment.
 - Complete penalty duration/accumulation rules, automatic yellow consequences and match abandonment when a valid lineup cannot be maintained.
-- Analytics, heatmaps, zones, playing-time reports and season dashboards.
+- Cross-match analytics, heatmaps, zones, playing-time reports and season dashboards. Per-match recorded playing time belongs to the approved completed summary.
 
 ## Synchronization and release hardening
+
+- Profile the completed-summary timeline in a production build with realistic long matches on target phones. Descriptions, marker data and breakdowns are cached, and a bounded timeline prevents a full-history expansion from lengthening the page. Consider `@tanstack/react-virtual` only if mounting or scrolling large histories remains a measured bottleneck. Virtualization reduces mounted rows; the bounded container controls page length. Preserve keyboard focus, touch details and scrolling to the row selected on the rink.
+- Revisit further match-summary visual refinements after feedback from other users. The current pre-deployment pass covers responsiveness, stable rows, compact result presentation and consistent section accents; additional cosmetic work is not a deployment prerequisite.
 
 - Actionable conflict inspection/resolution for blocked revision chains. Preserve local intent and require explicit resolution rather than last-write-wins.
 - Recorder-tab exclusivity or clear multi-writer safeguards. Web Locks currently serialize sync, not all recorder activity.
@@ -41,5 +51,5 @@ This file contains deferred work, not instructions to implement it. Current beha
 ## Decisions for later scopes
 
 - Confirm shot/statistical edge cases before adding aggregate analytics. Current outcomes are exclusive goal, non-goal on-target, off-target and blocked.
-- Confirm competition presets and full penalty rules before automating them. Current observer-driven team powerplay intentionally omits temporary personal restrictions.
+- Confirm competition presets and full penalty rules before automating them. Current team powerplay intentionally omits temporary personal restrictions and goal-driven expiry.
 - Discuss added packages, generic repositories or a sports rules engine only when an actual second use case requires them. Keep one app, shared outbox and direct feature functions for this prototype.

@@ -4,9 +4,9 @@ An offline-capable rink-hockey prototype for Players, Teams and live Matches. Re
 
 ## Current state
 
-Players support create/search/list/details. Teams add editing and multi-select Player assignments with optional jersey numbers and roles. Matches support incomplete setup, pre-start editing, starter/period configuration, clock controls, recovery/loss/shot/foul/cards, paired substitutions, manual powerplay completion and fifth-player entry, score, timeline, latest-event Undo and completed read-only summaries.
+Players support create/search/list/details. Teams add editing and multi-select Player assignments with optional jersey numbers and roles. Matches support incomplete setup, pre-start editing, starter/period configuration, clock controls, recovery/loss/shot/foul/cards, paired substitutions, clock-linked powerplay expiry/correction and fifth-player entry, score, timeline, latest-event Undo and completed read-only summaries. Completed summaries include period-filtered team/player statistics, recorded playing time and linked rink/timeline exploration.
 
-English and European Portuguese are bundled. Fixed query-based detail/Start/live routes work offline for locally available data. The dark layout is a prototype. Rink interaction, historical edits/deletes, automatic penalty timing, conflict-resolution UI, analytics and account-management UI are deferred. See [Product requirements](docs/product-requirements.md) and [Backlog](docs/backlog.md).
+English and European Portuguese are bundled. Fixed query-based detail/Start/live routes work offline for locally available data. The dark UI revamp, including rink-first recording and completed-match analysis, is implemented for review in [Design revamp](docs/design-revamp.md). Historical edits/deletes, individual temporary suspension rules, cross-match analytics, conflict-resolution UI and account-management UI remain deferred. See [Product requirements](docs/product-requirements.md) and [Backlog](docs/backlog.md).
 
 ## Production offline preview
 
@@ -125,6 +125,7 @@ Read [AGENTS.md](AGENTS.md) before changing the repository. The docs folder cont
 | [Account authentication](docs/account-auth.md)       | Sessions, permissions, account setup and sign-out.                     |
 | [Localization](docs/localization.md)                 | Catalogs, language preference, formatting and offline behavior.        |
 | [Development plan](docs/development-plan.md)         | Implemented scope, verification evidence and remaining release checks. |
+| [Design revamp](docs/design-revamp.md)               | Agreed UI direction, page-by-page increments, progress and next steps. |
 | [Backlog](docs/backlog.md)                           | Deferred work and decisions for later increments.                      |
 
 Automated tests require explicit authorization under AGENTS.md. Current non-test checks do not establish physical-device or full browser-family readiness.
