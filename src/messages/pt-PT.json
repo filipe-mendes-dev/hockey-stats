@@ -568,6 +568,8 @@
     "rinkSelected": "Posição selecionada para o evento",
     "rinkChangePosition": "Alterar posição",
     "rinkHint": "Toque para selecionar. Mantenha premido e arraste para ampliar. Teclado: setas para mover, Shift para ajuste fino e Enter para selecionar.",
+    "rinkTouchHint": "Toque numa posição ou mantenha premido e arraste para ver o marcador.",
+    "rinkDirectionPreview": "Sentido de ataque: {direction}",
     "rinkOutside": "Solte dentro da pista para selecionar uma posição.",
     "rinkAttack": "Ataque",
     "rinkDefence": "Defesa",

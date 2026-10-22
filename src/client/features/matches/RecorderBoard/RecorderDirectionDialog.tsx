@@ -6,6 +6,7 @@ import st from "./RecorderDirectionDialog.module.css";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import { RecorderContext } from "../RecorderContext/RecorderContext";
+import { RecorderRinkDirection } from "../RecorderRink/RecorderRinkDirection";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RecorderDirectionDialogProps } from "./RecorderDirectionDialog.interfaces";
 export function RecorderDirectionDialog({
@@ -49,6 +50,7 @@ export function RecorderDirectionDialog({
         elapsedMs={capturedElapsed}
         primary={t("attackDirection")}
       />
+      <RecorderRinkDirection direction={direction} />
       <SegmentedControl
         fullWidth
         radius="xl"

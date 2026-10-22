@@ -568,6 +568,8 @@
     "rinkSelected": "Selected event position",
     "rinkChangePosition": "Change position",
     "rinkHint": "Tap to select. Hold and drag to magnify. Keyboard: arrow keys to move, Shift for fine adjustment, Enter to select.",
+    "rinkTouchHint": "Tap a position, or hold and drag to see the pointer.",
+    "rinkDirectionPreview": "Attacking direction: {direction}",
     "rinkOutside": "Release inside the rink to select a position.",
     "rinkAttack": "Attack",
     "rinkDefence": "Defence",

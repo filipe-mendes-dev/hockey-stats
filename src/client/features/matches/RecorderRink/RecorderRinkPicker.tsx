@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { RinkPositionPicker } from "../../../components/RinkPositionPicker/RinkPositionPicker";
 import {
@@ -11,6 +10,7 @@ import {
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
 import type { RecorderRinkPickerProps } from "./RecorderRink.interfaces";
+import { RecorderRinkDirection } from "./RecorderRinkDirection";
 import st from "./RecorderRinkPicker.module.css";
 
 export function RecorderRinkPicker({
@@ -45,20 +45,24 @@ export function RecorderRinkPicker({
       <div className={st.directionChoice}>
         <p>{t("rinkDirectionRequired")}</p>
         <div className={st.directionButtons}>
-          <Button
-            variant="default"
+          <button
+            type="button"
+            className={st.directionOption}
             disabled={disabled || mutation.isPending}
             onClick={() => selectDirection("toward-x0")}
           >
-            {t("attackLeft")}
-          </Button>
-          <Button
-            variant="default"
+            <RecorderRinkDirection direction="toward-x0" compact />
+            <span>{t("attackLeft")}</span>
+          </button>
+          <button
+            type="button"
+            className={st.directionOption}
             disabled={disabled || mutation.isPending}
             onClick={() => selectDirection("toward-x1")}
           >
-            {t("attackRight")}
-          </Button>
+            <RecorderRinkDirection direction="toward-x1" compact />
+            <span>{t("attackRight")}</span>
+          </button>
         </div>
         {mutation.isError && (
           <p role="alert" className={st.error}>
@@ -73,6 +77,7 @@ export function RecorderRinkPicker({
         key={`${period}-${direction}`}
         label={t("rinkSelect")}
         hint={t(compactHint ? "rinkDesktopHint" : "rinkHint")}
+        touchHint={t("rinkTouchHint")}
         hintAccessory={hintAccessory}
         invalidLabel={t("rinkOutside")}
         positionLabel={(point) => {

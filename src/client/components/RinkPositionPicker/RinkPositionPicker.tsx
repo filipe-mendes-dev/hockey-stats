@@ -34,6 +34,7 @@ function suppressReleaseClick(): void {
 export function RinkPositionPicker({
   label,
   hint,
+  touchHint,
   hintAccessory,
   invalidLabel,
   positionLabel,
@@ -124,10 +125,9 @@ export function RinkPositionPicker({
       "--lens-left",
       `${Math.max(0, Math.min(bounds.width - 112, event.clientX - bounds.left - 56))}px`,
     );
-    lens.current.style.setProperty(
-      "--lens-top",
-      `${Math.max(0, event.clientY - bounds.top - 140)}px`,
-    );
+    const fingerY = event.clientY - bounds.top;
+    const lensTop = fingerY >= 140 ? fingerY - 140 : fingerY + 28;
+    lens.current.style.setProperty("--lens-top", `${lensTop}px`);
     setMagnifying(true);
   }
   function pointerDown(event: PointerEvent<HTMLDivElement>): void {
@@ -252,14 +252,19 @@ export function RinkPositionPicker({
           <HockeyRink
             label={label}
             viewport={viewport}
-            orientation={orientation}
+            orientation={
+              orientation
+                ? { attackingEnd: orientation.attackingEnd }
+                : undefined
+            }
           />
           <span className={st.crosshair} />
         </div>
       </div>
       <div className={st.hintRow}>
         <p id={hintId} className={st.hint}>
-          {hint}
+          <span className={st.pointerHint}>{hint}</span>
+          <span className={st.touchHint}>{touchHint ?? hint}</span>
         </p>
         {hintAccessory}
       </div>

@@ -97,14 +97,14 @@ export function HockeyRink({
           <text
             className={st.attackLabel}
             x={orientation.attackingEnd === "left" ? 250 : 750}
-            y="68"
+            y="80"
           >
             {orientation.attackLabel}
           </text>
           <text
             className={st.defenceLabel}
             x={orientation.attackingEnd === "left" ? 750 : 250}
-            y="68"
+            y="80"
           >
             {orientation.defenceLabel}
           </text>

@@ -7,6 +7,7 @@ import type {
 export interface RinkPositionPickerProps {
   label: string;
   hint: string;
+  touchHint?: string;
   hintAccessory?: ReactNode;
   invalidLabel: string;
   positionLabel: (point: RinkPoint) => string;

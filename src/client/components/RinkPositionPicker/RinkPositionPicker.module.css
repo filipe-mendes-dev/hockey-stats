@@ -3,7 +3,6 @@
 }
 .stage {
   position: relative;
-  padding-top: 8rem;
 }
 .target {
   aspect-ratio: 1016 / 516;
@@ -98,8 +97,14 @@
   color: var(--color-action);
   min-height: 1.125rem;
 }
-@media (pointer: fine) {
-  .stage {
-    padding-top: 0;
+.touchHint {
+  display: none;
+}
+@media (pointer: coarse) {
+  .pointerHint {
+    display: none;
+  }
+  .touchHint {
+    display: inline;
   }
 }
