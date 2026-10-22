@@ -11,6 +11,7 @@ import st from "./RecorderRink.module.css";
 export function RecorderRink({
   onOpen,
   presentation,
+  inert,
   ...picker
 }: RecorderRinkProps) {
   const t = useTranslations("recorder");
@@ -19,6 +20,7 @@ export function RecorderRink({
     <section
       className={compact ? st.compact : st.desktop}
       aria-label={t("rinkTitle")}
+      inert={inert}
     >
       {compact ? (
         <button

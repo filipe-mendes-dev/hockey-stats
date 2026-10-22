@@ -19,6 +19,7 @@ export interface RecorderRinkPickerProps {
 }
 
 export interface RecorderRinkProps extends RecorderRinkPickerProps {
+  inert?: boolean;
   onOpen: () => void;
   presentation: "compact" | "desktop";
 }

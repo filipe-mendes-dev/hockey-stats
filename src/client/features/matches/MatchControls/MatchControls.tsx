@@ -20,12 +20,12 @@ import type { MatchControlsProps } from "./MatchControls.interfaces";
 import st from "./MatchControls.module.css";
 export function MatchControls({
   match,
+  now,
   disabled,
   onBusyChange,
 }: MatchControlsProps) {
   const t = useTranslations("recorder");
   const mutation = useControlMatch();
-  const [now, setNow] = useState(0);
   const [panel, setPanel] = useState<"adjust" | "finish" | "period" | null>(
     null,
   );
@@ -49,11 +49,6 @@ export function MatchControls({
     onBusyChange(busy);
     return () => onBusyChange(false);
   }, [busy, onBusyChange]);
-  useEffect(() => {
-    if (match.status !== "live") return;
-    const timer = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(timer);
-  }, [match.status]);
   useEffect(() => {
     if (
       match.status !== "live" ||

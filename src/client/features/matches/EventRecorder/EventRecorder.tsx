@@ -51,7 +51,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const [correction, setCorrection] = useState<
     readonly PowerplayPenalty[] | null
   >(null);
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(Date.now);
   const promptedPenalty = useRef<string | undefined>(undefined);
   const readOnly = snapshot.match.status !== "live";
   const events = useMatchEvents(snapshot.match.id);
@@ -80,10 +80,10 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     ? { snapshot, state: deriveMatchState(snapshot, events.data ?? [], draft) }
     : context;
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || snapshot.match.clock?.runningSince === undefined) return;
     const timer = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(timer);
-  }, [readOnly]);
+  }, [readOnly, snapshot.match.clock?.runningSince]);
   const canEnter = getAvailableEventKinds(context).includes("player-in");
   const lastPenalty = derivedState.lastPowerplayEndCardEventId;
   useEffect(() => {
@@ -204,7 +204,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   }
 
   function openRink(): void {
-    if (disabled || readOnly) return;
+    if (disabled || controlsBusy || readOnly) return;
     returnFocusTo.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -279,20 +279,19 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     state.phase !== "idle" ||
     rinkPicking ||
     rinkGesture ||
-    controlsBusy ||
     correction !== null ||
     undo.isPending ||
     !events.data ||
     events.isError;
   const rinkProps = {
     match: snapshot.match,
+    inert: controlsBusy,
     period: draft?.period ?? snapshot.match.currentPeriod,
     direction: selectedDirection,
     position: draft?.position,
     disabled:
       state.phase !== "idle" ||
       rinkPicking ||
-      controlsBusy ||
       correction !== null ||
       undo.isPending ||
       !events.data ||
@@ -306,14 +305,13 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     <div className={st.recorder} data-live-recorder={!readOnly}>
       {!readOnly && (
         <div className={st.board}>
-          <div className={st.sticky}>
+          <div className={st.sticky} inert={controlsBusy}>
             <RecorderHeader
               match={snapshot.match}
               disabled={
                 state.phase !== "idle" ||
                 rinkPicking ||
                 rinkGesture ||
-                controlsBusy ||
                 correction !== null ||
                 undo.isPending
               }
@@ -344,6 +342,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           </div>
           <MatchControls
             match={snapshot.match}
+            now={now}
             disabled={
               state.phase !== "idle" ||
               rinkPicking ||
@@ -353,14 +352,13 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
             }
             onBusyChange={setControlsBusy}
           />
-          <div className={st.capture}>
+          <div className={st.capture} inert={controlsBusy}>
             <RecorderActions
               context={context}
               disabled={disabled}
               onPick={handleOpenEvent}
               undoDisabled={
                 readOnly ||
-                controlsBusy ||
                 rinkPicking ||
                 rinkGesture ||
                 correction !== null ||
