@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@mantine/core";
+import { Plus } from "lucide-react";
+import { CreatePlayerDialog } from "../../players/CreatePlayerDialog/CreatePlayerDialog";
 import { useTranslations } from "next-intl";
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { MembershipFields } from "../../../components/MembershipFields/MembershipFields";
@@ -28,6 +31,8 @@ export function PlayerAssignmentDialog({
   const addition = useAddTeamPlayers();
   const [step, setStep] = useState<"select" | "configure">("select");
   const [search, setSearch] = useState("");
+  const [creating, setCreating] = useState(false);
+  const createButton = useRef<HTMLButtonElement>(null);
   const [drafts, setDrafts] = useState<Record<string, PlayerAssignmentDraft>>(
     {},
   );
@@ -100,6 +105,22 @@ export function PlayerAssignmentDialog({
     }
   }
 
+  if (creating)
+    return (
+      <CreatePlayerDialog
+        onClose={() => {
+          setCreating(false);
+          requestAnimationFrame(() => createButton.current?.focus());
+        }}
+        onCreated={(player) => {
+          toggle(player.id, true);
+          setSearch("");
+          setCreating(false);
+          requestAnimationFrame(() => createButton.current?.focus());
+        }}
+      />
+    );
+
   return (
     <ResponsiveFormDialog
       opened
@@ -151,6 +172,14 @@ export function PlayerAssignmentDialog({
             value={search}
             onChange={setSearch}
           />
+          <Button
+            ref={createButton}
+            variant="subtle"
+            leftSection={<Plus size={17} aria-hidden="true" />}
+            onClick={() => setCreating(true)}
+          >
+            {t("createPlayer")}
+          </Button>
           {available.length === 0 ? (
             <p className={st.notice} role="status">
               {t("noAvailable")}
