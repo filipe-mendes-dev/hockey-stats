@@ -11,11 +11,19 @@ Support English (`en`) and European Portuguese (`pt-PT`) through next-intl. Engl
 
 URLs are independent of locale. Server rendering and initial hydration use deterministic English. After hydration, useSyncExternalStore restores the browser preference from localStorage key benchline.locale. Unsupported/absent values fall back to English. Storage restrictions allow session-only switching but may prevent preference persistence.
 
+LanguagePicker lives in the wider header and near the bottom of the compact navigation drawer. Phone sign-in keeps it in the header because no drawer is available. The footer has no language control.
+
+The New match DatePickerInput maps en/pt-PT to the dates library locale, uses localized display formatting and calendar navigation/clear labels, and stores the existing ISO date string. Wizard steps, selection feedback and Match-only editing are translated in both catalogs.
+
+SeasonPicker maps en/pt-PT to the dates library locale and translates navigation, selection and clear labels through the catalogs. Category presets and existing custom category/season strings remain unchanged data values.
+
 Both catalogs are bundled with the offline asset graph. Switching language requires no server refresh, navigation or remote translation fetch. It preserves current draft, clock and pending operations. Locale preference synchronization between tabs/accounts is not implemented.
 
 ## Message and formatting rules
 
 - Translate labels, validation, errors, empty states and accessibility text in both catalogs.
+- Save actions use the concise Save / Guardar label; pending save actions use Saving… / A guardar…. Keep explicit Create, Start and destructive-action labels.
+- Omit optional suffixes from form labels. Required fields retain their existing indicators and validation.
 - Use stable semantic keys and complete ICU messages; do not concatenate translated sentence fragments.
 - Keep canonical enums, API error codes, IDs and user-entered names untranslated.
 - Format dates/numbers for the selected locale. Match time is a duration; locale never changes stored elapsed time, replay order or coordinates.
@@ -23,3 +31,11 @@ Both catalogs are bundled with the offline asset graph. Switching language requi
 - Validate catalog structure/arguments when editing and run typecheck. Automated tests require explicit user instruction.
 
 Verification status and remaining physical-device/browser checks are in the [Development plan](development-plan.md).
+
+Match duration presets, custom minute input, two-half summaries, starter role counters and setup recovery messages are translated in both catalogs. Category strings remain canonical; U-13 is added without rewriting existing category values.
+
+Recorder timestamps use the shared countdown formatter with event-specific half duration; localized labels do not change stored elapsed milliseconds. Counter increase/decrease labels, half choices, missing-location feedback and opponent-only score guidance are translated. RecorderContext truncates long identity/action text while retaining the accented timestamp on one line.
+
+Powerplay indicators, active/queued status, remaining-time correction and retry feedback are translated in both catalogs. Indicator accessibility labels include the outstanding count and total remaining time across all penalties. Automatic Player in uses the existing translated picker.
+
+Rink entry labels, attack direction, position feedback and keyboard/touch instructions are bundled in both catalogs. Attack and Defence labels describe the recorded team's halves inside the displayed rink; separate heading and team goal labels are omitted. Assistive position feedback announces the selected half without visible coordinate percentages; stored coordinates remain team-relative. The selected point and captured draft survive language changes.

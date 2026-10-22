@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Match } from "../../../../domain/matches/match.schema";
 import type { RinkPosition } from "../../../../domain/matches/matchEvent.schema";
 import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
@@ -10,6 +11,7 @@ export interface RecorderRinkPickerProps {
   disabled?: boolean;
   autoFocus?: boolean;
   compactHint?: boolean;
+  hintAccessory?: ReactNode;
   onStart: () => void;
   onSelect: (position: RinkPosition) => void;
   onCancelGesture: () => void;
@@ -24,10 +26,8 @@ export interface RecorderRinkProps extends RecorderRinkPickerProps {
 export interface RecorderRinkSession {
   picking: boolean;
   direction: RinkAttackDirection | undefined;
-  canGoBack: boolean;
   onStart: () => void;
   onSelect: (position: RinkPosition) => void;
   onCancelGesture: () => void;
   onEdit: () => void;
-  onBack: () => void;
 }

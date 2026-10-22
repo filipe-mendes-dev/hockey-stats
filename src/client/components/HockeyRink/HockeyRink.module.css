@@ -2,7 +2,19 @@
   display: block;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
+}
+.halfLabels {
+  font-size: 36px;
+  font-weight: 500;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.attackLabel {
+  fill: currentColor;
+}
+.defenceLabel {
+  fill: var(--color-text-muted);
 }
 .markers {
   fill: currentColor;
@@ -10,14 +22,40 @@
   stroke-width: 2;
 }
 .selection {
-  fill: var(--color-background);
-  fill-opacity: 0.7;
-  stroke: var(--color-text);
-  stroke-width: 3;
+  --selection-halo: 24px;
+  --selection-ring: 20px;
+  --selection-inset: 16px;
+  --selection-point: 8px;
+  fill: none;
+  stroke-linecap: round;
   pointer-events: none;
 }
+.selection[data-size="compact"] {
+  --selection-halo: 20px;
+  --selection-ring: 16px;
+  --selection-inset: 12px;
+  --selection-point: 6px;
+}
+.halo,
+.inset {
+  stroke: var(--color-background);
+}
+.halo {
+  stroke-width: var(--selection-halo);
+}
+.ring {
+  stroke: var(--color-text);
+  stroke-width: var(--selection-ring);
+}
+.inset {
+  stroke-width: var(--selection-inset);
+}
 .point {
-  fill: currentColor;
-  fill-opacity: 1;
-  stroke: none;
+  stroke: currentColor;
+  stroke-width: var(--selection-point);
+}
+@media (max-width: 36rem) {
+  .halfLabels {
+    font-size: 56px;
+  }
 }

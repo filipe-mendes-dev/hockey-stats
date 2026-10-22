@@ -44,7 +44,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const [rinkGesture, setRinkGesture] = useState(false);
   const [rinkElapsedMs, setRinkElapsedMs] = useState<number>();
   const [rinkDirection, setRinkDirection] = useState<RinkAttackDirection>();
-  const [history, setHistory] = useState<EventDraft[]>([]);
   const pendingRink = useRef<{
     draft: EventDraft;
     direction: RinkAttackDirection;
@@ -160,18 +159,10 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       });
   }
   function dispatch(action: EventDraftAction): void {
-    const previous = store.getState().state;
     if (action.type === "cancel") {
       pendingRink.current = null;
       setRinkPicking(false);
       setRinkGesture(false);
-      setHistory([]);
-    } else if (
-      previous.phase === "collecting" &&
-      action.type !== "setPosition" &&
-      action.type !== "restoreChoices"
-    ) {
-      setHistory((entries) => [...entries, previous.draft]);
     }
     store.getState().dispatch(action);
     const next = store.getState().state;
@@ -201,7 +192,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         ? document.activeElement
         : null;
     add.reset();
-    setHistory([]);
     setRinkDirection(undefined);
     dispatch({
       type: "open",
@@ -219,7 +209,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null;
-    setHistory([]);
     add.reset();
     setRinkPicking(true);
   }
@@ -266,7 +255,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       const captured = pendingRink.current;
       if (!captured || store.getState().state.phase !== "idle") return;
       add.reset();
-      setHistory([]);
       setRinkDirection(captured.direction);
       dispatch({
         type: "open",
@@ -279,18 +267,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     pendingRink.current = null;
     setRinkGesture(false);
     setRinkPicking(false);
-  }
-
-  function back(): void {
-    if (rinkPicking) {
-      cancelRinkGesture();
-      setRinkPicking(false);
-      return;
-    }
-    const previous = history.at(-1);
-    if (!previous) return;
-    store.getState().dispatch({ type: "restoreChoices", draft: previous });
-    setHistory((entries) => entries.slice(0, -1));
   }
 
   function retry(): void {
@@ -310,8 +286,9 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     events.isError;
   const rinkProps = {
     match: snapshot.match,
-    period: snapshot.match.currentPeriod,
-    direction: currentDirection,
+    period: draft?.period ?? snapshot.match.currentPeriod,
+    direction: selectedDirection,
+    position: draft?.position,
     disabled:
       state.phase !== "idle" ||
       rinkPicking ||
@@ -476,12 +453,10 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           rink={{
             picking: rinkPicking,
             direction: selectedDirection,
-            canGoBack: Boolean(draft?.position) && history.length > 0,
             onStart: startRinkGesture,
             onSelect: selectRinkPosition,
             onCancelGesture: cancelRinkGesture,
             onEdit: () => setRinkPicking(true),
-            onBack: back,
           }}
         />
       )}

@@ -9,11 +9,15 @@ export function HockeyRink({
   color = "var(--color-action)",
   backgroundColor = "var(--color-surface)",
   position,
+  orientation,
+  selectionSize = "normal",
   markers = [],
   viewport,
   svgRef,
 }: HockeyRinkProps) {
   const titleId = useId();
+  const tintId = `${titleId}-tint`;
+  const boundaryId = `${titleId}-boundary`;
   return (
     <svg
       ref={svgRef}
@@ -28,7 +32,31 @@ export function HockeyRink({
       aria-labelledby={titleId}
     >
       <title id={titleId}>{label}</title>
+      {orientation && (
+        <defs>
+          <clipPath id={boundaryId}>
+            <rect width="1000" height="500" rx="75" />
+          </clipPath>
+          <linearGradient
+            id={tintId}
+            x1={orientation.attackingEnd === "left" ? "100%" : "0%"}
+            x2={orientation.attackingEnd === "left" ? "0%" : "100%"}
+          >
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
+            <stop offset="42%" stopColor="currentColor" stopOpacity="0.1" />
+            <stop offset="58%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      )}
       <rect width="1000" height="500" rx="75" fill={backgroundColor} />
+      {orientation && (
+        <rect
+          width="1000"
+          height="500"
+          fill={`url(#${tintId})`}
+          clipPath={`url(#${boundaryId})`}
+        />
+      )}
       <g fill="currentColor" opacity="0.045">
         <rect x="75" y="137.5" width="135" height="225" />
         <rect x="790" y="137.5" width="135" height="225" />
@@ -64,6 +92,24 @@ export function HockeyRink({
         stroke="currentColor"
         strokeWidth="3"
       />
+      {orientation && (
+        <g className={st.halfLabels}>
+          <text
+            className={st.attackLabel}
+            x={orientation.attackingEnd === "left" ? 250 : 750}
+            y="68"
+          >
+            {orientation.attackLabel}
+          </text>
+          <text
+            className={st.defenceLabel}
+            x={orientation.attackingEnd === "left" ? 750 : 250}
+            y="68"
+          >
+            {orientation.defenceLabel}
+          </text>
+        </g>
+      )}
       <g className={st.markers}>
         {markers.map((marker) => (
           <circle
@@ -79,11 +125,30 @@ export function HockeyRink({
       {position && (
         <g
           className={st.selection}
+          data-size={selectionSize}
           transform={`translate(${position.x * 1000} ${position.y * 500})`}
         >
-          <circle r="14" />
-          <path d="M-24 0H-7M7 0H24M0-24V-7M0 7V24" />
-          <circle className={st.point} r="3" />
+          {/* Round, non-scaling strokes keep the marker legible in previews. */}
+          <path
+            className={st.halo}
+            d="M0 0h0.001"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            className={st.ring}
+            d="M0 0h0.001"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            className={st.inset}
+            d="M0 0h0.001"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            className={st.point}
+            d="M0 0h0.001"
+            vectorEffect="non-scaling-stroke"
+          />
         </g>
       )}
     </svg>

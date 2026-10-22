@@ -75,11 +75,6 @@ export function EventEntryDialog({
           >
             {t("cancel")}
           </Button>
-          {phase === "collecting" && (rink.picking || rink.canGoBack) && (
-            <Button size="sm" variant="subtle" onClick={rink.onBack}>
-              {t("back")}
-            </Button>
-          )}
           {scoreCorrection && phase === "collecting" && (
             <Button
               type="submit"
@@ -130,6 +125,11 @@ export function EventEntryDialog({
             <HockeyRink
               label={t("rinkSelected")}
               position={toViewPosition(draft.position, rink.direction)}
+              orientation={{
+                attackingEnd: rink.direction === "toward-x0" ? "left" : "right",
+                attackLabel: t("rinkAttack"),
+                defenceLabel: t("rinkDefence"),
+              }}
             />
             <Button
               variant="subtle"

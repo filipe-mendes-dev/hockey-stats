@@ -1,19 +1,54 @@
 .compact {
-  border-top: 1px solid var(--color-border-subtle);
-  padding-top: 1rem;
+  min-width: 0;
 }
-.heading {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin: 0;
-}
-.headingRow {
+.entry {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 2rem;
+  gap: 0.875rem;
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border-action);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-glass);
+  box-shadow: var(--shadow-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+}
+.entryRink {
+  flex: 0 0 4rem;
+  aspect-ratio: 1016 / 516;
+}
+.entryRink svg :is(rect, path, circle) {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 0.75px;
+}
+.entryLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.entry:hover:enabled {
+  background: var(--color-surface-hover);
+  border-color: var(--color-action);
+}
+.entry:active:enabled {
+  background: var(--color-surface-action);
+}
+.entry:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.entry:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .entry {
+    backdrop-filter: blur(var(--surface-blur));
+  }
 }
 .help {
   font-size: 0.8125rem;

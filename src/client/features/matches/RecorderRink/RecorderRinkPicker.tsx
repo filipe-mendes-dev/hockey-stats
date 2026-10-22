@@ -1,10 +1,13 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RinkPositionPicker } from "../../../components/RinkPositionPicker/RinkPositionPicker";
-import { toViewPosition } from "../../../../domain/matches/rinkPosition";
+import {
+  getPositionHalf,
+  toTeamPosition,
+  toViewPosition,
+} from "../../../../domain/matches/rinkPosition";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
 import type { RecorderRinkPickerProps } from "./RecorderRink.interfaces";
@@ -18,6 +21,7 @@ export function RecorderRinkPicker({
   disabled = false,
   autoFocus = false,
   compactHint = false,
+  hintAccessory,
   onStart,
   onSelect,
   onCancelGesture,
@@ -63,50 +67,30 @@ export function RecorderRinkPicker({
         )}
       </div>
     );
-  const leftTeam =
-    direction === "toward-x1" ? match.teamNameAtMatch : match.opponentName;
-  const rightTeam =
-    direction === "toward-x1" ? match.opponentName : match.teamNameAtMatch;
   return (
-    <div className={st.picker} data-compact-hint={compactHint}>
-      <div className={st.direction}>
-        {direction === "toward-x0" ? (
-          <ArrowLeft size={18} aria-hidden="true" />
-        ) : (
-          <ArrowRight size={18} aria-hidden="true" />
-        )}
-        <span>
-          {t("rinkAttacking", {
-            team: match.teamNameAtMatch,
-            direction: t(direction === "toward-x0" ? "rinkLeft" : "rinkRight"),
-          })}
-        </span>
-      </div>
-      <div className={st.ends}>
-        <span title={t("rinkGoal", { team: leftTeam })}>
-          {t("rinkGoal", { team: leftTeam })}
-        </span>
-        <span title={t("rinkGoal", { team: rightTeam })}>
-          {t("rinkGoal", { team: rightTeam })}
-        </span>
-      </div>
+    <div className={st.picker}>
       <RinkPositionPicker
         key={`${period}-${direction}`}
         label={t("rinkSelect")}
         hint={t(compactHint ? "rinkDesktopHint" : "rinkHint")}
+        hintAccessory={hintAccessory}
         invalidLabel={t("rinkOutside")}
-        positionLabel={(point) =>
-          t("rinkCoordinates", {
-            x: Math.round(point.x * 100),
-            y: Math.round(point.y * 100),
-          })
-        }
+        positionLabel={(point) => {
+          const half = getPositionHalf(toTeamPosition(point, direction));
+          return half
+            ? t("rinkPositionHalf", { half: t(half) })
+            : t("rinkPositionHalfway");
+        }}
+        orientation={{
+          attackingEnd: direction === "toward-x0" ? "left" : "right",
+          attackLabel: t("rinkAttack"),
+          defenceLabel: t("rinkDefence"),
+        }}
         initialPosition={
           position ? toViewPosition(position, direction) : undefined
         }
         disabled={disabled}
         autoFocus={autoFocus}
-        hideIdleStatus={compactHint}
         onStart={onStart}
         onSelect={onSelect}
         onCancelGesture={onCancelGesture}

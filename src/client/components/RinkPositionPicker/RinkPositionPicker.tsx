@@ -11,15 +11,36 @@ import { isInsideRink, pointerToRink } from "../HockeyRink/rinkGeometry";
 import type { RinkPositionPickerProps } from "./RinkPositionPicker.interfaces";
 import st from "./RinkPositionPicker.module.css";
 
+function suppressReleaseClick(): void {
+  // The picker can become action buttons before the release click arrives.
+  const timeout = window.setTimeout(cleanup, 500);
+  function cleanup(): void {
+    window.clearTimeout(timeout);
+    document.removeEventListener("click", consume, true);
+    document.removeEventListener("pointerdown", cleanup, true);
+    document.removeEventListener("keydown", cleanup, true);
+  }
+  function consume(event: MouseEvent): void {
+    cleanup();
+    if (event.detail === 0) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+  document.addEventListener("click", consume, true);
+  document.addEventListener("pointerdown", cleanup, true);
+  document.addEventListener("keydown", cleanup, true);
+}
+
 export function RinkPositionPicker({
   label,
   hint,
+  hintAccessory,
   invalidLabel,
   positionLabel,
   initialPosition,
+  orientation,
   disabled = false,
   autoFocus = false,
-  hideIdleStatus = false,
   onStart,
   onSelect,
   onCancelGesture,
@@ -92,7 +113,7 @@ export function RinkPositionPicker({
     const bounds = stage.current.getBoundingClientRect();
     const scale = svg.current.getScreenCTM();
     if (!scale) return;
-    const span = 112 / (Math.hypot(scale.a, scale.b) * 3);
+    const span = 112 / (Math.hypot(scale.a, scale.b) * 1.5);
     setViewport({
       x: point.x * 1000 - span / 2,
       y: point.y * 500 - span / 2,
@@ -138,6 +159,7 @@ export function RinkPositionPicker({
       return;
     }
     setPosition(point);
+    suppressReleaseClick();
     onSelect(point);
   }
   function keyDown(event: KeyboardEvent<HTMLDivElement>): void {
@@ -214,7 +236,12 @@ export function RinkPositionPicker({
           }}
           onContextMenu={(event) => event.preventDefault()}
         >
-          <HockeyRink label={label} svgRef={svg} position={visiblePosition} />
+          <HockeyRink
+            label={label}
+            svgRef={svg}
+            position={visiblePosition}
+            orientation={orientation}
+          />
         </div>
         <div
           ref={lens}
@@ -222,23 +249,26 @@ export function RinkPositionPicker({
           data-visible={magnifying}
           aria-hidden="true"
         >
-          <HockeyRink label={label} viewport={viewport} />
+          <HockeyRink
+            label={label}
+            viewport={viewport}
+            orientation={orientation}
+          />
           <span className={st.crosshair} />
         </div>
       </div>
-      <p id={hintId} className={st.hint}>
-        {hint}
-      </p>
-      <p
-        className={st.status}
-        role="status"
-        hidden={hideIdleStatus && !invalid && !visiblePosition}
-      >
+      <div className={st.hintRow}>
+        <p id={hintId} className={st.hint}>
+          {hint}
+        </p>
+        {hintAccessory}
+      </div>
+      <p className={invalid ? st.status : st.announcement} role="status">
         {invalid
           ? invalidLabel
           : visiblePosition
             ? positionLabel(visiblePosition)
-            : "\u00a0"}
+            : ""}
       </p>
     </div>
   );

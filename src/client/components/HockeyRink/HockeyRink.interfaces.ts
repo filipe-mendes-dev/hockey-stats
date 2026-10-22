@@ -19,11 +19,19 @@ export interface RinkMarker {
   label: string;
 }
 
+export interface RinkOrientation {
+  attackingEnd: "left" | "right";
+  attackLabel?: string;
+  defenceLabel?: string;
+}
+
 export interface HockeyRinkProps {
   label: string;
   color?: string;
   backgroundColor?: string;
   position?: RinkPoint | undefined;
+  orientation?: RinkOrientation | undefined;
+  selectionSize?: "normal" | "compact";
   markers?: readonly RinkMarker[];
   viewport?: RinkViewport | undefined;
   svgRef?: Ref<SVGSVGElement>;
