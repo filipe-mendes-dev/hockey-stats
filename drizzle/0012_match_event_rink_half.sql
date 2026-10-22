@@ -1,0 +1,1 @@
+ALTER TABLE "match_event" ADD COLUMN "rink_half" text;

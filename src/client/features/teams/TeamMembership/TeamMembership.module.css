@@ -1,13 +1,19 @@
-.member {
-  display: grid;
-  gap: 1rem;
-  min-width: 0;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
+.notice {
+  margin: 0.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
-.member h3,
-.member p {
-  margin: 0;
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.identity > span {
+  min-width: 0;
 }

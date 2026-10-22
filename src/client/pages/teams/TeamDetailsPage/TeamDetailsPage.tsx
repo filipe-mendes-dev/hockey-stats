@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Team } from "../../../../domain/teams/team.schema";
-import { TeamForm } from "../../../features/teams/TeamForm/TeamForm";
+import { EditTeamDialog } from "../../../features/teams/EditTeamDialog/EditTeamDialog";
 import { TeamPlayers } from "../../../features/teams/TeamPlayers/TeamPlayers";
-import { useUpdateTeam } from "../../../features/teams/mutations/teams.mutations";
-import { LocalRevisionConflictError } from "../../../features/teams/teams.errors";
-import { Button } from "../../../components/Button/Button";
+import {
+  ActionIcon,
+  Alert,
+  Button,
+  Loader,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { Pencil } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTeam } from "../../../features/teams/queries/teams.queries";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
-import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
+import { PageHeader } from "../../../components/PageHeader/PageHeader";
+import { TeamMark } from "../../../features/teams/TeamMark/TeamMark";
 import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
 import st from "./TeamDetailsPage.module.css";
 
@@ -23,102 +30,75 @@ export function TeamDetailsPage() {
     searchParams.get("id") ??
     (typeof params.id === "string" ? params.id : undefined);
   const teamQuery = useTeam(teamId);
-  const update = useUpdateTeam();
   const [editing, setEditing] = useState<Team | null>(null);
-  const syncText = useTranslations("sync");
-  const team = teamQuery.data;
+  const editButton = useRef<HTMLButtonElement>(null);
+  const team = teamQuery.isError ? null : teamQuery.data;
+
+  function closeEditor(): void {
+    setEditing(null);
+    requestAnimationFrame(() =>
+      editButton.current?.focus({ preventScroll: true }),
+    );
+  }
 
   return (
-    <EntityPage
-      backHref="/app/teams"
-      backLabel={t("back")}
-      title={t("detailsTitle")}
-      storageNotice={t("storageNotice")}
-    >
-      {teamQuery.isPending || teamQuery.isError ? (
-        <EntityDataStatus
-          loadingLabel={t("loading")}
-          failedLabel={t("loadFailed")}
-          retryLabel={t("retry")}
-          failed={teamQuery.isError}
-          onRetry={() => {
-            void teamQuery.refetch();
-          }}
-        />
+    <section className={st.page}>
+      <PageHeader
+        title={team?.name ?? t("detailsTitle")}
+        back={{ href: "/app/teams", label: t("back") }}
+        avatar={team ? <TeamMark size="lg" /> : null}
+        description={
+          team ? [team.category, team.season].filter(Boolean).join(" · ") : ""
+        }
+        actions={
+          team ? (
+            <>
+              <DeliveryStatus compact kind="team.create" entityId={team.id} />
+              <Tooltip label={t("edit")}>
+                <ActionIcon
+                  ref={editButton}
+                  aria-label={t("edit")}
+                  aria-haspopup="dialog"
+                  aria-expanded={editing?.id === team.id}
+                  onClick={() => setEditing(team)}
+                >
+                  <Pencil size={17} strokeWidth={1.6} aria-hidden="true" />
+                </ActionIcon>
+              </Tooltip>
+            </>
+          ) : null
+        }
+      />
+      {editing && editing.id === team?.id && (
+        <EditTeamDialog team={editing} onClose={closeEditor} />
+      )}
+      {teamQuery.isPending ? (
+        <div className={st.loading} role="status">
+          <Loader size="sm" />
+          <Text>{t("loading")}</Text>
+        </div>
+      ) : teamQuery.isError ? (
+        <Alert color="red" title={t("loadFailed")} role="alert">
+          <Button
+            size="sm"
+            variant="subtle"
+            onClick={() => {
+              void teamQuery.refetch();
+            }}
+          >
+            {t("retry")}
+          </Button>
+        </Alert>
       ) : team ? (
         <div className={st.content}>
-          <dl className={st.details}>
-            <div>
-              <dt>{syncText("title")}</dt>
-              <dd>
-                <DeliveryStatus kind="team.create" entityId={team.id} />
-              </dd>
-            </div>
-            <div>
-              <dt>{t("name")}</dt>
-              <dd>{team.name}</dd>
-            </div>
-            {team.category && (
-              <div>
-                <dt>{t("category")}</dt>
-                <dd>{team.category}</dd>
-              </div>
-            )}
-            {team.season && (
-              <div>
-                <dt>{t("season")}</dt>
-                <dd>{team.season}</dd>
-              </div>
-            )}
-            <div>
-              <dt>{t("teamId")}</dt>
-              <dd>{team.id}</dd>
-            </div>
-          </dl>
-          {editing && editing.id === team.id ? (
-            <TeamForm
-              initial={editing}
-              pending={update.isPending}
-              failed={update.isError}
-              failedLabel={
-                update.error instanceof LocalRevisionConflictError
-                  ? t("changed")
-                  : t("saveFailed")
-              }
-              submitLabel={t("save")}
-              onCancel={() => {
-                setEditing(null);
-                update.reset();
-              }}
-              onSave={async (fields) => {
-                await update.mutateAsync({
-                  ...fields,
-                  id: editing.id,
-                  expectedRevision: editing.revision,
-                });
-                setEditing(null);
-              }}
-            />
-          ) : (
-            <div>
-              <Button
-                onClick={() => {
-                  setEditing(team);
-                  update.reset();
-                }}
-              >
-                {t("edit")}
-              </Button>
-            </div>
-          )}
           <TeamPlayers key={team.id} teamId={team.id} />
         </div>
       ) : (
         <div className={st.unavailable}>
-          <h2>{t("unavailableTitle")}</h2>
-          <p>{t("unavailableDescription")}</p>
+          <Title order={2}>{t("unavailableTitle")}</Title>
+          <Text>{t("unavailableDescription")}</Text>
         </div>
       )}
-    </EntityPage>
+    </section>
   );
 }

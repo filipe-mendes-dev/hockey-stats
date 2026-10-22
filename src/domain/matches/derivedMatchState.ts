@@ -1,10 +1,15 @@
 import type { MatchSnapshot } from "./match.schema";
+import { getPlayingTime } from "./powerplay";
+import type { PowerplayPenalty } from "./powerplay";
+import type { MatchTime } from "./matchEvent.schema";
 import type { MatchEvent } from "./matchEvent.schema";
 export interface DerivedMatchState {
   activePlayerIds: ReadonlySet<string>;
   ejectedPlayerIds: ReadonlySet<string>;
   blueCardCounts: ReadonlyMap<string, number>;
   powerplayCardEventIds: readonly string[];
+  powerplays: readonly PowerplayPenalty[];
+  lastPowerplayEndCardEventId: string | undefined;
   isPowerplay: boolean;
   maxOnField: 4 | 5;
   ownScore: number;
@@ -14,6 +19,7 @@ export interface DerivedMatchState {
 export function deriveMatchState(
   snapshot: MatchSnapshot,
   events: readonly MatchEvent[],
+  time?: { period: number; gameTime?: MatchTime | undefined },
 ): DerivedMatchState {
   const active = new Set(
     snapshot.players
@@ -22,19 +28,48 @@ export function deriveMatchState(
   );
   const ejected = new Set<string>();
   const blueCardCounts = new Map<string, number>();
-  const powerplayCardEventIds: string[] = [];
+  interface PendingPenalty {
+    cardEventId: string;
+    colour: "blue" | "red";
+    durationMs: number | undefined;
+    capturedTime: number | undefined;
+    endsAt?: number;
+  }
+  const penalties: PendingPenalty[] = [];
+  let lastPowerplayEndCardEventId: string | undefined;
+  function startCurrent(at: number | undefined): void {
+    const current = penalties[0];
+    if (current?.durationMs !== undefined && at !== undefined)
+      current.endsAt =
+        Math.max(at, current.capturedTime ?? at) + current.durationMs;
+  }
+  function finishCurrent(at: number | undefined): void {
+    lastPowerplayEndCardEventId = penalties.shift()?.cardEventId;
+    startCurrent(at);
+  }
+  function advance(at: number | undefined): void {
+    if (at === undefined) return;
+    while (penalties[0]?.endsAt !== undefined && penalties[0].endsAt <= at)
+      finishCurrent(penalties[0].endsAt);
+  }
   let ownScore = 0;
   let opponentScore = 0;
   let valid = true;
   for (const event of [...events].sort((a, b) => a.order - b.order)) {
     if (event.deletedAt !== undefined) continue;
+    const eventTime = getPlayingTime(
+      snapshot.match,
+      event.period,
+      event.gameTime?.elapsedMs,
+    );
+    advance(eventTime);
     switch (event.kind) {
       case "player-in":
         if (
           active.has(event.matchPlayerId) ||
           (event.entryReason &&
             (ejected.has(event.matchPlayerId) ||
-              powerplayCardEventIds.length > 0 ||
+              penalties.length > 0 ||
               active.size !== 4))
         )
           valid = false;
@@ -83,13 +118,30 @@ export function deriveMatchState(
             valid = false;
           active.add(event.replacementMatchPlayerId);
         }
-        if (event.startsPowerplay) powerplayCardEventIds.push(event.id);
+        if (event.startsPowerplay) {
+          penalties.push({
+            cardEventId: event.id,
+            colour: event.colour,
+            durationMs: event.powerplayDurationMs,
+            capturedTime: eventTime,
+          });
+          if (penalties.length === 1) startCurrent(eventTime);
+        }
         break;
       }
       case "powerplay-end":
-        if (powerplayCardEventIds[0] !== event.powerplayCardEventId)
+        if (penalties[0]?.cardEventId !== event.powerplayCardEventId)
           valid = false;
-        else powerplayCardEventIds.shift();
+        else finishCurrent(eventTime);
+        break;
+      case "powerplay-adjust":
+        if (penalties[0]?.cardEventId !== event.powerplayCardEventId)
+          valid = false;
+        else {
+          penalties[0].durationMs = event.powerplayDurationMs;
+          penalties[0].capturedTime = eventTime;
+          startCurrent(eventTime);
+        }
         break;
       case "suspension-end":
         break;
@@ -112,12 +164,27 @@ export function deriveMatchState(
     )
       valid = false;
   }
-  const isPowerplay = powerplayCardEventIds.length > 0;
+  const currentTime = time
+    ? getPlayingTime(snapshot.match, time.period, time.gameTime?.elapsedMs)
+    : undefined;
+  advance(currentTime);
+  const powerplays = penalties.map((penalty, index) => ({
+    cardEventId: penalty.cardEventId,
+    colour: penalty.colour,
+    remainingMs:
+      index === 0 && penalty.endsAt !== undefined && currentTime !== undefined
+        ? Math.max(0, penalty.endsAt - currentTime)
+        : penalty.durationMs,
+  }));
+  const powerplayCardEventIds = penalties.map((penalty) => penalty.cardEventId);
+  const isPowerplay = penalties.length > 0;
   return {
     activePlayerIds: active,
     ejectedPlayerIds: ejected,
     blueCardCounts,
     powerplayCardEventIds,
+    powerplays,
+    lastPowerplayEndCardEventId,
     isPowerplay,
     maxOnField: isPowerplay ? 4 : 5,
     ownScore,

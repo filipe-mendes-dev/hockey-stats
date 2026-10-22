@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import type { SubmitEvent } from "react";
+import {
+  Alert,
+  Button,
+  Paper,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { authClient } from "../../features/auth/auth-client";
 import st from "./SignInPage.module.css";
@@ -9,6 +19,7 @@ import st from "./SignInPage.module.css";
 export function SignInPage() {
   const t = useTranslations("auth");
   const [pending, setPending] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState<
     "invalidCredentials" | "unavailable" | "rateLimited" | null
   >(null);
@@ -50,49 +61,78 @@ export function SignInPage() {
   }
 
   return (
-    <section className={st.content} aria-labelledby="login-title">
-      <h1 id="login-title">{t("signIn")}</h1>
+    <Paper
+      component="section"
+      className={st.content}
+      aria-labelledby="login-title"
+    >
+      <header className={st.header}>
+        <Title order={1} id="login-title" className={st.title}>
+          {t("welcomeBack")}
+        </Title>
+        <Text className={st.description}>{t("signInDescription")}</Text>
+      </header>
       <form onSubmit={handleSubmit} aria-busy={pending}>
         <fieldset className={st.fields} disabled={pending}>
-          <div className={st.field}>
-            <label htmlFor="username">{t("username")}</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              required
-              minLength={3}
-              maxLength={30}
-              aria-describedby={error ? "login-error" : undefined}
-              aria-invalid={error === "invalidCredentials"}
-            />
-          </div>
-          <div className={st.field}>
-            <label htmlFor="password">{t("password")}</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              maxLength={128}
-              aria-describedby={error ? "login-error" : undefined}
-              aria-invalid={error === "invalidCredentials"}
-            />
-          </div>
-          <button className={st.submit} type="submit">
+          <TextInput
+            label={t("username")}
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            minLength={3}
+            maxLength={30}
+            error={error === "invalidCredentials"}
+            description={error ? t(error) : undefined}
+            descriptionProps={{ id: "username-feedback" }}
+            classNames={{ description: st.visuallyHidden }}
+          />
+          <PasswordInput
+            label={t("password")}
+            id="password"
+            name="password"
+            autoComplete="current-password"
+            required
+            maxLength={128}
+            error={error === "invalidCredentials"}
+            description={error ? t(error) : undefined}
+            descriptionProps={{ id: "password-feedback" }}
+            classNames={{ description: st.visuallyHidden }}
+            aria-invalid={error === "invalidCredentials"}
+            visible={passwordVisible}
+            onVisibilityChange={setPasswordVisible}
+            visibilityToggleButtonProps={{
+              "aria-label": t(
+                passwordVisible ? "hidePassword" : "showPassword",
+              ),
+            }}
+          />
+          <Button
+            className={st.submit}
+            type="submit"
+            fullWidth
+            loading={pending}
+            rightSection={<ArrowRight size={18} aria-hidden="true" />}
+          >
             {pending ? t("signingIn") : t("signIn")}
-          </button>
+          </Button>
         </fieldset>
         {error && (
-          <p id="login-error" className={st.error} role="alert">
+          <Alert
+            id="login-error"
+            className={st.error}
+            color="red"
+            icon={<AlertCircle size={18} aria-hidden="true" />}
+            role="alert"
+          >
             {t(error)}
-          </p>
+          </Alert>
         )}
       </form>
-    </section>
+      <Text className={st.note}>{t("offlineHint")}</Text>
+    </Paper>
   );
 }

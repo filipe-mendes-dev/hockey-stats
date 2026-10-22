@@ -1,33 +1,23 @@
 "use client";
 
+import { Button } from "@mantine/core";
 import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { isOfflinePagePath } from "../../offline-pages";
-import { LocalStorageStatus } from "./LocalStorageStatus";
-import { useServiceWorker } from "./use-service-worker";
+import type { PwaStatusProps } from "./PwaStatus.interfaces";
 import st from "./PwaStatus.module.css";
 
-export function PwaStatus() {
+export function PwaStatus({
+  worker: { status, updateAvailable, retry },
+}: PwaStatusProps) {
   const t = useTranslations("pwa");
-  const pathname = usePathname();
-  const { status, updateAvailable, retry } = useServiceWorker();
-
   return (
-    <footer className={st.status}>
-      <p role="status" aria-live="polite">
-        {t(status)}
-      </p>
+    <section className={st.status} aria-label={t("statusLabel")}>
+      <p role="status">{t(status)}</p>
       {status === "failed" && (
-        <button className={st.retry} type="button" onClick={retry}>
+        <Button size="sm" variant="default" onClick={retry}>
           {t("retry")}
-        </button>
-      )}
-      {(pathname === "/app" || pathname.startsWith("/app/")) && (
-        <LocalStorageStatus
-          filesCached={status === "cached" && isOfflinePagePath(pathname)}
-        />
+        </Button>
       )}
       {updateAvailable && <p role="status">{t("updateAvailable")}</p>}
-    </footer>
+    </section>
   );
 }

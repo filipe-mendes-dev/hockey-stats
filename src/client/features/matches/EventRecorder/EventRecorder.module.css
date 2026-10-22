@@ -1,116 +1,86 @@
-.recorder,
-.controls,
-.modalContent {
-  display: grid;
-  gap: 1rem;
+.recorder {
+  --recorder-section-gap: 1.25rem;
   min-width: 0;
-  overflow-wrap: anywhere;
-}
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-}
-.toolbar p {
-  color: var(--color-text-muted);
-}
-.period {
-  display: grid;
-  gap: 0.5rem;
-  min-width: 0;
-}
-.period select {
-  min-height: 2.75rem;
   width: 100%;
-  min-width: 0;
-  padding: 0.5rem;
-  font: inherit;
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-control);
-  border-radius: 0.5rem;
+  max-width: 80rem;
+  margin-inline: auto;
 }
-.layout {
+.board {
+  display: contents;
+}
+.review {
+  display: contents;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: env(safe-area-inset-top) 1rem 1rem;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.capture {
   display: grid;
-  gap: 1.5rem;
-  min-width: 0;
-}
-.players {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  gap: 0.75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-.players li {
-  min-width: 0;
-}
-.players button {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  min-height: 3.5rem;
-  gap: 0.4rem;
-  overflow-wrap: anywhere;
-}
-.players span {
-  font-size: 0.875em;
-}
-.choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-.timeline {
+  align-content: start;
+  gap: var(--recorder-section-gap);
+  padding: var(--recorder-section-gap) 1rem;
   min-width: 0;
 }
-.events {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0;
-  list-style: none;
-}
-.events li {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
+.recorder[data-live-recorder="true"] .review > section[data-scrollable="true"] {
+  padding: 0 1rem max(1rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border-subtle);
 }
 .error {
+  font-size: 0.8125rem;
   color: var(--color-error);
+  margin: 0;
 }
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+@supports (backdrop-filter: blur(1px)) {
+  .sticky {
+    background: var(--color-surface-header);
+    backdrop-filter: blur(var(--surface-blur));
+  }
 }
 @media (min-width: 64rem) {
-  .layout {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  .recorder[data-live-recorder="true"] {
+    --recorder-section-gap: 0.875rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    column-gap: 1.5rem;
+    padding: 0 1.5rem;
+  }
+  .board {
+    display: block;
+    min-width: 0;
+    min-height: min-content;
+  }
+  .sticky {
+    border-bottom: 0;
+    top: var(--app-header-height);
+    padding-bottom: 0.5rem;
+  }
+  .capture {
+    padding-block: var(--recorder-section-gap);
+  }
+  .recorder[data-live-recorder="true"] .review {
+    display: flex;
+    flex-direction: column;
+    gap: var(--recorder-section-gap);
+    min-width: 0;
+    min-height: 0;
+    padding: 1.5rem 0 1rem 1.5rem;
+    border-left: 1px solid var(--color-border-subtle);
+  }
+  .recorder[data-live-recorder="true"]
+    .review
+    > section[data-scrollable="true"] {
+    flex: 1;
+    padding: 0;
+    border: 0;
   }
 }
 
-.score {
+.readOnlyScore {
   display: grid;
-  gap: 0.75rem;
-  padding: min(1rem, 3vw);
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  overflow-wrap: anywhere;
-}
-
-.choices > button {
-  flex: 1 1 10rem;
-  min-width: 0;
-  padding-inline: min(1.25rem, 4vw);
+  gap: 0.5rem;
 }

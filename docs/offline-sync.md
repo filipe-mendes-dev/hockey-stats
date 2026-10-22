@@ -20,7 +20,7 @@ Initialization verifies read/write transaction access and reports preparing, rea
 
 One ordered outbox serves Players, Teams, TeamPlayers, Matches and events. Each operation has a stable operationId, entityId, monotonic local sequence, immutable typed command and pending/blocked status. Never change payload while reusing its ID.
 
-Player/Team/TeamPlayer creates precede dependent work. Commands for one Team, TeamPlayer or Match follow their revision chain. Match creation, setup, Start, clock/lifecycle controls, events and Undo share the Match aggregate ID and expectedRevision. Do not silently rebase a stale command.
+Player/Team/TeamPlayer creates precede dependent work. Commands for one Team, TeamPlayer or Match follow their revision chain. Match creation, setup, Start, clock/lifecycle/attack-direction controls, events and Undo share the Match aggregate ID and expectedRevision. Do not silently rebase a stale command.
 
 | Boundary                     | Current contract                                                                              |
 | ---------------------------- | --------------------------------------------------------------------------------------------- |
@@ -32,7 +32,9 @@ Player/Team/TeamPlayer creates precede dependent work. Commands for one Team, Te
 
 Handlers validate the session and X-Expected-User-Id header independently. Authorization derives from the session, never a supplied owner. POST also checks the configured application origin. Responses are no-store and are not cached by the worker.
 
-Entity/setup/control commands use version 1; current event create/Undo commands use version 3. Event versions 1/2 remain shape-compatible for preceding queued work. Once powerplay-protocol events exist, older event-protocol writes conflict; an already accepted operation still replays its exact receipt. The acknowledgement/download envelopes remain version 1. Database, command and application-cache versions are independent.
+Match creation now stores two equal-duration halves in the existing periods JSON. Setup snapshot readers also accept the legacy empty-period form. Existing live/completed period configurations and queued legacy commands remain readable. New local Start reads the saved format; its server acceptance checks preserve a previously configured format. There is no storage migration or new command field/version. Deploy the updated shared validators with this UI; preceding clients do not understand configured setup snapshots.
+
+Entity/setup/control commands use version 1; current event create/Undo commands use version 5. Event versions 1/2/3/4 remain shape-compatible for preceding queued work. Once powerplay-protocol events exist, older event-protocol writes conflict; an already accepted operation still replays its exact receipt. The acknowledgement/download envelopes remain version 1. Database, command and application-cache versions are independent.
 
 The server reserves an owner/operation receipt in the same SQL transaction as the mutation. Concurrent duplicate reservations wait and replay the committed result. Reusing an ID with different content conflicts. Failed workflows roll back receipt and data together. Match event/control workflows lock the owned Match and check revision/domain rules.
 
@@ -50,6 +52,8 @@ Apply acknowledgement data and remove only its outbox operation in one IndexedDB
 
 Downloads merge complete records without deleting local entities absent from the response. Pending and blocked entities are protected. A pending Match protects its entire snapshot/event history. Replace accepted Match snapshot and events together only when its revision is not older and no local Match commands remain. The local Undo journal stays local.
 
+The shared footer shows compact sync state and pending/blocked counts. Full account, retry, storage and installation explanations remain available through Details. These display components subscribe to existing state; the single SyncLifecycle still owns startup, invalidation and teardown beneath initialized account setup.
+
 The shared localDataEvents module sends a DOM notification to this tab and BroadcastChannel invalidation to other tabs. SyncLifecycle refreshes entity/outbox queries. Notifications do not replace transaction checks and contain no records or credentials.
 
 ## Failure and cleanup policy
@@ -64,7 +68,7 @@ The shared localDataEvents module sends a DOM notification to this tab and Broad
 | Permanent command rejection/stale revision  | Mark blocked; retain local work and stop its dependent chain.                               |
 | Failed/blocked sign-out deletion            | Show cleanup retry; never claim that data was removed.                                      |
 
-Explicit sign-out first stops synchronization and invalidates the server session. On success it closes local writes, notifies tabs, deletes the complete application IndexedDB, then navigates to clear transient Query/Zustand state. It includes unsynced work. Other tabs close/navigate on notification or deletion. Late responses are aborted and owner-checked. Generic cached files remain.
+Sign-out first opens a confirmation dialog and reads all pending and blocked outbox entries. Cancellation changes no local records or sync state. Only after confirmation does explicit sign-out stop synchronization and invalidate the server session. On success it closes local writes, notifies tabs, deletes the complete application IndexedDB, then navigates to clear transient Query/Zustand state. It includes unsynced work. Other tabs close/navigate on notification or deletion. Late responses are aborted and owner-checked. Generic cached files remain.
 
 If the server sign-out request fails, including while offline, the current UI retains local data and reports failure. An offline-only clear/revocation workflow is not implemented. Session expiry itself never clears records.
 
@@ -72,7 +76,7 @@ If the server sign-out request fails, including while offline, the current UI re
 
 `/app` is the public static launch target. Precache generic documents and full RSC payloads for the paths in `src/offline-pages.ts`, including Players/Teams details and Match creation/view/Start/live. Query IDs select IndexedDB records without requiring separate cached URLs. Initial application installation must happen online, and feature data must have been downloaded or created locally.
 
-Never cache personalized server HTML, auth redirects or API responses. Unsupported routes and speculative/segmented prefetches have no generic fallback. Distinguish HTML navigation from full RSC responses. Both language catalogs and feature code ship in the required asset graph.
+Never cache personalized server HTML, auth redirects or API responses. Unsupported routes and speculative/segmented prefetches have no generic fallback. Distinguish HTML navigation from full RSC responses. Both language catalogs and feature code ship in the required asset graph. Local language-picker flag SVGs are included in the explicit public-asset precache patterns.
 
 Offline readiness requires verified cached files plus successful storage initialization. Native installation alone is insufficient. Unknown IDs show unavailable. Legacy dynamic Player/Team documents remain outside the offline guarantee.
 
@@ -83,3 +87,7 @@ Worker registration runs only in production. Updates remain waiting until all ap
 One active observer per Match is the product assumption. Same-origin transactions serialize local writes and Web Locks serialize uploads, but a second recorder tab is not automatically read-only. Concurrent remote writers can produce blocked revision conflicts; no merge/resolution UI exists yet.
 
 Full downloads, local history retention and personal-device access are deliberate prototype choices. Incremental downloads, cross-device Undo, export/backup, encrypted/shared-device unlock and conflict recovery remain in the [Backlog](backlog.md). See [Development plan](development-plan.md) for verification limits.
+
+Version 4 adds required defensive/attacking half to new recovery/loss inputs and restricts new score corrections to opponent deltas. Stored legacy events may omit the half or retain own-score adjustments. Older queued commands retain their validation path; pre-v4 mutations conflict once rink-half events are present. SQL migration 0012 adds nullable match_event.rink_half, mapped during insert/download and retained through Undo. IndexedDB needs no version/index change because this is an optional record property.
+
+Version 5 adds saved team-penalty durations and powerplay-adjust events. SQL migration 0013 adds nullable match_event.powerplay_duration_ms. Automatic expiry derives from saved event times and the Match clock anchor, so it works offline and after reload without background writes. Corrections use the existing atomic event/history/Match-revision/outbox workflow. Old cards remain untimed until explicitly corrected, and old completion events stay readable. Pre-v5 writes conflict once timed-powerplay history exists; accepted receipts still replay.

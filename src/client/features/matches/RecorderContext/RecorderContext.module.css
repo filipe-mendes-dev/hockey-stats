@@ -1,0 +1,66 @@
+.context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.identity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.identity svg {
+  color: var(--color-action);
+  flex-shrink: 0;
+}
+.identity strong {
+  flex: 0 1 auto;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.identity > span {
+  flex-shrink: 0;
+  max-width: 50%;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.time strong {
+  color: var(--color-action);
+  font-weight: 600;
+}
+.time svg {
+  flex-shrink: 0;
+}
+@media (max-width: 36rem) {
+  .context {
+    gap: 0.5rem;
+  }
+  .identity {
+    gap: 0.375rem;
+  }
+  .identity strong {
+    font-size: 1rem;
+  }
+}

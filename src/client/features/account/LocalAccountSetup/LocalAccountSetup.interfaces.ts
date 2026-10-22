@@ -6,7 +6,7 @@ export interface LocalAccountSetupProps {
 }
 
 export interface AccountSetupState {
-  status: "loading" | "ready" | "signIn" | "import" | "failed";
+  status: "loading" | "ready" | "import" | "failed";
   account: AuthenticatedUser | null;
   playerCount: number;
 }

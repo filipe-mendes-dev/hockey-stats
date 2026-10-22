@@ -19,6 +19,7 @@ export const matchEventKindSchema = z.enum([
   ...playerEventKindSchema.options,
   "suspension-end",
   "powerplay-end",
+  "powerplay-adjust",
   "player-out",
   "opponent-goal",
   "score-adjustment",
@@ -48,16 +49,19 @@ const base = {
   gameTime: matchTimeSchema.optional(),
 };
 const player = { ...base, matchPlayerId: z.uuidv4() };
+export const rinkHalfSchema = z.enum(["defensive", "attacking"]);
 const spatial = { ...player, position: rinkPositionSchema.optional() };
 export const recoveryFieldsSchema = z.strictObject({
   ...spatial,
   kind: playerEventKindSchema.extract(["ball-recovery"]),
   subtype: recoverySubtypeSchema,
+  rinkHalf: rinkHalfSchema.optional(),
 });
 const loss = z.strictObject({
   ...spatial,
   kind: playerEventKindSchema.extract(["ball-loss"]),
   reason: lossReasonSchema,
+  rinkHalf: rinkHalfSchema.optional(),
 });
 const shot = z.strictObject({
   ...spatial,
@@ -76,10 +80,13 @@ const card = z
     colour: cardColourSchema,
     lineupEffect: cardLineupEffectSchema.optional(),
     startsPowerplay: z.boolean().optional(),
+    powerplayDurationMs: z.int().positive().max(3_600_000).optional(),
     removedMatchPlayerId: z.uuidv4().optional(),
     replacementMatchPlayerId: z.uuidv4().optional(),
   })
   .refine((event) => {
+    if (event.powerplayDurationMs !== undefined && !event.startsPowerplay)
+      return false;
     if (event.startsPowerplay !== undefined) {
       if (event.startsPowerplay !== (event.colour !== "yellow")) return false;
       if (event.startsPowerplay && !event.gameTime) return false;
@@ -137,6 +144,13 @@ const powerplayEnd = z.strictObject({
   gameTime: matchTimeSchema,
   powerplayCardEventId: z.uuidv4(),
 });
+const powerplayAdjust = z.strictObject({
+  ...base,
+  kind: z.literal("powerplay-adjust"),
+  gameTime: matchTimeSchema,
+  powerplayCardEventId: z.uuidv4(),
+  powerplayDurationMs: z.int().positive().max(3_600_000),
+});
 const opponentGoal = z.strictObject({
   ...base,
   kind: matchEventKindSchema.extract(["opponent-goal"]),
@@ -150,9 +164,7 @@ const scoreAdjustment = z
   })
   .refine((event) => event.ownDelta !== 0 || event.opponentDelta !== 0);
 const identity = { id: z.uuidv4(), operationId: z.uuidv4() };
-export const addMatchEventInputSchema = z.discriminatedUnion("kind", [
-  recoveryFieldsSchema.extend(identity),
-  loss.extend(identity),
+const commonEventInputs = [
   shot.extend(identity),
   foul.extend(identity),
   currentCard.safeExtend(identity),
@@ -163,8 +175,32 @@ export const addMatchEventInputSchema = z.discriminatedUnion("kind", [
   }),
   powerplayEnd.extend(identity),
   opponentGoal.extend(identity),
+] as const;
+export const versionThreeMatchEventInputSchema = z.discriminatedUnion("kind", [
+  recoveryFieldsSchema.extend(identity),
+  loss.extend(identity),
+  ...commonEventInputs,
   scoreAdjustment.safeExtend(identity),
 ]);
+export const versionFourMatchEventInputSchema = z.discriminatedUnion("kind", [
+  recoveryFieldsSchema.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  loss.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  ...commonEventInputs,
+  scoreAdjustment.safeExtend({ ...identity, ownDelta: z.literal(0) }),
+]);
+
+export const addMatchEventInputSchema = z
+  .discriminatedUnion("kind", [
+    ...versionFourMatchEventInputSchema.options,
+    powerplayAdjust.extend(identity),
+  ])
+  .refine(
+    (event) =>
+      event.kind !== "card" ||
+      !event.startsPowerplay ||
+      event.powerplayDurationMs !== undefined,
+  );
+
 const stored = {
   id: z.uuidv4(),
   order: z.int().positive(),
@@ -184,6 +220,7 @@ export const matchEventSchema = z
     substitution.safeExtend(stored),
     suspensionEnd.extend(stored),
     powerplayEnd.extend(stored),
+    powerplayAdjust.extend(stored),
     playerIn.extend(stored),
     playerOut.extend(stored),
     opponentGoal.extend(stored),
@@ -197,6 +234,12 @@ export const matchEventSchema = z
         (event.deletedAt >= event.createdAt &&
           event.deletedAt === event.updatedAt)),
   );
+const matchEventRuleInputSchema = z.discriminatedUnion("kind", [
+  ...versionThreeMatchEventInputSchema.options,
+  powerplayAdjust.extend(identity),
+]);
+export type RinkHalf = z.infer<typeof rinkHalfSchema>;
+export type MatchEventRuleInput = z.infer<typeof matchEventRuleInputSchema>;
 export type MatchEvent = z.infer<typeof matchEventSchema>;
 export type PlayerEventKind = z.infer<typeof playerEventKindSchema>;
 export type CardLineupEffect = z.infer<typeof cardLineupEffectSchema>;
@@ -211,14 +254,14 @@ export type CardColour = z.infer<typeof cardColourSchema>;
 export function toMatchEventInput(
   event: MatchEvent,
   operationId: string,
-): AddMatchEventInput {
+): MatchEventRuleInput {
   const { order, revision, createdAt, updatedAt, deletedAt, ...fields } = event;
   void order;
   void revision;
   void createdAt;
   void updatedAt;
   void deletedAt;
-  return addMatchEventInputSchema.parse({ ...fields, operationId });
+  return matchEventRuleInputSchema.parse({ ...fields, operationId });
 }
 export function eventMatchesInput(
   event: MatchEvent,

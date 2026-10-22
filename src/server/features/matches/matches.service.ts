@@ -121,6 +121,9 @@ export async function applyMatchCommand(
       command.match.opponentName !== current.match.opponentName ||
       command.match.scheduledDate !== current.match.scheduledDate ||
       command.match.venueRole !== current.match.venueRole ||
+      (current.match.periods.length > 0 &&
+        JSON.stringify(command.match.periods) !==
+          JSON.stringify(current.match.periods)) ||
       command.players.length !== current.players.length ||
       !command.players.every((player) =>
         current.players.some((entry) => samePlayerDetails(entry, player)),

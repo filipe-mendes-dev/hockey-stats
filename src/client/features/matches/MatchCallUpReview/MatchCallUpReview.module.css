@@ -1,0 +1,52 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-block: 0.625rem;
+}
+.row + .row {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.name,
+.description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.name {
+  font-weight: 500;
+  line-height: 1.5;
+}
+.description,
+.notice {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.playerContext {
+  display: grid;
+  gap: 0.5rem;
+}
+.notice {
+  margin: 0;
+}

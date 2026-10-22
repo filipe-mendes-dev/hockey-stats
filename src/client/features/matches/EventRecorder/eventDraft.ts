@@ -1,4 +1,5 @@
 import type { Match } from "../../../../domain/matches/match.schema";
+import { getPowerplayDuration } from "../../../../domain/matches/powerplay";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import type {
   AddMatchEventInput,
@@ -9,8 +10,10 @@ import type {
   ShotOutcome,
   CardColour,
   RinkPosition,
+  RinkHalf,
 } from "../../../../domain/matches/matchEvent.schema";
 import { addMatchEventInputSchema } from "../../../../domain/matches/matchEvent.schema";
+import { getPositionHalf } from "../../../../domain/matches/rinkPosition";
 
 export interface EventDraft {
   id: string;
@@ -20,6 +23,7 @@ export interface EventDraft {
   capturedAt: number;
   gameTime?: MatchTime;
   position?: RinkPosition;
+  rinkHalf?: RinkHalf;
   matchPlayerId?: string;
   kind?: AddMatchEventInput["kind"];
   outgoingMatchPlayerId?: string;
@@ -46,7 +50,9 @@ export type EventDraftState =
     };
 export type EventDraftAction =
   | { type: "open"; draft: EventDraft }
+  | { type: "restoreChoices"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
+  | { type: "setPosition"; position: RinkPosition }
   | {
       type: "selectKind";
       kind: AddMatchEventInput["kind"];
@@ -60,6 +66,7 @@ export type EventDraftAction =
       removedId?: string;
     }
   | { type: "confirmPowerplayEnd"; cardEventId: string }
+  | { type: "selectHalf"; rinkHalf: RinkHalf }
   | { type: "selectSubtype"; subtype: RecoverySubtype }
   | { type: "selectReason"; reason: LossReason }
   | { type: "selectOutcome"; outcome: ShotOutcome }
@@ -89,11 +96,45 @@ export function transitionEventDraft(
       : state;
   if (state.phase !== "collecting") return state;
   switch (action.type) {
+    case "restoreChoices":
+      return {
+        phase: "collecting",
+        draft: {
+          ...action.draft,
+          ...(state.draft.position ? { position: state.draft.position } : {}),
+          ...((action.draft.kind === "ball-recovery" ||
+            action.draft.kind === "ball-loss") &&
+          state.draft.position
+            ? {
+                rinkHalf:
+                  getPositionHalf(state.draft.position) ??
+                  action.draft.rinkHalf,
+              }
+            : {}),
+          id: state.draft.id,
+          operationId: state.draft.operationId,
+          matchId: state.draft.matchId,
+          period: state.draft.period,
+          capturedAt: state.draft.capturedAt,
+          ...(state.draft.gameTime ? { gameTime: state.draft.gameTime } : {}),
+        },
+      };
+
     case "selectPlayer":
       return { ...state, draft: { ...state.draft, matchPlayerId: action.id } };
+    case "setPosition": {
+      const draft = { ...state.draft, position: action.position };
+      if (draft.kind === "ball-recovery" || draft.kind === "ball-loss") {
+        const half = getPositionHalf(action.position);
+        if (half) draft.rinkHalf = half;
+        else delete draft.rinkHalf;
+      }
+      return { ...state, draft };
+    }
     case "selectKind": {
       const draft = { ...state.draft, kind: action.kind };
       if (state.draft.kind !== action.kind) {
+        delete draft.rinkHalf;
         delete draft.subtype;
         delete draft.reason;
         delete draft.outcome;
@@ -118,6 +159,13 @@ export function transitionEventDraft(
       }
       if (action.kind === "substitution" || action.kind === "player-in")
         delete draft.position;
+      if (
+        (action.kind === "ball-recovery" || action.kind === "ball-loss") &&
+        draft.position
+      ) {
+        const half = getPositionHalf(draft.position);
+        if (half) draft.rinkHalf = half;
+      }
       if (
         action.kind === "opponent-goal" ||
         action.kind === "score-adjustment" ||
@@ -168,6 +216,11 @@ export function transitionEventDraft(
             },
           }
         : state;
+    case "selectHalf":
+      return state.draft.kind === "ball-recovery" ||
+        state.draft.kind === "ball-loss"
+        ? { ...state, draft: { ...state.draft, rinkHalf: action.rinkHalf } }
+        : state;
     case "selectSubtype":
       return state.draft.kind === "ball-recovery"
         ? { ...state, draft: { ...state.draft, subtype: action.subtype } }
@@ -215,7 +268,12 @@ export function completeEventDraft(
   const result = addMatchEventInputSchema.safeParse({
     ...fields,
     ...(draft.kind === "card"
-      ? { startsPowerplay: draft.colour !== "yellow" }
+      ? {
+          startsPowerplay: draft.colour !== "yellow",
+          ...(draft.colour === "blue" || draft.colour === "red"
+            ? { powerplayDurationMs: getPowerplayDuration(draft.colour) }
+            : {}),
+        }
       : {}),
     ...(draft.kind === "player-in" ? { entryReason: "powerplay-ended" } : {}),
   });

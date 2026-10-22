@@ -1,0 +1,52 @@
+.indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0.2rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 100%;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.cards {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+.card {
+  display: block;
+  width: 0.5rem;
+  height: 0.75rem;
+  border-radius: 0.1rem;
+  background: var(--color-card-blue);
+}
+.card[data-colour="red"] {
+  background: var(--color-card-red);
+}
+.card[data-queued="true"] {
+  opacity: 0.55;
+}
+.time,
+.more {
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.indicator:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+@media (hover: hover) {
+  .indicator:not(:disabled):hover {
+    background: var(--color-surface-hover);
+  }
+}

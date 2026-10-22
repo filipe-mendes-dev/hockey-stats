@@ -1,0 +1,124 @@
+.timeline {
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.heading h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.heading > span {
+  font-variant-numeric: tabular-nums;
+}
+.all {
+  margin-inline-start: auto;
+}
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.events li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  color: var(--color-action);
+  border-radius: var(--radius-icon);
+  background: var(--color-surface-action);
+}
+.description {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+.description strong {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.metadata {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timestamp {
+  display: inline-flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.6875rem;
+}
+.time {
+  color: var(--color-action);
+}
+.detailsTooltip {
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  overflow-wrap: anywhere;
+}
+.empty {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  padding-block: 0.5rem;
+}
+@media (max-width: 63.999rem) {
+  .events:not([data-expanded="true"]) li:nth-child(n + 4) {
+    display: none;
+  }
+}
+@media (min-width: 64rem) {
+  .timeline[data-scrollable="true"] {
+    display: flex;
+    flex-direction: column;
+    min-height: 12rem;
+    contain: size;
+    overflow: hidden;
+  }
+  .timeline[data-scrollable="true"] .events {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+  .timeline[data-scrollable="true"] .heading {
+    flex-shrink: 0;
+    background: var(--color-background);
+  }
+  .timeline .all {
+    display: none;
+  }
+}

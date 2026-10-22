@@ -21,12 +21,14 @@ The username plugin requires Better Auth's core email field internally. Creation
 
 - `/sign-in` renders the login form; an existing authenticated session redirects to `/app`.
 - `/` is the server-protected home and redirects unauthenticated visitors to sign-in.
-- `/app` pages are generic static shells. LocalAccountSetup gates access using established local ownership and initial online sign-in.
+- `/app` pages are generic static shells. LocalAccountSetup first checks established local ownership. Without a local identity and with a confirmed missing session, replace the current route with `/sign-in`. With a valid session, finish initialization automatically or show the existing-data import decision. Storage, network and initialization errors remain visible with retry; they do not trigger an authentication redirect. An established local identity permits local use after session expiry or network loss. While that browser check is pending, render only a neutral loading indicator, without setup headings or actions. The sign-in page header logo links back to sign-in, avoiding a needless trip through `/app`. The server cannot inspect the IndexedDB identity; keep `/app` prerendered and cacheable rather than adding a server session requirement that would block initialized offline use.
 - `/api/auth/[...all]` delegates to Better Auth. Sync handlers authorize the current user and expected local owner.
+
+The shared header shows Sign out only when the client has a session, sign-out is in progress, or local cleanup needs retry. The pathname alone does not establish authentication. Session checks in the header are presentation only and never gate offline hockey access.
 
 A different authenticated account cannot adopt or synchronize an existing owner's local data. The application reports mismatch and retains that dataset. Offline use trusts the unlocked personal device and cannot check fresh revocation.
 
-Explicit sign-out requires a successful server request, then deletes the complete application IndexedDB, including unsynced work. Cleanup failures offer retry and late sync responses cannot recreate deleted data. Failed network sign-out retains data and reports failure. See [Offline cleanup policy](offline-sync.md#failure-and-cleanup-policy).
+Explicit sign-out requires confirmation. The dialog reads all pending and blocked outbox operations before enabling confirmation and warns about local-data deletion. Cancel leaves the session, synchronization and local records intact. Confirm requires a successful server request, then deletes the complete application IndexedDB, including unsynced work. Cleanup failures offer retry and late sync responses cannot recreate deleted data. Failed network sign-out retains data and reports failure. See [Offline cleanup policy](offline-sync.md#failure-and-cleanup-policy).
 
 ## Account creation and setup
 

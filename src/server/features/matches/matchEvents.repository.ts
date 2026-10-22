@@ -19,11 +19,13 @@ export function mapMatchEvent(
     replacementMatchPlayerId,
     lineupEffect,
     startsPowerplay,
+    powerplayDurationMs,
     removedMatchPlayerId,
     powerplayCardEventId,
     entryReason,
     subtype,
     reason,
+    rinkHalf,
     outcome,
     colour,
     ownDelta,
@@ -39,11 +41,13 @@ export function mapMatchEvent(
     ...(replacementMatchPlayerId === null ? {} : { replacementMatchPlayerId }),
     ...(lineupEffect === null ? {} : { lineupEffect }),
     ...(startsPowerplay === null ? {} : { startsPowerplay }),
+    ...(powerplayDurationMs === null ? {} : { powerplayDurationMs }),
     ...(removedMatchPlayerId === null ? {} : { removedMatchPlayerId }),
     ...(powerplayCardEventId === null ? {} : { powerplayCardEventId }),
     ...(entryReason === null ? {} : { entryReason }),
     ...(subtype === null ? {} : { subtype }),
     ...(reason === null ? {} : { reason }),
+    ...(rinkHalf === null ? {} : { rinkHalf }),
     ...(outcome === null ? {} : { outcome }),
     ...(colour === null ? {} : { colour }),
     ...(ownDelta === null ? {} : { ownDelta }),
@@ -80,11 +84,18 @@ function eventRow(event: MatchEvent): typeof matchEvents.$inferInsert {
     removedMatchPlayerId:
       event.kind === "card" ? (event.removedMatchPlayerId ?? null) : null,
     powerplayCardEventId:
-      event.kind === "powerplay-end" ? event.powerplayCardEventId : null,
+      event.kind === "powerplay-end" || event.kind === "powerplay-adjust"
+        ? event.powerplayCardEventId
+        : null,
+    powerplayDurationMs:
+      "powerplayDurationMs" in event
+        ? (event.powerplayDurationMs ?? null)
+        : null,
     entryReason:
       event.kind === "player-in" ? (event.entryReason ?? null) : null,
     subtype: "subtype" in event ? event.subtype : null,
     reason: "reason" in event ? event.reason : null,
+    rinkHalf: "rinkHalf" in event ? (event.rinkHalf ?? null) : null,
     outcome: "outcome" in event ? event.outcome : null,
     colour: "colour" in event ? event.colour : null,
     ownDelta: "ownDelta" in event ? event.ownDelta : null,

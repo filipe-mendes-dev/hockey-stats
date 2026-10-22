@@ -1,0 +1,37 @@
+.wizard {
+  max-width: 36rem;
+  min-width: 0;
+}
+.stepContent {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.heading {
+  margin: 0;
+  color: var(--color-action);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.hint,
+.empty {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+}
+@media (max-width: 36rem) {
+  .wizard {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .heading {
+    scroll-margin-top: calc(var(--app-header-height) + 7rem);
+  }
+}

@@ -1,0 +1,62 @@
+.item {
+  position: relative;
+}
+.item + .item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 1rem;
+  height: 1px;
+  background: var(--color-border-subtle);
+  pointer-events: none;
+}
+.row.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 4rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+}
+.row:hover {
+  background: var(--color-surface-highlight);
+}
+.row[data-checked] {
+  background: var(--color-surface-selection);
+}
+.avatar,
+.indicator {
+  display: flex;
+  flex-shrink: 0;
+}
+.copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.row[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -4,15 +4,23 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+.fields section {
+  display: grid;
+  gap: 0.875rem;
 }
+.fields h3 {
+  display: none;
+}
+.fields p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+.choices,
 .players {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -20,32 +28,47 @@
 .players li {
   min-width: 0;
 }
-.players button {
-  width: 100%;
-  min-height: 3.5rem;
+.playerLabel {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
   overflow-wrap: anywhere;
 }
-.fields label {
-  display: grid;
-  gap: 0.5rem;
-}
-.fields input {
+.choices button,
+.players button {
   width: 100%;
-  min-width: 0;
-  min-height: 2.75rem;
-  padding: 0.5rem;
-  font: inherit;
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-control);
-  border-radius: 0.5rem;
+  height: 100%;
+  min-height: 3.5rem;
+  font-size: 0.875rem;
+  padding: 0.875rem 0.75rem;
+  border-radius: var(--radius-button);
 }
-.error {
-  color: var(--color-error);
+.cardChoice[data-card-colour="yellow"] {
+  --card-accent: var(--color-card-yellow);
+  --card-surface: var(--color-card-yellow-surface);
+  --card-border: var(--color-card-yellow-border);
 }
-
-.choices > button {
-  flex: 1 1 10rem;
-  min-width: 0;
-  padding-inline: min(1.25rem, 4vw);
+.cardChoice[data-card-colour="blue"] {
+  --card-accent: var(--color-card-blue);
+  --card-surface: var(--color-card-blue-surface);
+  --card-border: var(--color-card-blue-border);
+}
+.cardChoice[data-card-colour="red"] {
+  --card-accent: var(--color-card-red);
+  --card-surface: var(--color-card-red-surface);
+  --card-border: var(--color-card-red-border);
+}
+.fields .cardChoice[data-card-colour] {
+  color: var(--card-accent);
+  border-color: var(--card-border);
+  background: var(--card-surface);
+}
+@media (hover: hover) {
+  .fields .cardChoice[data-card-colour]:hover {
+    color: var(--card-accent);
+    border-color: var(--card-accent);
+    background: var(--card-surface);
+  }
 }

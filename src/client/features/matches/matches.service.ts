@@ -3,6 +3,7 @@ import {
   updateMatchSetupInputSchema,
   startMatchInputSchema,
   matchSnapshotSchema,
+  regulationPeriodsSchema,
 } from "../../../domain/matches/match.schema";
 import type {
   CreateMatchInput,
@@ -78,6 +79,7 @@ export async function createMatch(
           opponentName: fields.opponentName,
           scheduledDate: fields.scheduledDate,
           venueRole: fields.venueRole,
+          periods: fields.periods,
           status: "setup",
           revision: 1,
           createdAt: now,
@@ -169,6 +171,7 @@ export async function updateMatchSetup(
           opponentName: fields.opponentName,
           scheduledDate: fields.scheduledDate,
           venueRole: fields.venueRole,
+          periods: fields.periods ?? current.match.periods,
           revision: current.match.revision + 1,
           updatedAt: Math.max(Date.now(), current.match.updatedAt),
         },
@@ -217,6 +220,8 @@ export async function startMatch(
         )
       )
         throw new MatchChangedError();
+      if (!regulationPeriodsSchema.safeParse(current.match.periods).success)
+        throw new MatchChangedError();
       const now = Math.max(Date.now(), current.match.updatedAt);
       const snapshot = matchSnapshotSchema.parse({
         match: {
@@ -225,7 +230,6 @@ export async function startMatch(
           status: "live",
           currentPeriod: 1,
           clock: { elapsedMs: 0 },
-          periods: fields.periods,
           startedAt: now,
           updatedAt: now,
         },

@@ -1,0 +1,26 @@
+.counts {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.card {
+  display: inline-block;
+  width: 0.4375rem;
+  height: 0.6875rem;
+  border-radius: 0.125rem;
+  background: var(--color-card-yellow);
+}
+.card[data-colour="blue"] {
+  background: var(--color-card-blue);
+}
+.card[data-colour="red"] {
+  background: var(--color-card-red);
+}

@@ -2,25 +2,37 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  formatMatchTime,
+  getCountdownMs,
   getClockElapsed,
 } from "../../../../domain/matches/matchControl";
 import type { MatchControlAction } from "../../../../domain/matches/matchControl";
-import { Button } from "../../../components/Button/Button";
-import { Modal } from "../../../components/Modal/Modal";
+import { ActionIcon, Button, Tooltip } from "@mantine/core";
+import { Flag, Pause, Play, TimerReset } from "lucide-react";
+import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
+import { DurationCounter } from "../../../components/DurationCounter/DurationCounter";
+import {
+  getDurationFields,
+  parseDurationFields,
+} from "../../../components/DurationCounter/durationFields";
+import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
 import st from "./MatchControls.module.css";
 export function MatchControls({
   match,
+  now,
   disabled,
   onBusyChange,
 }: MatchControlsProps) {
   const t = useTranslations("recorder");
   const mutation = useControlMatch();
-  const [now, setNow] = useState(0);
-  const [panel, setPanel] = useState<"adjust" | "finish" | null>(null);
-  const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
+  const [panel, setPanel] = useState<"adjust" | "finish" | "period" | null>(
+    null,
+  );
+  const [clockFields, setClockFields] = useState(() => getDurationFields(0));
+  const [capturedElapsed, setCapturedElapsed] = useState<number | undefined>(
+    undefined,
+  );
   const lastAutoPause = useRef<number | undefined>(undefined);
   const period = match.periods.find(
     (entry) => entry.number === match.currentPeriod,
@@ -37,11 +49,6 @@ export function MatchControls({
     onBusyChange(busy);
     return () => onBusyChange(false);
   }, [busy, onBusyChange]);
-  useEffect(() => {
-    if (match.status !== "live") return;
-    const timer = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(timer);
-  }, [match.status]);
   useEffect(() => {
     if (
       match.status !== "live" ||
@@ -66,40 +73,33 @@ export function MatchControls({
       { onSuccess: () => setPanel(null) },
     );
   }
-  function open(next: "adjust" | "finish"): void {
-    setReturnFocusTo(
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null,
-    );
+  function open(next: "adjust" | "finish" | "period"): void {
+    const current = getCountdownMs(elapsed, duration) ?? elapsed ?? 0;
+    setCapturedElapsed(elapsed);
+    setClockFields(getDurationFields(current));
     mutation.reset();
     setPanel(next);
   }
   if (match.status !== "live") return null;
-  const shownTime = remaining ?? elapsed;
+  const enteredTime = parseDurationFields(clockFields, duration);
+  const finishLabel = t(
+    match.currentPeriod === match.periods.length ? "endMatch" : "endPeriod",
+  );
   return (
     <section className={st.controls} aria-label={t("clockTitle")}>
-      <strong>{t("periodNumber", { number: match.currentPeriod })}</strong>
-      <output
-        aria-live="off"
-        className={st.clock}
-        aria-label={t(duration === undefined ? "elapsedTime" : "remainingTime")}
-      >
-        {running && now === 0
-          ? "…"
-          : shownTime === undefined
-            ? t("untimed")
-            : formatMatchTime(
-                duration === undefined
-                  ? shownTime
-                  : Math.ceil(shownTime / 1000) * 1000,
-              )}
-      </output>
-      <span>
-        {t(running && remaining !== 0 ? "clockRunning" : "clockPaused")}
-      </span>
       <div className={st.actions}>
+        <Tooltip label={t("adjustClock")}>
+          <ActionIcon
+            variant="subtle"
+            aria-label={t("adjustClock")}
+            disabled={disabled || busy}
+            onClick={() => open("adjust")}
+          >
+            <TimerReset size={18} />
+          </ActionIcon>
+        </Tooltip>
         <Button
+          size="sm"
           disabled={
             disabled ||
             busy ||
@@ -108,122 +108,85 @@ export function MatchControls({
           onClick={() =>
             control({ type: running ? "clock.pause" : "clock.start" })
           }
+          leftSection={running ? <Pause size={16} /> : <Play size={16} />}
         >
           {t(running ? "pauseClock" : "startClock")}
         </Button>
-        <Button
-          variant="secondary"
-          disabled={disabled || busy}
-          onClick={() => open("adjust")}
-        >
-          {t("adjustClock")}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={disabled || busy}
-          onClick={() =>
-            match.currentPeriod === match.periods.length
-              ? open("finish")
-              : control({ type: "period.end" })
-          }
-        >
-          {t(
-            match.currentPeriod === match.periods.length
-              ? "endMatch"
-              : "endPeriod",
-          )}
-        </Button>
-      </div>
-      {duration === undefined && <p>{t("durationRequired")}</p>}
-      {mutation.isError && <p role="alert">{t("controlFailed")}</p>}
-      {panel && (
-        <Modal
-          title={t(panel === "finish" ? "endMatch" : "adjustClock")}
-          locked={mutation.isPending}
-          returnFocusTo={returnFocusTo}
-          onDismiss={() => setPanel(null)}
-        >
-          {panel === "finish" ? (
-            <div className={st.controls}>
-              <p>{t("finishConfirmation")}</p>
-              <Button
-                disabled={mutation.isPending}
-                onClick={() => control({ type: "match.end" })}
-              >
-                {t("endMatch")}
-              </Button>
-            </div>
-          ) : (
-            <form
-              className={st.controls}
-              action={(data) => {
-                const minutes = Number(data.get("minutes"));
-                const seconds = Number(data.get("seconds"));
-                if (
-                  !Number.isInteger(minutes) ||
-                  minutes < 0 ||
-                  !Number.isInteger(seconds) ||
-                  seconds < 0 ||
-                  seconds > 59
-                )
-                  return;
-                const entered = minutes * 60_000 + seconds * 1000;
-                control({
-                  type: "clock.adjust",
-                  elapsedMs:
-                    duration === undefined ? entered : duration - entered,
-                });
-              }}
-            >
-              <p>
-                {t(
-                  duration === undefined ? "adjustElapsed" : "adjustRemaining",
-                )}
-              </p>
-              <label>
-                {t("minutes")}
-                <input
-                  name="minutes"
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  defaultValue={Math.floor(
-                    (shownTime ?? duration ?? 0) / 60_000,
-                  )}
-                  disabled={mutation.isPending}
-                />
-              </label>
-              <label>
-                {t("seconds")}
-                <input
-                  name="seconds"
-                  type="number"
-                  min="0"
-                  max="59"
-                  step="1"
-                  required
-                  defaultValue={
-                    Math.floor((shownTime ?? duration ?? 0) / 1000) % 60
-                  }
-                  disabled={mutation.isPending}
-                />
-              </label>
-              <Button type="submit" disabled={mutation.isPending}>
-                {t("saveClock")}
-              </Button>
-            </form>
-          )}
-          {mutation.isError && <p role="alert">{t("controlFailed")}</p>}
-          <Button
-            variant="secondary"
-            disabled={mutation.isPending}
-            onClick={() => setPanel(null)}
+        <Tooltip label={finishLabel}>
+          <ActionIcon
+            variant="subtle"
+            aria-label={finishLabel}
+            disabled={disabled || busy}
+            onClick={() =>
+              open(
+                match.currentPeriod === match.periods.length
+                  ? "finish"
+                  : "period",
+              )
+            }
           >
-            {t("cancel")}
-          </Button>
-        </Modal>
+            <Flag size={18} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      {duration === undefined && <p role="status">{t("durationRequired")}</p>}
+      {mutation.isError && !panel && (
+        <p role="alert" className={st.error}>
+          {t("controlFailed")}
+        </p>
       )}
+      <ResponsiveFormDialog
+        opened={panel !== null}
+        title={panel === "adjust" ? t("adjustClock") : finishLabel}
+        closeLabel={t("cancel")}
+        cancelLabel={t("cancel")}
+        submitLabel={panel === "adjust" ? t("saveClock") : finishLabel}
+        pending={mutation.isPending}
+        error={mutation.isError ? t("controlFailed") : null}
+        submitDisabled={panel === "adjust" && enteredTime === null}
+        onClose={() => setPanel(null)}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (panel !== "adjust") {
+            control({ type: panel === "finish" ? "match.end" : "period.end" });
+            return;
+          }
+          if (enteredTime === null) return;
+          control({
+            type: "clock.adjust",
+            elapsedMs:
+              duration === undefined ? enteredTime : duration - enteredTime,
+          });
+        }}
+      >
+        <RecorderContext
+          match={match}
+          period={match.currentPeriod}
+          elapsedMs={capturedElapsed}
+          primary={panel === "adjust" ? t("adjustClock") : finishLabel}
+        />
+        {panel === "adjust" ? (
+          <>
+            {duration === undefined && (
+              <p className={st.help}>{t("adjustElapsed")}</p>
+            )}
+            <DurationCounter
+              value={clockFields}
+              onChange={setClockFields}
+              maxMs={duration}
+              minutesLabel={t("minutes")}
+              secondsLabel={t("seconds")}
+              disabled={mutation.isPending}
+            />
+          </>
+        ) : (
+          <p className={st.help}>
+            {t(
+              panel === "finish" ? "finishConfirmation" : "periodConfirmation",
+            )}
+          </p>
+        )}
+      </ResponsiveFormDialog>
     </section>
   );
 }

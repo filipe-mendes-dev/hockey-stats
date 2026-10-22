@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { useMatches } from "../../../features/matches/queries/matches.queries";
-import { formatMatchDate } from "../../../features/matches/date";
-import { EntityPage } from "../../../components/EntityPage/EntityPage";
+import Link from "next/link";
+import { Button, Text, Title } from "@mantine/core";
+import { Search, Trophy } from "lucide-react";
+import { PageHeader } from "../../../components/PageHeader/PageHeader";
+import { SearchToolbar } from "../../../components/SearchToolbar/SearchToolbar";
+import { MatchRow } from "../../../features/matches/MatchRow/MatchRow";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
-import { ListItem } from "../../../components/ListItem/ListItem";
-import { ButtonLink } from "../../../components/Button/Button";
-import { SearchInputField } from "../../../components/SearchInputField/SearchInputField";
-import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
 import { normalizeSearch } from "../../../utils/search";
 import st from "./MatchesListPage.module.css";
 export function MatchesListPage() {
@@ -31,23 +31,22 @@ export function MatchesListPage() {
         a.match.id.localeCompare(b.match.id),
     );
   return (
-    <EntityPage
-      backHref="/app"
-      backLabel={t("backToMenu")}
-      title={t("title")}
-      description={t("description")}
-      storageNotice={t("storageNotice")}
-    >
-      <div className={st.toolbar}>
-        <SearchInputField
-          label={t("searchLabel")}
-          placeholder={t("searchPlaceholder")}
-          clearLabel={t("clearSearch")}
-          value={search}
-          onChange={setSearch}
-        />
-        <ButtonLink href="/app/matches/new">{t("new")}</ButtonLink>
-      </div>
+    <section className={st.page}>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        back={{ href: "/app", label: t("backToMenu") }}
+      />
+      <SearchToolbar
+        label={t("searchLabel")}
+        placeholder={t("searchPlaceholder")}
+        clearLabel={t("clearSearch")}
+        value={search}
+        onChange={setSearch}
+        actionHref="/app/matches/new"
+        actionLabel={t("newTitle")}
+        compactActionLabel={t("new")}
+      />
       {query.isPending || query.isError ? (
         <EntityDataStatus
           loadingLabel={t("loading")}
@@ -60,44 +59,42 @@ export function MatchesListPage() {
         />
       ) : snapshots.length === 0 ? (
         <div className={st.empty}>
-          <h2>{t("emptyTitle")}</h2>
-          <p>{t("emptyDescription")}</p>
+          <Trophy size={30} strokeWidth={1.4} aria-hidden="true" />
+          <Title order={2}>{t("emptyTitle")}</Title>
+          <Text>{t("emptyDescription")}</Text>
+          <Button
+            component={Link}
+            href="/app/matches/new"
+            prefetch={false}
+            variant="subtle"
+            size="sm"
+          >
+            {t("newTitle")}
+          </Button>
         </div>
       ) : (
         <>
-          <p role="status">{t("results", { count: filtered.length })}</p>
+          <p className={st.resultCount} role="status">
+            {t("results", { count: filtered.length })}
+          </p>
           {filtered.length === 0 ? (
             <div className={st.empty}>
-              <h2>{t("noMatchesTitle")}</h2>
-              <p>{t("noMatchesDescription")}</p>
+              <Search size={30} strokeWidth={1.4} aria-hidden="true" />
+              <Title order={2}>{t("noMatchesTitle")}</Title>
+              <Text>{t("noMatchesDescription")}</Text>
+              <Button variant="subtle" size="sm" onClick={() => setSearch("")}>
+                {t("clearSearch")}
+              </Button>
             </div>
           ) : (
-            <ul className={st.list}>
-              {filtered.map(({ match, players }) => (
-                <ListItem
-                  key={match.id}
-                  title={`${match.teamNameAtMatch} · ${match.opponentName}`}
-                  href={`/app/matches/view?id=${match.id}`}
-                >
-                  <p>
-                    {[
-                      match.scheduledDate
-                        ? formatMatchDate(match.scheduledDate, locale)
-                        : undefined,
-                      match.venueRole ? t(match.venueRole) : undefined,
-                      t(match.status),
-                      t("selected", { count: players.length }),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                  <DeliveryStatus kind="match.create" entityId={match.id} />
-                </ListItem>
+            <ul className={st.list} aria-label={t("title")}>
+              {filtered.map((snapshot) => (
+                <MatchRow key={snapshot.match.id} snapshot={snapshot} />
               ))}
             </ul>
           )}
         </>
       )}
-    </EntityPage>
+    </section>
   );
 }

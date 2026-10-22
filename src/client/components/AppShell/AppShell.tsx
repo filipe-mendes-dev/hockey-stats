@@ -1,29 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   resumeSynchronization,
   stopSynchronization,
 } from "../../features/sync/syncCoordinator";
 import { authClient } from "../../features/auth/auth-client";
+import { SignOutDialog } from "../../features/account/SignOutDialog/SignOutDialog";
 import {
   clearLocalDatabase,
   closeDatabaseForSignOut,
   localDataClearedEvent,
 } from "../../storage/database";
-import { useLanguage } from "../../i18n/LanguageProvider";
+import { AppFooter } from "../AppFooter/AppFooter";
+import { AppHeader } from "../AppHeader/AppHeader";
 import type { AppShellProps } from "./AppShell.interfaces";
 import st from "./AppShell.module.css";
 
-export function AppShell({ children, authenticated = false }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const t = useTranslations();
-  const { locale, select } = useLanguage();
+  const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const isSignIn = pathname === "/sign-in";
+  const supportsAccountActions =
+    pathname === "/" || pathname === "/app" || pathname.startsWith("/app/");
   const [pending, setPending] = useState(false);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [failed, setFailed] = useState<
     "signOutFailed" | "signOutCleanupFailed" | null
   >(null);
   const sessionEnded = useRef(false);
+  const showAccountActions =
+    supportsAccountActions &&
+    (Boolean(session) || pending || failed === "signOutCleanupFailed");
 
   useEffect(() => {
     function leaveLocalApp(): void {
@@ -73,46 +84,50 @@ export function AppShell({ children, authenticated = false }: AppShellProps) {
   }
 
   return (
-    <div className={st.shell}>
-      <header className={st.header}>
-        <div className={st.headerContent}>
-          <span className={st.brand}>{t("shell.title")}</span>
-          <div className={st.actions}>
-            <label className={st.language}>
-              <span>{t("language.label")}</span>
-              <select
-                value={locale}
-                onChange={(event) => select(event.target.value)}
-              >
-                <option value="en">{t("language.english")}</option>
-                <option value="pt-PT">{t("language.portuguese")}</option>
-              </select>
-            </label>
-            {authenticated && (
-              <button
-                className={st.signOut}
-                type="button"
-                onClick={signOut}
-                disabled={pending}
-              >
-                {pending ? t("auth.signingOut") : t("auth.signOut")}
-              </button>
-            )}
-          </div>
-          {failed && (
-            <p className={st.error} role="alert">
-              {t(`auth.${failed}`)}
-            </p>
-          )}
-        </div>
-      </header>
-      <main className={st.main}>
+    <div className={st.shell} data-recorder={pathname === "/app/matches/live"}>
+      <a className={st.skipLink} href="#main-content">
+        {t("shell.skipToContent")}
+      </a>
+      <AppHeader
+        homeHref={isSignIn ? "/sign-in" : "/app"}
+        accountAction={
+          showAccountActions
+            ? {
+                label: pending ? t("auth.signingOut") : t("auth.signOut"),
+                pending,
+                onClick: () => setConfirmingSignOut(true),
+              }
+            : undefined
+        }
+      />
+      {failed && !confirmingSignOut && (
+        <p className={st.error} role="alert">
+          {t(`auth.${failed}`)}
+        </p>
+      )}
+      <main
+        id="main-content"
+        className={st.main}
+        data-auth-page={isSignIn}
+        tabIndex={-1}
+      >
         {failed === "signOutCleanupFailed" ? (
           <h1>{t("auth.signOutCleanupTitle")}</h1>
         ) : (
           children
         )}
       </main>
+      <AppFooter />
+      <SignOutDialog
+        opened={confirmingSignOut}
+        pending={pending}
+        cleanupOnly={failed === "signOutCleanupFailed"}
+        error={failed}
+        onClose={() => {
+          if (!pending) setConfirmingSignOut(false);
+        }}
+        onConfirm={signOut}
+      />
     </div>
   );
 }

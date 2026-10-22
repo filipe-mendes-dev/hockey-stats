@@ -1,0 +1,15 @@
+.action.action {
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+.compactLabel {
+  display: none;
+}
+@media (max-width: 36rem) {
+  .fullLabel {
+    display: none;
+  }
+  .compactLabel {
+    display: inline;
+  }
+}

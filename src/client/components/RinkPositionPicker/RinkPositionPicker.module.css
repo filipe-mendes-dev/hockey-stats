@@ -1,0 +1,110 @@
+.picker {
+  min-width: 0;
+}
+.stage {
+  position: relative;
+}
+.target {
+  aspect-ratio: 1016 / 516;
+  cursor: crosshair;
+  touch-action: pinch-zoom;
+  user-select: none;
+  -webkit-touch-callout: none;
+  border-radius: 0.5rem;
+  outline-offset: 4px;
+}
+.target[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.5;
+}
+.target:focus-visible {
+  outline: 2px solid var(--color-focus);
+}
+.lens {
+  display: none;
+  position: absolute;
+  left: var(--lens-left, 0px);
+  top: var(--lens-top, 0px);
+  width: 112px;
+  height: 112px;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-floating);
+  pointer-events: none;
+  z-index: 1;
+}
+.lens[data-visible="true"] {
+  display: block;
+}
+.crosshair {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--color-text), var(--color-text)) center / 1px 28px
+      no-repeat,
+    linear-gradient(var(--color-text), var(--color-text)) center / 28px 1px
+      no-repeat;
+}
+.crosshair::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-action);
+  box-shadow:
+    0 0 0 3px var(--color-background),
+    0 0 0 5px var(--color-text);
+}
+.hint,
+.status {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0.5rem 0 0;
+  overflow-wrap: anywhere;
+}
+.hintRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.hintRow > :last-child:not(:first-child) {
+  flex-shrink: 0;
+}
+.hint {
+  min-width: 0;
+  margin: 0;
+}
+.announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.status {
+  color: var(--color-action);
+  min-height: 1.125rem;
+}
+.touchHint {
+  display: none;
+}
+@media (pointer: coarse) {
+  .pointerHint {
+    display: none;
+  }
+  .touchHint {
+    display: inline;
+  }
+}

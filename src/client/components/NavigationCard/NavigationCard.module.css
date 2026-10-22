@@ -1,0 +1,104 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  height: 100%;
+  min-height: 12rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 var(--color-surface-highlight);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+  overflow-wrap: anywhere;
+}
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.icon {
+  display: inline-flex;
+  color: var(--color-action);
+  transition: transform 150ms ease;
+}
+.arrow {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform 150ms ease;
+}
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.description {
+  margin-top: 0.375rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.card[data-featured] {
+  min-height: 15rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border-color: var(--color-border-action);
+  background:
+    linear-gradient(115deg, var(--color-surface-action), transparent),
+    var(--color-surface);
+}
+.card[data-featured] .title {
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+}
+.card[data-featured] .description {
+  font-size: 0.9375rem;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .card {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+  .card[data-featured] {
+    background:
+      linear-gradient(115deg, var(--color-surface-action), transparent),
+      var(--color-surface-glass);
+  }
+}
+@media (hover: hover) {
+  .card:hover {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-action);
+  }
+  .card:hover .arrow {
+    color: var(--color-text);
+    transform: translate(2px, -2px);
+  }
+  .card:hover .icon {
+    transform: scale(1.08);
+  }
+}
+@media (max-width: 36rem) {
+  .card {
+    min-height: 10rem;
+  }
+  .card[data-featured] {
+    min-height: 13rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .icon,
+  .arrow {
+    transition: none;
+  }
+  .card:hover .arrow,
+  .card:hover .icon {
+    transform: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { matchSchema } from "./match.schema";
+import { matchSchema, matchPeriodSchema } from "./match.schema";
 import type { Match } from "./match.schema";
 
 export const matchControlActionSchema = z.discriminatedUnion("type", [
@@ -8,6 +8,10 @@ export const matchControlActionSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("clock.adjust"),
     elapsedMs: z.int().nonnegative(),
+  }),
+  z.strictObject({
+    type: z.literal("period.direction"),
+    attackDirection: matchPeriodSchema.shape.attackDirection,
   }),
   z.strictObject({ type: z.literal("period.end") }),
   z.strictObject({ type: z.literal("match.end") }),
@@ -42,6 +46,20 @@ export function getClockElapsed(match: Match, now: number): number | undefined {
 }
 export function formatMatchTime(elapsedMs: number): string {
   return `${String(Math.floor(elapsedMs / 60_000)).padStart(2, "0")}:${String(Math.floor(elapsedMs / 1000) % 60).padStart(2, "0")}`;
+}
+export function getCountdownMs(
+  elapsedMs: number | undefined,
+  durationMs: number | undefined,
+): number | undefined {
+  if (elapsedMs === undefined || durationMs === undefined) return undefined;
+  return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000) * 1000;
+}
+export function formatCountdown(
+  elapsedMs: number | undefined,
+  durationMs: number | undefined,
+): string | undefined {
+  const remaining = getCountdownMs(elapsedMs, durationMs);
+  return remaining === undefined ? undefined : formatMatchTime(remaining);
 }
 export function applyMatchControl(
   match: Match,
@@ -88,6 +106,13 @@ export function applyMatchControl(
           ? { runningSince: now }
           : {}),
       };
+      break;
+    case "period.direction":
+      next.periods = match.periods.map((entry) =>
+        entry.number === match.currentPeriod
+          ? { ...entry, attackDirection: action.attackDirection }
+          : entry,
+      );
       break;
     case "period.end":
     case "match.end": {

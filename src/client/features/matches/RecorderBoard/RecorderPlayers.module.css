@@ -1,0 +1,155 @@
+.section {
+  display: grid;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.heading span {
+  font-variant-numeric: tabular-nums;
+}
+.field {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.field li {
+  min-width: 0;
+}
+.player,
+.reserve {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-action);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-action);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+}
+.number {
+  color: var(--color-action);
+  font-size: 1.25rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 1.5rem;
+  text-align: center;
+}
+.name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.875rem;
+}
+.keeper {
+  width: calc(50% - 0.25rem);
+  justify-self: center;
+}
+.keeper .player {
+  min-height: 2.75rem;
+  background: transparent;
+  border-color: var(--color-border-action);
+}
+.keeper svg {
+  color: var(--color-action);
+  flex-shrink: 0;
+}
+.bench {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 0.625rem;
+}
+.bench ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.bench li {
+  min-width: 0;
+  max-width: 100%;
+}
+.reserve {
+  min-height: 2.75rem;
+  border-color: var(--color-border-subtle);
+  background: transparent;
+  padding: 0.375rem 0.625rem;
+}
+.reserve .number {
+  font-size: 0.875rem;
+  min-width: 1rem;
+}
+.reserve .name {
+  max-width: 10rem;
+  font-size: 0.8125rem;
+}
+.player:disabled,
+.reserve:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@media (hover: hover) {
+  .player:not(:disabled):hover,
+  .reserve:not(:disabled):hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-action);
+  }
+}
+
+.lineupHeading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.5rem;
+  min-width: 0;
+}
+.powerplay {
+  color: var(--color-card-red);
+  font-size: 0.6875rem;
+}
+.count {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+.lineupHeading button {
+  min-height: 2.75rem;
+}
+@media (min-width: 64rem) {
+  .section {
+    gap: 0.5rem;
+  }
+  .player {
+    min-height: 2.75rem;
+    padding-block: 0.375rem;
+  }
+  .number {
+    font-size: 1.125rem;
+  }
+  .bench {
+    gap: 0.5rem;
+    margin-top: 0.375rem;
+  }
+}

@@ -1,0 +1,31 @@
+.content {
+  display: grid;
+  gap: 1.25rem;
+}
+.heading {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--color-action);
+  outline: none;
+}
+.submit {
+  margin-inline-start: auto;
+}
+.positionPreview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem;
+}
+.positionPreview button {
+  justify-self: end;
+  max-width: 100%;
+}
+@media (max-width: 36rem) {
+  .submit {
+    flex: 1;
+    min-width: 0;
+    margin-inline-start: 0;
+  }
+}

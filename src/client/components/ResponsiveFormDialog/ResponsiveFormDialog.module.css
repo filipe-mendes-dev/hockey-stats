@@ -1,0 +1,102 @@
+.root .content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2 * var(--modal-y-offset));
+  overflow: hidden;
+  background: var(--color-surface-dialog);
+  box-shadow: var(--shadow-surface);
+}
+.root .header {
+  flex-shrink: 0;
+  padding: 0.25rem 1.25rem;
+  min-height: 3.25rem;
+  background: var(--color-surface-dialog-chrome);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.root .body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  padding: 1.5rem 1.25rem;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.fields > * {
+  flex-shrink: 0;
+}
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem 1.25rem;
+}
+.root .title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.root .close {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-inline-end: -0.75rem;
+  border-radius: var(--radius-icon);
+}
+.root .overlay {
+  background: var(--color-overlay-dialog);
+}
+.cancel {
+  margin-inline-start: -0.875rem;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .root .content {
+    background: var(--color-surface-dialog-glass);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+}
+@media (max-width: 36rem) {
+  .root .content {
+    height: var(--form-dialog-height, 100dvh);
+    max-height: var(--form-dialog-height, 100dvh);
+    border: 0;
+    border-radius: 0;
+    background: var(--color-background);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .fields {
+    flex: 1;
+  }
+  .actions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: 0.75rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 36.001rem) {
+  .root[data-layout="flow"] .content {
+    height: min(42rem, calc(100dvh - 2 * var(--modal-y-offset)));
+  }
+  .root[data-layout="flow"] .fields {
+    flex: 1;
+  }
+}

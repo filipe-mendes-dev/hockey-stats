@@ -11,6 +11,19 @@ export async function listTeamPlayers(teamId: string): Promise<TeamPlayer[]> {
       .toArray()
   ).map((row) => teamPlayerSchema.parse(row));
 }
+export async function listTeamPlayersByPlayer(
+  playerId: string,
+): Promise<TeamPlayer[]> {
+  if (!teamPlayerSchema.shape.playerId.safeParse(playerId).success) return [];
+  const database = await getDatabase();
+  const rows = await database
+    .table<unknown, string>("teamPlayers")
+    .where("playerId")
+    .equals(playerId)
+    .toArray();
+  return rows.map((row) => teamPlayerSchema.parse(row));
+}
+
 export async function getTeamPlayer(id: string): Promise<TeamPlayer | null> {
   const database = await getDatabase();
   const row = await database.table<unknown, string>("teamPlayers").get(id);

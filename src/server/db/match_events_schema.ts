@@ -35,6 +35,7 @@ export const matchEvents = pgTable(
     ),
     lineupEffect: text("lineup_effect"),
     startsPowerplay: boolean("starts_powerplay"),
+    powerplayDurationMs: integer("powerplay_duration_ms"),
     removedMatchPlayerId: uuid("removed_match_player_id").references(
       () => matchPlayers.id,
       { onDelete: "restrict" },
@@ -45,6 +46,7 @@ export const matchEvents = pgTable(
     kind: text("kind").notNull(),
     subtype: text("subtype"),
     reason: text("reason"),
+    rinkHalf: text("rink_half", { enum: ["defensive", "attacking"] }),
     outcome: text("outcome"),
     colour: text("colour"),
     ownDelta: integer("own_delta"),

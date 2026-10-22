@@ -1,44 +1,50 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Title } from "@mantine/core";
+import { Play } from "lucide-react";
 import { AppMenu } from "../../components/AppMenu/AppMenu";
+import { NavigationCard } from "../../components/NavigationCard/NavigationCard";
 import type { AppMenuItem } from "../../components/AppMenu/AppMenu.interfaces";
+import { PageHeader } from "../../components/PageHeader/PageHeader";
+import { navigationDestinations } from "../../components/AppNavigation/navigation";
 import st from "./AppHomePage.module.css";
 
 export function AppHomePage() {
   const t = useTranslations("appHome");
-  const items: AppMenuItem[] = [
-    {
-      id: "players",
-      title: t("players"),
-      description: t("playersDescription"),
-      href: "/app/players",
+  const items: AppMenuItem[] = navigationDestinations.flatMap(
+    ({ id, href, icon: Icon }) => {
+      if (id === "home") return [];
+      return [
+        {
+          id,
+          href,
+          title: t(id),
+          description: t(`${id}Description`),
+          icon: <Icon size={24} strokeWidth={1.6} />,
+        },
+      ];
     },
-    {
-      id: "teams",
-      title: t("teams"),
-      description: t("teamsDescription"),
-      href: "/app/teams",
-    },
-    {
-      id: "matches",
-      title: t("matches"),
-      description: t("matchesDescription"),
-      href: "/app/matches",
-    },
-  ];
+  );
 
   return (
     <section className={st.page}>
-      <header className={st.header}>
-        <h1>{t("title")}</h1>
-        <p>{t("description")}</p>
-      </header>
-      <AppMenu
-        label={t("navigationLabel")}
-        comingSoonLabel={t("comingSoon")}
-        items={items}
+      <PageHeader
+        eyebrow={t("title")}
+        title={t("welcome")}
+        description={t("description")}
       />
+      <NavigationCard
+        featured
+        title={t("recordMatch")}
+        description={t("recordMatchDescription")}
+        href="/app/matches/new"
+        icon={<Play size={29} strokeWidth={1.6} />}
+      />
+      <Title order={2} className={st.sectionTitle}>
+        {t("quickAccess")}
+      </Title>
+      <AppMenu label={t("navigationLabel")} items={items} />
     </section>
   );
 }

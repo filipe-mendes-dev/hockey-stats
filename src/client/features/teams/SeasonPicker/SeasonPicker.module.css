@@ -1,0 +1,17 @@
+.input {
+  text-box-trim: none;
+}
+.year,
+.navigation,
+.decade {
+  border-radius: var(--radius-control);
+  min-height: 2.75rem;
+}
+.year[data-selected] {
+  color: var(--color-on-action);
+  background: var(--color-action);
+}
+.year:not([data-selected]):not(:disabled):hover,
+.navigation:not(:disabled):hover {
+  background: var(--color-surface-hover);
+}
