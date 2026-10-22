@@ -42,6 +42,10 @@ npm run start
 
 `check` runs formatting verification, lint, typecheck and a production build. It does not run tests. `start` serves that build. Individual commands are `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm run build`. CLI arguments pass through, for example `npm run dev -- --port 3001`.
 
+## VPS deployment
+
+The production Dockerfile packages the application, migrations and interactive account helpers in one image. `compose.production.yaml` selects that image through `BENCHLINE_IMAGE`, runs PostgreSQL 18 with separate maintenance/application credentials and preserves its named volume across releases. Development Compose is unchanged. See [VPS deployment](docs/deployment.md) for external configuration and first-start commands, and [Dependency advisory assessment](docs/security-advisories.md) for the Next.js patch required before public exposure. Nginx/HTTPS and backups remain later increments.
+
 ## Local PostgreSQL
 
 Install and start Docker with the Compose plugin, then run from the repository root:

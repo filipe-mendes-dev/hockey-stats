@@ -1,0 +1,64 @@
+name: benchline-production
+
+services:
+  postgres:
+    image: postgres:18-trixie
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in the external environment file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the external environment file}
+      BENCHLINE_DB_USER: ${BENCHLINE_DB_USER:?Set BENCHLINE_DB_USER in the external environment file}
+      BENCHLINE_DB_PASSWORD: ${BENCHLINE_DB_PASSWORD:?Set BENCHLINE_DB_PASSWORD in the external environment file}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - type: bind
+        source: ./deploy/postgres/init-benchline.sh
+        target: /docker-entrypoint-initdb.d/10-benchline.sh
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - backend
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    shm_size: 128mb
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    image: ${BENCHLINE_IMAGE:?Set BENCHLINE_IMAGE to an explicit release tag or digest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the external environment file}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in the external environment file}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL in the external environment file}
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - backend
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
