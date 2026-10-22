@@ -8,16 +8,6 @@ import { MatchStatusBadge } from "../MatchStatusBadge/MatchStatusBadge";
 import type { MatchResultProps } from "./MatchResult.interfaces";
 import st from "./MatchResult.module.css";
 
-function initials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/u)
-    .slice(0, 2)
-    .map((part) => [...part][0] ?? "")
-    .join("")
-    .toLocaleUpperCase();
-}
-
 export function MatchResult({ match, score, periods }: MatchResultProps) {
   const t = useTranslations("matches");
   const statistics = useTranslations("statistics");
@@ -44,25 +34,21 @@ export function MatchResult({ match, score, periods }: MatchResultProps) {
       </div>
       <div className={st.scoreboard}>
         <div className={st.team} data-own>
-          <span className={st.initials} aria-hidden="true">
-            {initials(match.teamNameAtMatch)}
-          </span>
           <h2>{match.teamNameAtMatch}</h2>
         </div>
-        <div className={st.score} aria-label={statistics("finalScore")}>
+        <div
+          className={st.score}
+          role="group"
+          aria-label={statistics("finalScore")}
+        >
           <strong>
             {score ? format.number(score.own) : "…"}
             <span aria-hidden="true">:</span>
             {score ? format.number(score.opponent) : "…"}
           </strong>
-          <span>{statistics("finalScore")}</span>
         </div>
         <div className={st.team}>
-          <span className={st.initials} aria-hidden="true">
-            {initials(match.opponentName)}
-          </span>
           <h2>{match.opponentName}</h2>
-          <span className={st.opponent}>{t("opponent")}</span>
         </div>
       </div>
       {periods && (

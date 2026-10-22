@@ -12,3 +12,14 @@ export interface MatchEventAnalysisProps {
   onClearPlayer: () => void;
   id: string;
 }
+
+export interface MatchEventDescription {
+  participant: string;
+  action: string;
+  time: string;
+  periodName: string;
+  context: string;
+  positioned: boolean;
+  elapsed: boolean;
+  label: string;
+}

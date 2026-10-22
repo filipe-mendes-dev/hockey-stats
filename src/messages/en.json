@@ -688,6 +688,8 @@
     "lossesLegend": "Loss",
     "shotLegend": "Shot",
     "foulLegend": "Foul",
-    "cardLegend": "Card"
+    "cardLegend": "Card",
+    "eventDescriptionNoPosition": "{participant} · {action} · {time} · No position recorded",
+    "elapsedPeriod": "{period} · elapsed"
   }
 }

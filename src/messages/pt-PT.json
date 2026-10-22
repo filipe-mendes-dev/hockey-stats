@@ -688,6 +688,8 @@
     "lossesLegend": "Perda",
     "shotLegend": "Remate",
     "foulLegend": "Falta",
-    "cardLegend": "Cartão"
+    "cardLegend": "Cartão",
+    "eventDescriptionNoPosition": "{participant} · {action} · {time} · Sem posição registada",
+    "elapsedPeriod": "{period} · decorrido"
   }
 }

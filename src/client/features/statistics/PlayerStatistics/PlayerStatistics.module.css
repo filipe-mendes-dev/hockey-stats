@@ -12,6 +12,7 @@
   flex-wrap: wrap;
 }
 .heading h2 {
+  color: var(--color-action);
   margin: 0;
   font-size: 1.25rem;
   font-weight: 500;

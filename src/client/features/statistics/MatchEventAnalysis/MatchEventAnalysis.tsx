@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
-import { ActionIcon, Button, Tooltip, UnstyledButton } from "@mantine/core";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { ActionIcon, Button } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { ArrowRight, MousePointer2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
@@ -18,9 +19,10 @@ import type { EventRinkMarker } from "../../../components/EventRink/EventRink.in
 import { StatisticsBreakdown } from "../../../components/StatisticsBreakdown/StatisticsBreakdown";
 import type { StatisticsSegment } from "../../../components/StatisticsBreakdown/StatisticsBreakdown.interfaces";
 import { RecorderActionIcon } from "../../matches/RecorderBoard/RecorderActionIcon";
-import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
+import { MatchTimelineRow } from "./MatchTimelineRow";
 import type {
   MatchEventAnalysisProps,
+  MatchEventDescription,
   StatisticsCategory,
 } from "./MatchEventAnalysis.interfaces";
 import st from "./MatchEventAnalysis.module.css";
@@ -57,7 +59,8 @@ export function MatchEventAnalysis({
   const [category, setCategory] = useState<StatisticsCategory>("all");
   const [pinned, setPinned] = useState<string>();
   const [preview, setPreview] = useState<string>();
-  const [expanded, setExpanded] = useState(false);
+  const timelineRef = useRef<HTMLOListElement>(null);
+  const compact = useMediaQuery("(max-width: 50em)");
   const categories: readonly { value: StatisticsCategory; label: string }[] = [
     { value: "all", label: t("allActions") },
     { value: "shot", label: t("shots") },
@@ -66,15 +69,35 @@ export function MatchEventAnalysis({
     { value: "team-foul", label: t("fouls") },
     { value: "card", label: t("cards") },
   ];
-  const scoped = events.filter(
-    (event) =>
-      event.deletedAt === undefined &&
-      (period === undefined || event.period === period) &&
-      (!selectedPlayerId || involvesPlayer(event, selectedPlayerId)),
+  const scoped = useMemo(
+    () =>
+      events.filter(
+        (event) =>
+          event.deletedAt === undefined &&
+          (period === undefined || event.period === period) &&
+          (!selectedPlayerId || involvesPlayer(event, selectedPlayerId)),
+      ),
+    [events, period, selectedPlayerId],
   );
-  const filtered = scoped
-    .filter((event) => category === "all" || event.kind === category)
-    .sort((left, right) => right.order - left.order);
+  const filtered = useMemo(
+    () =>
+      scoped
+        .filter((event) => category === "all" || event.kind === category)
+        .sort((left, right) => right.order - left.order),
+    [scoped, category],
+  );
+  const categoryCounts = useMemo<Record<StatisticsCategory, number>>(
+    () => ({
+      all: scoped.length,
+      shot: scoped.filter((event) => event.kind === "shot").length,
+      "ball-recovery": scoped.filter((event) => event.kind === "ball-recovery")
+        .length,
+      "ball-loss": scoped.filter((event) => event.kind === "ball-loss").length,
+      "team-foul": scoped.filter((event) => event.kind === "team-foul").length,
+      card: scoped.filter((event) => event.kind === "card").length,
+    }),
+    [scoped],
+  );
   const pinnedEvent = filtered.find((event) => event.id === pinned);
   const activeEvent =
     filtered.find((event) => event.id === preview) ?? pinnedEvent;
@@ -82,142 +105,161 @@ export function MatchEventAnalysis({
     (player) => player.id === selectedPlayerId,
   );
 
-  function playerName(playerId: string | undefined): string {
-    return (
-      snapshot.players.find((player) => player.id === playerId)
-        ?.playerNameAtMatch ?? recorder("playerUnavailable")
-    );
-  }
-
-  function describe(event: MatchEvent) {
-    const participant =
-      event.kind === "substitution"
-        ? recorder("substitutionPlayers", {
-            outgoing: playerName(event.outgoingMatchPlayerId),
-            incoming: playerName(event.incomingMatchPlayerId),
-          })
-        : "matchPlayerId" in event
-          ? playerName(event.matchPlayerId)
-          : event.kind === "opponent-goal"
-            ? snapshot.match.opponentName
-            : snapshot.match.teamNameAtMatch;
-    const detail = getEventDetail(event);
-    const parts = [
-      recorder("eventSummary", {
-        kind: recorder(event.kind),
-        detail: detail
-          ? recorder(detail)
-          : event.kind === "score-adjustment"
-            ? recorder("scoreChange", {
-                own: event.ownDelta,
-                opponent: event.opponentDelta,
-              })
-            : "",
-      }).trim(),
-    ];
-    if (event.kind === "ball-recovery" || event.kind === "ball-loss")
-      parts.push(recorder(event.rinkHalf ?? "locationUnknown"));
-    if (event.kind === "powerplay-adjust")
-      parts.push(
-        recorder("penaltyAdjustedTo", {
-          time: formatMatchTime(event.powerplayDurationMs),
-        }),
+  const descriptions = useMemo(() => {
+    function playerName(playerId: string | undefined): string {
+      return (
+        snapshot.players.find((player) => player.id === playerId)
+          ?.playerNameAtMatch ?? recorder("playerUnavailable")
       );
-    if (event.kind === "card") {
-      if (event.removedMatchPlayerId)
+    }
+
+    function describe(event: MatchEvent): MatchEventDescription {
+      const participant =
+        event.kind === "substitution"
+          ? recorder("substitutionPlayers", {
+              outgoing: playerName(event.outgoingMatchPlayerId),
+              incoming: playerName(event.incomingMatchPlayerId),
+            })
+          : "matchPlayerId" in event
+            ? playerName(event.matchPlayerId)
+            : event.kind === "opponent-goal"
+              ? snapshot.match.opponentName
+              : snapshot.match.teamNameAtMatch;
+      const detail = getEventDetail(event);
+      const parts = [
+        recorder("eventSummary", {
+          kind: recorder(event.kind),
+          detail: detail
+            ? recorder(detail)
+            : event.kind === "score-adjustment"
+              ? recorder("scoreChange", {
+                  own: event.ownDelta,
+                  opponent: event.opponentDelta,
+                })
+              : "",
+        }).trim(),
+      ];
+      if (event.kind === "ball-recovery" || event.kind === "ball-loss")
+        parts.push(recorder(event.rinkHalf ?? "locationUnknown"));
+      if (event.kind === "powerplay-adjust")
         parts.push(
-          recorder("outgoingPlayer", {
-            name: playerName(event.removedMatchPlayerId),
+          recorder("penaltyAdjustedTo", {
+            time: formatMatchTime(event.powerplayDurationMs),
           }),
         );
-      if (event.lineupEffect === "replace")
-        parts.push(
-          recorder("incomingPlayer", {
-            name: playerName(event.replacementMatchPlayerId),
-          }),
-        );
-      if (
-        event.colour === "blue" &&
-        event.startsPowerplay &&
-        (deriveMatchState(
-          snapshot,
-          events.filter((entry) => entry.order <= event.order),
-        ).blueCardCounts.get(event.matchPlayerId) ?? 0) >= 3
-      )
-        parts.push(recorder("thirdBlueRed"));
+      if (event.kind === "card") {
+        if (event.removedMatchPlayerId)
+          parts.push(
+            recorder("outgoingPlayer", {
+              name: playerName(event.removedMatchPlayerId),
+            }),
+          );
+        if (event.lineupEffect === "replace")
+          parts.push(
+            recorder("incomingPlayer", {
+              name: playerName(event.replacementMatchPlayerId),
+            }),
+          );
+        if (
+          event.colour === "blue" &&
+          event.startsPowerplay &&
+          (deriveMatchState(
+            snapshot,
+            events.filter((entry) => entry.order <= event.order),
+          ).blueCardCounts.get(event.matchPlayerId) ?? 0) >= 3
+        )
+          parts.push(recorder("thirdBlueRed"));
+      }
+      const action = parts.join(" · ");
+      const duration = snapshot.match.periods.find(
+        (entry) => entry.number === event.period,
+      )?.durationMs;
+      const countdown = formatCountdown(event.gameTime?.elapsedMs, duration);
+      const time =
+        countdown ??
+        (event.gameTime
+          ? formatMatchTime(event.gameTime.elapsedMs)
+          : recorder("untimed"));
+      const periodName = matches("periodLabel", { number: event.period });
+      const context = event.gameTime
+        ? t(countdown === undefined ? "elapsed" : "remaining", {
+            period: periodName,
+            time,
+          })
+        : recorder("eventTime", { period: event.period, time });
+      const positioned = "position" in event && event.position !== undefined;
+      return {
+        participant,
+        action,
+        time,
+        periodName,
+        context,
+        positioned,
+        elapsed: countdown === undefined && event.gameTime !== undefined,
+        label: t(
+          positioned ? "eventDescription" : "eventDescriptionNoPosition",
+          { participant, action, time: context },
+        ),
+      };
     }
-    const action = parts.join(" · ");
-    const duration = snapshot.match.periods.find(
-      (entry) => entry.number === event.period,
-    )?.durationMs;
-    const countdown = formatCountdown(event.gameTime?.elapsedMs, duration);
-    const time =
-      countdown ??
-      (event.gameTime
-        ? formatMatchTime(event.gameTime.elapsedMs)
-        : recorder("untimed"));
-    const periodName = matches("periodLabel", { number: event.period });
-    const context = event.gameTime
-      ? t(countdown === undefined ? "elapsed" : "remaining", {
-          period: periodName,
-          time,
-        })
-      : recorder("eventTime", { period: event.period, time });
-    const positioned = "position" in event && event.position !== undefined;
-    return {
-      participant,
-      action,
-      time,
-      periodName,
-      context,
-      positioned,
-      elapsed: countdown === undefined && event.gameTime !== undefined,
-      label: t("eventDescription", { participant, action, time: context }),
-    };
-  }
 
-  const markers: EventRinkMarker[] = filtered.flatMap((event) => {
-    if (!("position" in event) || !event.position) return [];
-    const description = describe(event);
-    const marker: EventRinkMarker = {
-      id: event.id,
-      position: toViewPosition(event.position, "toward-x1"),
-      label: description.label,
-      shape: "circle",
-      tone: "action",
-      emphasized: event.kind === "shot" && event.outcome === "goal",
-    };
-    if (event.kind === "shot" && category === "shot")
-      marker.tone =
-        event.outcome === "on-target"
-          ? "blue"
-          : event.outcome === "off-target"
-            ? "muted"
-            : event.outcome === "blocked"
-              ? "yellow"
-              : "action";
-    if (event.kind === "ball-recovery") marker.shape = "diamond";
-    if (event.kind === "ball-loss") {
-      marker.shape = "cross";
-      marker.tone = "red";
-    }
-    if (event.kind === "team-foul") {
-      marker.shape = "square";
-      marker.tone = "yellow";
-    }
-    if (event.kind === "card") {
-      marker.shape = "card";
-      marker.tone =
-        event.colour === "red"
-          ? "red"
-          : event.colour === "blue"
-            ? "blue"
-            : "yellow";
-    }
-    return [marker];
-  });
+    return new Map(
+      events
+        .filter((event) => event.deletedAt === undefined)
+        .map((event) => [event.id, describe(event)]),
+    );
+  }, [events, snapshot, t, recorder, matches]);
 
-  function breakdown(): { title: string; segments: StatisticsSegment[] } {
+  const markers = useMemo<EventRinkMarker[]>(
+    () =>
+      filtered.flatMap((event) => {
+        if (!("position" in event) || !event.position) return [];
+        const description = descriptions.get(event.id);
+        if (!description) return [];
+        const marker: EventRinkMarker = {
+          id: event.id,
+          position: toViewPosition(event.position, "toward-x1"),
+          label: description.label,
+          shape: "circle",
+          tone: "action",
+          emphasized: event.kind === "shot" && event.outcome === "goal",
+        };
+        if (event.kind === "shot" && category === "shot")
+          marker.tone =
+            event.outcome === "on-target"
+              ? "blue"
+              : event.outcome === "off-target"
+                ? "muted"
+                : event.outcome === "blocked"
+                  ? "yellow"
+                  : "action";
+        if (event.kind === "ball-recovery") marker.shape = "diamond";
+        if (event.kind === "ball-loss") {
+          marker.shape = "cross";
+          marker.tone = "red";
+        }
+        if (event.kind === "team-foul") {
+          marker.shape = "square";
+          marker.tone = "yellow";
+        }
+        if (event.kind === "card") {
+          marker.shape = "card";
+          marker.tone =
+            event.colour === "red"
+              ? "red"
+              : event.colour === "blue"
+                ? "blue"
+                : "yellow";
+        }
+        return [marker];
+      }),
+    [filtered, category, descriptions],
+  );
+
+  const chart = useMemo<{
+    title: string;
+    segments: StatisticsSegment[];
+  }>(() => {
     const statistics = getActionStatistics(filtered);
     if (category === "card")
       return {
@@ -307,22 +349,45 @@ export function MatchEventAnalysis({
         },
       ],
     };
-  }
-  const chart = breakdown();
-  const detail = activeEvent ? describe(activeEvent) : undefined;
-  const initialRows = filtered.slice(0, 6);
-  const visible = expanded
-    ? filtered
-    : pinnedEvent && !initialRows.some((event) => event.id === pinnedEvent.id)
-      ? [...initialRows, pinnedEvent].sort(
-          (left, right) => right.order - left.order,
-        )
-      : initialRows;
+  }, [
+    filtered,
+    category,
+    snapshot.match.periods,
+    period,
+    t,
+    recorder,
+    matches,
+  ]);
+  const detail = activeEvent ? descriptions.get(activeEvent.id) : undefined;
 
-  function selectEvent(eventId: string): void {
-    setPinned(pinned === eventId ? undefined : eventId);
+  const clearSelection = useCallback(() => {
+    setPinned(undefined);
     setPreview(undefined);
-  }
+  }, []);
+  const selectEvent = useCallback(
+    (eventId: string) => {
+      setPinned((previous) => (previous === eventId ? undefined : eventId));
+      setPreview(undefined);
+      const list = timelineRef.current;
+      const row = document.getElementById(`${timelineId}-${eventId}`);
+      if (list && row) {
+        const listBounds = list.getBoundingClientRect();
+        const rowBounds = row.getBoundingClientRect();
+        if (
+          rowBounds.top < listBounds.top ||
+          rowBounds.bottom > listBounds.bottom
+        ) {
+          list.scrollTop +=
+            rowBounds.top -
+            listBounds.top -
+            (list.clientHeight - rowBounds.height) / 2;
+        }
+        if (compact)
+          row.scrollIntoView({ block: "nearest", behavior: "instant" });
+      }
+    },
+    [timelineId, compact],
+  );
 
   return (
     <section id={id} className={st.section} aria-labelledby={heading}>
@@ -366,17 +431,11 @@ export function MatchEventAnalysis({
               setCategory(option.value);
               setPinned(undefined);
               setPreview(undefined);
-              setExpanded(false);
             }}
           >
             {option.label}
             <span className={st.categoryCount}>
-              {
-                scoped.filter(
-                  (event) =>
-                    option.value === "all" || event.kind === option.value,
-                ).length
-              }
+              {categoryCounts[option.value]}
             </span>
           </Button>
         ))}
@@ -470,16 +529,12 @@ export function MatchEventAnalysis({
                   : t("selectEvent")}
               </strong>
               <span>{detail ? detail.context : t("selectHint")}</span>
-              {detail && !detail.positioned && <span>{t("noPosition")}</span>}
             </div>
             {pinnedEvent && (
               <ActionIcon
                 type="button"
                 aria-label={t("clearEvent")}
-                onClick={() => {
-                  setPinned(undefined);
-                  setPreview(undefined);
-                }}
+                onClick={clearSelection}
               >
                 <X size={16} aria-hidden="true" />
               </ActionIcon>
@@ -501,87 +556,34 @@ export function MatchEventAnalysis({
             <h3 id={timelineHeading}>{t("timeline")}</h3>
             <span>{t("eventCount", { count: filtered.length })}</span>
           </div>
-          <ol id={timelineId} className={st.events}>
-            {visible.map((event) => {
-              const description = describe(event);
-              return (
-                <li key={event.id}>
-                  <Tooltip
-                    label={description.label}
-                    multiline
-                    events={{ hover: true, focus: true, touch: false }}
-                  >
-                    <UnstyledButton
-                      className={st.event}
-                      data-active={activeEvent?.id === event.id}
-                      aria-label={description.label}
-                      aria-pressed={pinnedEvent?.id === event.id}
-                      aria-controls={detailId}
-                      onClick={() => selectEvent(event.id)}
-                      onPointerEnter={(pointer) => {
-                        if (pointer.pointerType !== "touch")
-                          setPreview(event.id);
-                      }}
-                      onPointerLeave={() => setPreview(undefined)}
-                      onFocus={() => setPreview(event.id)}
-                      onBlur={() => setPreview(undefined)}
-                    >
-                      <span
-                        className={st.eventIcon}
-                        data-colour={
-                          event.kind === "card"
-                            ? event.colour
-                            : event.kind === "shot" && event.outcome === "goal"
-                              ? "goal"
-                              : undefined
-                        }
-                      >
-                        <RecorderActionIcon kind={event.kind} size={15} />
-                      </span>
-                      <span className={st.eventCopy}>
-                        <strong>{description.participant}</strong>
-                        <span>{description.action}</span>
-                        {!description.positioned && (
-                          <span className={st.missingPosition}>
-                            {t("noPosition")}
-                          </span>
-                        )}
-                      </span>
-                      <span className={st.eventTime}>
-                        <span>{description.time}</span>
-                        <span>{description.periodName}</span>
-                        {description.elapsed && (
-                          <span>{recorder("elapsedTime")}</span>
-                        )}
-                      </span>
-                    </UnstyledButton>
-                  </Tooltip>
-                  <DeliveryStatus
-                    compact
-                    kind="matchEvent.create"
-                    entityId={snapshot.match.id}
-                    eventId={event.id}
-                  />
-                </li>
-              );
+          <ol
+            id={timelineId}
+            ref={timelineRef}
+            className={st.events}
+            aria-labelledby={timelineHeading}
+            tabIndex={filtered.length ? 0 : undefined}
+          >
+            {filtered.map((event) => {
+              const description = descriptions.get(event.id);
+              return description ? (
+                <MatchTimelineRow
+                  key={event.id}
+                  id={`${timelineId}-${event.id}`}
+                  event={event}
+                  description={description}
+                  active={activeEvent?.id === event.id}
+                  selected={pinnedEvent?.id === event.id}
+                  compact={compact}
+                  detailId={detailId}
+                  onPreview={setPreview}
+                  onSelect={selectEvent}
+                  onClear={clearSelection}
+                />
+              ) : null;
             })}
           </ol>
           {filtered.length === 0 && (
             <p className={st.empty}>{t("emptyEvents")}</p>
-          )}
-          {filtered.length > 6 && (
-            <Button
-              variant="subtle"
-              size="sm"
-              className={st.more}
-              aria-expanded={expanded}
-              aria-controls={timelineId}
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded
-                ? t("showFewer")
-                : t("showAll", { count: filtered.length })}
-            </Button>
           )}
         </section>
       </div>

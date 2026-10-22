@@ -7,6 +7,7 @@
   margin-bottom: 0.75rem;
 }
 .heading h4 {
+  color: var(--color-action);
   margin: 0;
   font-size: 0.875rem;
   font-weight: 500;

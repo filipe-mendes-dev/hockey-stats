@@ -15,3 +15,12 @@ export interface EventRinkProps {
   onPreview: (id: string | undefined) => void;
   onSelect: (id: string) => void;
 }
+
+export interface EventRinkMarkerButtonProps extends Pick<
+  EventRinkProps,
+  "onPreview" | "onSelect"
+> {
+  marker: EventRinkMarker;
+  active: boolean;
+  selected: boolean;
+}
