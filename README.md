@@ -44,7 +44,11 @@ npm run start
 
 ## VPS deployment
 
-The production Dockerfile packages the application, migrations and interactive account helpers in one image. `compose.production.yaml` selects that image through `BENCHLINE_IMAGE`, runs PostgreSQL 18 with separate maintenance/application credentials and preserves its named volume across releases. Development Compose is unchanged. See [VPS deployment](docs/deployment.md) for external configuration and first-start commands, and [Dependency advisory assessment](docs/security-advisories.md) for the Next.js patch required before public exposure. Nginx/HTTPS and backups remain later increments.
+Production uses one application image and PostgreSQL 18. Compose selects a versioned image through `BENCHLINE_IMAGE`, loads external credentials and retains database storage across releases. Local verification is complete; VPS deployment is pending.
+
+- [Deployment reference](docs/deployment.md): architecture, configuration, maintenance and verification.
+- [First VPS deployment](docs/vps-first-deployment.md): Mac/VPS commands and checkpoints for Netcup.
+- [Dependency advisories](docs/security-advisories.md): resolved Next.js findings and remaining tooling advisories.
 
 ## Local PostgreSQL
 

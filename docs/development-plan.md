@@ -1,5 +1,13 @@
 # Development plan and prototype status
 
+## VPS deployment
+
+Increments 1 and 2 are accepted. One production Dockerfile supports manual builds and future GitHub Actions builds. Production Compose selects a versioned image through `BENCHLINE_IMAGE`, keeps credentials outside the repository and preserves the PostgreSQL 18 volume across releases. Migrations and account setup use explicit commands in the application image.
+
+The final local checks passed on 2026-10-23 after patching Next.js to 16.4.2. They covered the AMD64 build, database permissions, runtime-only credentials, non-root cache writes, authentication and offline reload. The audit reports five high and four moderate development-tool findings, with zero critical findings. See [VPS deployment](deployment.md) for verification results and [Dependency advisory assessment](security-advisories.md) for exposure and follow-up details.
+
+Increment 3 is pending. Follow the [first VPS deployment guide](vps-first-deployment.md) one checkpoint at a time. It separates Mac and VPS commands and includes sudo requirements for `deploy`. No VPS commands have been executed. Backups, update recovery and GitHub Actions/GHCR remain subsequent increments; production releases will require a manual trigger.
+
 ## Player name editing
 
 Authorized on 2026-10-22. Enable Edit in the existing Player actions menu on list and profile views. Reuse PlayerNameField and ResponsiveFormDialog. Validate trimmed nonempty names, retain duplicate-name support, lock pending saves and preserve failed/conflicted drafts. Persist the renamed Player and player.update command atomically with expected revision checks; preserve MatchPlayer names and all other historical snapshots. Use existing receipt, deletion protection and synchronization behavior. No migration, package or automated test work is required.
