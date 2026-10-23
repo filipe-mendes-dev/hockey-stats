@@ -44,9 +44,10 @@ npm run start
 
 ## VPS deployment
 
-Production uses one application image and PostgreSQL 18. Compose selects a versioned image through `BENCHLINE_IMAGE`, loads external credentials and retains database storage across releases. Local verification is complete; VPS deployment is pending.
+Production uses one application image and PostgreSQL 18. Compose selects a versioned image through `BENCHLINE_IMAGE`, loads external credentials and retains database storage across releases. Local deployment checks are complete. GitHub Actions validates PRs and publishes release images to GHCR; VPS deployment is pending.
 
 - [Deployment reference](docs/deployment.md): architecture, configuration, maintenance and verification.
+- [CI and container publishing](docs/ci-cd.md): branch flow, workflow triggers, GHCR setup and image verification.
 - [First VPS deployment](docs/vps-first-deployment.md): Mac/VPS commands and checkpoints for Netcup.
 - [Dependency advisories](docs/security-advisories.md): resolved Next.js findings and remaining tooling advisories.
 

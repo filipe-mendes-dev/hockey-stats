@@ -2,11 +2,13 @@
 
 ## VPS deployment
 
-Increments 1 and 2 are accepted. One production Dockerfile supports manual builds and future GitHub Actions builds. Production Compose selects a versioned image through `BENCHLINE_IMAGE`, keeps credentials outside the repository and preserves the PostgreSQL 18 volume across releases. Migrations and account setup use explicit commands in the application image.
+Increments 1 and 2 are accepted. One production Dockerfile supports GitHub Actions and manual builds. Production Compose selects a versioned image through `BENCHLINE_IMAGE`, keeps credentials outside the repository and preserves the PostgreSQL 18 volume across releases. Migrations and account setup use explicit commands in the application image.
 
 The final local checks passed on 2026-10-23 after patching Next.js to 16.4.2. They covered the AMD64 build, database permissions, runtime-only credentials, non-root cache writes, authentication and offline reload. The audit reports five high and four moderate development-tool findings, with zero critical findings. See [VPS deployment](deployment.md) for verification results and [Dependency advisory assessment](security-advisories.md) for exposure and follow-up details.
 
-Increment 3 is pending. Follow the [first VPS deployment guide](vps-first-deployment.md) one checkpoint at a time. It separates Mac and VPS commands and includes sudo requirements for `deploy`. No VPS commands have been executed. Backups, update recovery and GitHub Actions/GHCR remain subsequent increments; production releases will require a manual trigger.
+Increment 3A now precedes the first VPS deployment. It adds PR CI for `staging`/`master` and automatic GHCR image publishing on pushes to `master`, using the existing Dockerfile. Development PRs use `feature/*` or `fix/*` and squash into `staging`; staging-to-master promotions use merge commits. See [CI and container publishing](ci-cd.md) for workflow checks, package permissions and first-image verification. Local workflow validation and the exact CI sequence in a clean AMD64 Linux container passed. GitHub execution and the first publish remain pending. Manual production deployment is a separate later increment. No VPS changes, staging infrastructure, automatic Git tags or GitHub Releases are included.
+
+The [first VPS deployment guide](vps-first-deployment.md) now selects a published GHCR image. VPS execution remains pending, followed by backups and update recovery. No VPS commands have been executed.
 
 ## Player name editing
 
