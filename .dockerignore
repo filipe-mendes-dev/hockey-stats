@@ -1,0 +1,32 @@
+# Allow only inputs needed to build the app and run its maintenance commands.
+**
+!package.json
+!package-lock.json
+!next.config.ts
+!tsconfig.json
+!drizzle.config.ts
+!src/
+!src/**
+!public/
+!public/**
+!scripts/
+!scripts/**
+!drizzle/
+!drizzle/**
+
+# Exclude local output and credentials even when nested in an allowed directory.
+**/node_modules
+**/.next
+**/.env*
+**/*.env
+**/.npmrc
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.tsbuildinfo
+src/messages/*.d.json.ts
+**/tests
+**/__tests__
+**/*.test.*
+**/*.spec.*

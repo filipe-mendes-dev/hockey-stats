@@ -51,4 +51,4 @@
 - Run relevant non-test checks. Inspect aggregate scripts before running them; do not run any that include tests unless explicitly requested. Report failed, skipped or unavailable checks accurately.
 - Verify offline/service-worker behavior against a production build.
 - Mark phases complete only after acceptance criteria pass.
-- Prefix branches with `feat/` for features or `fix/` for bug fixes. Never use `codex/`.
+- Use `feature/` for new feature branches and `fix/` for bug fixes. Squash development PRs into `staging` and promote `staging` to `master` with a merge commit. Never use `codex/`.
