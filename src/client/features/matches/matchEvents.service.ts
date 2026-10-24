@@ -108,7 +108,7 @@ export async function addMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 5,
+        version: 7,
         operationId,
         kind: "matchEvent.create",
         expectedRevision: snapshot.match.revision,
@@ -172,7 +172,7 @@ export async function undoMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 5,
+        version: 7,
         operationId,
         kind: "matchEvent.undo",
         expectedRevision: snapshot.match.revision,

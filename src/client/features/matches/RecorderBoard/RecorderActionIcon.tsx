@@ -10,6 +10,7 @@ import {
   Square,
   Target,
   Trophy,
+  Timer,
 } from "lucide-react";
 import type { RecorderActionIconProps } from "./RecorderBoard.interfaces";
 const icons = {
@@ -26,6 +27,8 @@ const icons = {
   "powerplay-end": Flag,
   "powerplay-adjust": Flag,
   "suspension-end": Flag,
+  "goalkeeper-save": ShieldCheck,
+  timeout: Timer,
 };
 export function RecorderActionIcon({
   kind,

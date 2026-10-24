@@ -141,6 +141,8 @@ export function getEventEligibility(
   }
   if (!context.state.activePlayerIds.has(playerId))
     return reject("player-off-field");
+  if (kind === "goalkeeper-save" && player.role !== "goalkeeper")
+    return reject("goalkeeper-event-unavailable");
   if (
     player.role === "goalkeeper" &&
     (kind === "ball-recovery" || kind === "ball-loss" || kind === "shot")
@@ -217,6 +219,12 @@ export function isValidEventForMatch(
     event.matchId === snapshot.match.id &&
     period !== undefined &&
     ids.every((id) => snapshot.players.some((player) => player.id === id)) &&
+    (!(event.kind === "goalkeeper-save" || event.kind === "opponent-goal") ||
+      !event.matchPlayerId ||
+      snapshot.players.some(
+        (player) =>
+          player.id === event.matchPlayerId && player.role === "goalkeeper",
+      )) &&
     (event.gameTime === undefined ||
       period.durationMs === undefined ||
       event.gameTime.elapsedMs <= period.durationMs)
@@ -247,6 +255,10 @@ export function validateMatchEvent(
   );
   if (!lineup.allowed) return lineup;
   switch (input.kind) {
+    case "opponent-goal":
+      return input.matchPlayerId
+        ? getEventEligibility(context, "goalkeeper-save", input.matchPlayerId)
+        : allowed;
     case "powerplay-adjust":
     case "powerplay-end":
       return context.state.powerplayCardEventIds[0] ===
@@ -305,6 +317,7 @@ export function validateMatchEvent(
     case "ball-loss":
     case "shot":
     case "team-foul":
+    case "goalkeeper-save":
       return getEventEligibility(context, input.kind, input.matchPlayerId);
     default:
       return allowed;

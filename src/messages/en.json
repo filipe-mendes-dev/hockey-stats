@@ -589,7 +589,14 @@
     "rinkRight": "right",
     "rinkGoal": "{team}'s goal",
     "rinkDesktopHint": "Click the rink to record an event.",
-    "rinkHelp": "Rink selection help"
+    "rinkHelp": "Rink selection help",
+    "goalkeeper-save": "Goalkeeper save",
+    "timeout": "Timeout",
+    "own": "Our team",
+    "opponent": "Opponent",
+    "simple": "Simple save",
+    "difficult": "Difficult save",
+    "intercepted-shot": "Intercepted shot"
   },
   "footer": {
     "label": "Application status",

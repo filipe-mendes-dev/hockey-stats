@@ -589,7 +589,14 @@
     "rinkRight": "direita",
     "rinkGoal": "Baliza de {team}",
     "rinkDesktopHint": "Clique na pista para registar um evento.",
-    "rinkHelp": "Ajuda para selecionar na pista"
+    "rinkHelp": "Ajuda para selecionar na pista",
+    "goalkeeper-save": "Defesa",
+    "timeout": "Desconto de tempo",
+    "own": "A nossa equipa",
+    "opponent": "Adversário",
+    "simple": "Defesa simples",
+    "difficult": "Defesa difícil",
+    "intercepted-shot": "Remate intercetado"
   },
   "footer": {
     "label": "Estado da aplicação",

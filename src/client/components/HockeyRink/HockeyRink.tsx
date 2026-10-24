@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { restartSpots } from "../../../domain/matches/rinkPosition";
 import type { HockeyRinkProps } from "./HockeyRink.interfaces";
 import st from "./HockeyRink.module.css";
 
@@ -69,8 +70,14 @@ export function HockeyRink({
         <path d="M75 228.75A21.25 21.25 0 0 1 75 271.25M925 228.75A21.25 21.25 0 0 0 925 271.25" />
       </g>
       <g fill="currentColor">
-        {[210, 260, 500, 740, 790].map((x) => (
-          <circle key={x} cx={x} cy="250" r="2.5" />
+        {[
+          1 - restartSpots.penalty.y,
+          1 - restartSpots["direct-free-hit"].y,
+          0.5,
+          restartSpots["direct-free-hit"].y,
+          restartSpots.penalty.y,
+        ].map((x) => (
+          <circle key={x} cx={x * 1000} cy="250" r="2.5" />
         ))}
       </g>
       <g stroke="currentColor" strokeLinejoin="round">
