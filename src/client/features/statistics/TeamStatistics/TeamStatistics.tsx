@@ -41,25 +41,33 @@ export function TeamStatistics({ statistics }: TeamStatisticsProps) {
     { label: t("fouls"), value: statistics.fouls, note: t("committed") },
   ];
   return (
-    <dl className={st.metrics}>
-      {metrics.map((metric) => (
-        <div key={metric.label} className={st.metric}>
-          <dt>{metric.label}</dt>
+    <>
+      <dl className={st.metrics}>
+        {metrics.map((metric) => (
+          <div key={metric.label} className={st.metric}>
+            <dt>{metric.label}</dt>
+            <dd>
+              <strong>{format.number(metric.value)}</strong>
+              <span>{metric.note}</span>
+            </dd>
+          </div>
+        ))}
+        <div className={st.metric}>
+          <dt>{t("cards")}</dt>
           <dd>
-            <strong>{format.number(metric.value)}</strong>
-            <span>{metric.note}</span>
+            <div className={st.cards}>
+              <CardCounts cards={statistics.cards} showZeros />
+            </div>
+            <span>{t("cardOrder")}</span>
           </dd>
         </div>
-      ))}
-      <div className={st.metric}>
-        <dt>{t("cards")}</dt>
-        <dd>
-          <div className={st.cards}>
-            <CardCounts cards={statistics.cards} showZeros />
-          </div>
-          <span>{t("cardOrder")}</span>
-        </dd>
-      </div>
-    </dl>
+      </dl>
+      <p className={st.timeouts}>
+        {t("timeoutsSummary", {
+          own: format.number(statistics.timeouts.own),
+          opponent: format.number(statistics.timeouts.opponent),
+        })}
+      </p>
+    </>
   );
 }

@@ -715,7 +715,16 @@
     "foulLegend": "Foul",
     "cardLegend": "Card",
     "eventDescriptionNoPosition": "{participant} · {action} · {time} · No position recorded",
-    "elapsedPeriod": "{period} · elapsed"
+    "elapsedPeriod": "{period} · elapsed",
+    "goalkeepersTitle": "Goalkeepers",
+    "saves": "Recorded saves",
+    "simpleSaves": "Simple saves",
+    "difficultSaves": "Difficult saves",
+    "concededGoals": "Attributed goals conceded",
+    "goalkeeperRecordingNote": "Counts reflect recorded events only. Zero saves does not establish that no saves occurred. Historical matches may have incomplete save or goalkeeper attribution data.",
+    "unattributedGoals": "Goals conceded without goalkeeper attribution: {count}.",
+    "timeouts": "Timeouts",
+    "timeoutsSummary": "Timeouts: our team {own} · opponent {opponent}"
   },
   "adminUsers": {
     "title": "Users",

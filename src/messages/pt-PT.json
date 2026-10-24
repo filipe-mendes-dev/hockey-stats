@@ -715,7 +715,16 @@
     "foulLegend": "Falta",
     "cardLegend": "Cartão",
     "eventDescriptionNoPosition": "{participant} · {action} · {time} · Sem posição registada",
-    "elapsedPeriod": "{period} · decorrido"
+    "elapsedPeriod": "{period} · decorrido",
+    "goalkeepersTitle": "Guarda-redes",
+    "saves": "Defesas registadas",
+    "simpleSaves": "Defesas simples",
+    "difficultSaves": "Defesas difíceis",
+    "concededGoals": "Golos sofridos atribuídos",
+    "goalkeeperRecordingNote": "As contagens refletem apenas os eventos registados. Zero defesas não significa que não tenham ocorrido defesas. Os jogos antigos podem ter registos incompletos de defesas ou da atribuição ao guarda-redes.",
+    "unattributedGoals": "Golos sofridos sem guarda-redes identificado: {count}.",
+    "timeouts": "Descontos de tempo",
+    "timeoutsSummary": "Descontos de tempo: a nossa equipa {own} · adversário {opponent}"
   },
   "adminUsers": {
     "title": "Utilizadores",
