@@ -297,135 +297,101 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     onSelect: selectRinkPosition,
     onCancelGesture: cancelRinkGesture,
   };
+  if (readOnly) return null;
   return (
     <div className={st.recorder} data-live-recorder={!readOnly}>
-      {!readOnly && (
-        <div className={st.board}>
-          <div className={st.sticky} inert={controlsBusy}>
-            <RecorderHeader
-              match={snapshot.match}
-              disabled={
-                state.phase !== "idle" ||
-                rinkGesture ||
-                correction !== null ||
-                undo.isPending
-              }
-              scoreDisabled={disabled}
-              onScoreAdjust={() =>
-                handleOpenEvent({ kind: "score-adjustment" })
-              }
-            />
-            <MatchScoreboard
-              match={snapshot.match}
-              now={now}
-              powerplays={
-                events.data && !events.isError ? derivedState.powerplays : []
-              }
-              onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
-              ownScore={
-                events.data && !events.isError
-                  ? derivedState.ownScore
-                  : undefined
-              }
-              opponentScore={
-                events.data && !events.isError
-                  ? derivedState.opponentScore
-                  : undefined
-              }
-              disabled={disabled}
-            />
-          </div>
-          <MatchControls
+      <div className={st.board}>
+        <div className={st.sticky} inert={controlsBusy}>
+          <RecorderHeader
             match={snapshot.match}
-            now={now}
             disabled={
-              directionOpen ||
               state.phase !== "idle" ||
               rinkGesture ||
               correction !== null ||
               undo.isPending
             }
-            onBusyChange={setClockControlsBusy}
+            scoreDisabled={disabled}
+            onScoreAdjust={() => handleOpenEvent({ kind: "score-adjustment" })}
           />
-          <div className={st.capture} inert={controlsBusy}>
-            <RecorderActions
-              context={context}
-              disabled={disabled}
-              onPick={handleOpenEvent}
-              undoDisabled={
-                readOnly ||
-                rinkGesture ||
-                correction !== null ||
-                !candidate.data ||
-                undo.isPending ||
-                state.phase !== "idle"
-              }
-              undoPending={undo.isPending}
-              onUndo={() => {
-                if (candidate.data)
-                  undo.mutate({
-                    matchId: snapshot.match.id,
-                    eventId: candidate.data.id,
-                  });
-              }}
-            />
-            <RecorderPlayers
-              context={context}
-              disabled={disabled}
-              onPick={handleOpenEvent}
-            />
-            {undo.isError && (
-              <p className={st.error} role="alert">
-                {t("undoFailed")}
-              </p>
-            )}
-            {candidate.isError && (
-              <p className={st.error}>{t("undoUnavailable")}</p>
-            )}
-          </div>
+          <MatchScoreboard
+            match={snapshot.match}
+            now={now}
+            powerplays={
+              events.data && !events.isError ? derivedState.powerplays : []
+            }
+            onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
+            ownScore={
+              events.data && !events.isError ? derivedState.ownScore : undefined
+            }
+            opponentScore={
+              events.data && !events.isError
+                ? derivedState.opponentScore
+                : undefined
+            }
+            disabled={disabled}
+          />
         </div>
-      )}
-      {readOnly && (
-        <section className={st.readOnlyScore} aria-label={t("scoreTitle")}>
-          <strong>
-            {snapshot.match.teamNameAtMatch}:{" "}
-            {events.data && !events.isError ? derivedState.ownScore : "…"}
-          </strong>
-          <strong>
-            {snapshot.match.opponentName}:{" "}
-            {events.data && !events.isError ? derivedState.opponentScore : "…"}
-          </strong>
-          <p>{t("completedSummary")}</p>
-          {events.data && !events.isError && (
-            <p>
-              {t(
-                derivedState.isPowerplay
-                  ? "powerplayActive"
-                  : "powerplayInactive",
-                {
-                  maximum: String(derivedState.maxOnField),
-                  queued: String(
-                    Math.max(0, derivedState.powerplayCardEventIds.length - 1),
-                  ),
-                },
-              )}
+        <MatchControls
+          match={snapshot.match}
+          now={now}
+          disabled={
+            directionOpen ||
+            state.phase !== "idle" ||
+            rinkGesture ||
+            correction !== null ||
+            undo.isPending
+          }
+          onBusyChange={setClockControlsBusy}
+        />
+        <div className={st.capture} inert={controlsBusy}>
+          <RecorderActions
+            context={context}
+            disabled={disabled}
+            onPick={handleOpenEvent}
+            undoDisabled={
+              readOnly ||
+              rinkGesture ||
+              correction !== null ||
+              !candidate.data ||
+              undo.isPending ||
+              state.phase !== "idle"
+            }
+            undoPending={undo.isPending}
+            onUndo={() => {
+              if (candidate.data)
+                undo.mutate({
+                  matchId: snapshot.match.id,
+                  eventId: candidate.data.id,
+                });
+            }}
+          />
+          <RecorderPlayers
+            context={context}
+            disabled={disabled}
+            onPick={handleOpenEvent}
+          />
+          {undo.isError && (
+            <p className={st.error} role="alert">
+              {t("undoFailed")}
             </p>
           )}
-        </section>
-      )}
+          {candidate.isError && (
+            <p className={st.error}>{t("undoUnavailable")}</p>
+          )}
+        </div>
+      </div>
       <div className={st.review}>
-        {!readOnly && <RecorderRink {...rinkProps} />}
+        <RecorderRink {...rinkProps} />
         <RecorderTimeline
           snapshot={snapshot}
           events={events.data}
           loading={events.isPending}
           failed={events.isError}
           onRetry={() => void events.refetch()}
-          expanded={readOnly}
-          scrollable={!readOnly}
+          scrollable
         />
       </div>
-      {directionOpen && !readOnly && (
+      {directionOpen && (
         <RecorderDirectionDialog
           match={snapshot.match}
           onClose={() => {
@@ -434,14 +400,14 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           }}
         />
       )}
-      {correction && !readOnly && (
+      {correction && (
         <PowerplayCorrectionDialog
           match={snapshot.match}
           penalties={correction}
           onClose={() => setCorrection(null)}
         />
       )}
-      {draft && !readOnly && !directionOpen && (
+      {draft && !directionOpen && (
         <EventEntryDialog
           draft={draft}
           context={draftContext}

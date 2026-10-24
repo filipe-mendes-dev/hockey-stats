@@ -471,7 +471,6 @@
     "scoreTitle": "Resultado",
     "opponent-goal": "Golo adversário",
     "score-adjustment": "Corrigir resultado",
-    "completedSummary": "Jogo terminado. O resultado e os eventos registados estão disponíveis apenas para consulta.",
     "matchLevelEvent": "Jogo",
     "scoreChange": "Alteração do nosso resultado: {own, number}; alteração do resultado adversário: {opponent, number}",
     "ball-loss": "Perda de bola",

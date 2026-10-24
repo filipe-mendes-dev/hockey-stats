@@ -471,7 +471,6 @@
     "scoreTitle": "Score",
     "opponent-goal": "Opponent goal",
     "score-adjustment": "Correct score",
-    "completedSummary": "Completed Match. Score and recorded events are read-only.",
     "matchLevelEvent": "Match",
     "scoreChange": "Our score change: {own, number}; opponent score change: {opponent, number}",
     "ball-loss": "Ball loss",

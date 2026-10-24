@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Alert, Button } from "@mantine/core";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { StartMatchInput } from "../../../../domain/matches/match.schema";
@@ -27,11 +26,16 @@ export function StartMatchPage() {
   const backHref = snapshot
     ? `/app/matches/view?id=${encodeURIComponent(snapshot.match.id)}`
     : "/app/matches";
+  const destination =
+    snapshot && snapshot.match.status !== "setup"
+      ? `/app/matches/${snapshot.match.status === "completed" ? "view" : "live"}?id=${encodeURIComponent(snapshot.match.id)}`
+      : undefined;
+  useEffect(() => {
+    if (destination && !query.isPending && !query.isError)
+      router.replace(destination);
+  }, [destination, query.isPending, query.isError, router]);
   async function save(input: StartMatchInput): Promise<void> {
-    const saved = await start.mutateAsync(input);
-    router.replace(
-      `/app/matches/live?id=${encodeURIComponent(saved.match.id)}`,
-    );
+    await start.mutateAsync(input);
   }
   return (
     <section className={st.page}>
@@ -58,7 +62,7 @@ export function StartMatchPage() {
           disabled: start.isPending,
         }}
       />
-      {query.isPending || query.isError ? (
+      {query.isPending || query.isError || destination ? (
         <EntityDataStatus
           loadingLabel={t("loading")}
           failedLabel={t("loadFailed")}
@@ -70,15 +74,6 @@ export function StartMatchPage() {
         />
       ) : !snapshot ? (
         <p>{t("unavailableDescription")}</p>
-      ) : snapshot.match.status !== "setup" ? (
-        <Button
-          component={Link}
-          href={`/app/matches/${snapshot.match.status === "completed" ? "view" : "live"}?id=${encodeURIComponent(snapshot.match.id)}`}
-          prefetch={false}
-          size="sm"
-        >
-          {t(snapshot.match.status === "completed" ? "summaryTitle" : "resume")}
-        </Button>
       ) : (
         <StartMatchForm
           key={snapshot.match.id}
@@ -95,11 +90,6 @@ export function StartMatchPage() {
           }
           onStart={save}
         />
-      )}
-      {start.isError && snapshot?.match.status !== "setup" && (
-        <Alert color="red" role="alert">
-          {t("changed")}
-        </Alert>
       )}
     </section>
   );
