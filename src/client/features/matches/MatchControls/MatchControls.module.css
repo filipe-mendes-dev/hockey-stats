@@ -5,13 +5,28 @@
   padding: 1rem 1rem 0;
 }
 .actions {
+  display: grid;
+  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.actions > :first-child {
+  justify-self: end;
+}
+.primary {
+  justify-self: center;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 0.75rem;
+}
+.finish {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  min-width: 44px;
 }
 .actions button {
-  min-height: 2.75rem;
+  min-height: 44px;
 }
 .inputs {
   display: grid;
@@ -30,4 +45,14 @@
   .controls {
     padding-block: 0.5rem 0;
   }
+}
+
+.actions button :global(.mantine-Button-label) {
+  white-space: nowrap;
+}
+
+.actions :global(.mantine-ActionIcon-root) {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
 }
