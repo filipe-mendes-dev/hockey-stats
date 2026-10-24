@@ -19,6 +19,7 @@ import { addMatchEventInputSchema } from "../../../../domain/matches/matchEvent.
 import {
   getPositionHalf,
   getRestartSpot,
+  supportsRinkPosition,
 } from "../../../../domain/matches/rinkPosition";
 
 export interface EventDraft {
@@ -66,6 +67,7 @@ export type EventDraftAction =
   | { type: "restoreChoices"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
   | { type: "setPosition"; position: RinkPosition }
+  | { type: "clearPosition" }
   | {
       type: "selectGameEvent";
       event: "opponent-goal" | "timeout" | "set-piece";
@@ -190,6 +192,13 @@ export function transitionEventDraft(
 
     case "selectPlayer":
       return { ...state, draft: { ...state.draft, matchPlayerId: action.id } };
+    case "clearPosition": {
+      const draft = { ...state.draft };
+      delete draft.position;
+      if (draft.kind === "ball-recovery" || draft.kind === "ball-loss")
+        delete draft.rinkHalf;
+      return { ...state, draft };
+    }
     case "setPosition": {
       const draft = { ...state.draft, position: action.position };
       if (draft.kind === "ball-recovery" || draft.kind === "ball-loss") {
@@ -230,8 +239,7 @@ export function transitionEventDraft(
         }
         delete draft.matchPlayerId;
       }
-      if (action.kind === "substitution" || action.kind === "player-in")
-        delete draft.position;
+      if (!supportsRinkPosition(action.kind)) delete draft.position;
       if (action.kind === "shot") draft.attemptType = "open-play";
       if (
         (action.kind === "ball-recovery" || action.kind === "ball-loss") &&

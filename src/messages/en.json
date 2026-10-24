@@ -606,7 +606,12 @@
     "chooseSetPiece": "Choose a set piece",
     "chooseSave": "Save difficulty",
     "chooseTimeoutTeam": "Which team called the timeout?",
-    "restartSpot": "Fixed restart spot"
+    "restartSpot": "Fixed restart spot",
+    "changeDirection": "Change direction",
+    "rinkRegisterHint": "Tap rink to register",
+    "rinkAddPositionHint": "Tap to add a position",
+    "rinkSelectedHint": "Position selected",
+    "rinkClearPosition": "Remove position"
   },
   "footer": {
     "label": "Application status",

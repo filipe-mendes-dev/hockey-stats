@@ -606,7 +606,12 @@
     "chooseSetPiece": "Escolher bola parada",
     "chooseSave": "Dificuldade da defesa",
     "chooseTimeoutTeam": "Que equipa pediu o desconto de tempo?",
-    "restartSpot": "Marca fixa de bola parada"
+    "restartSpot": "Marca fixa de bola parada",
+    "changeDirection": "Alterar direção",
+    "rinkRegisterHint": "Toque para registar",
+    "rinkAddPositionHint": "Toque para marcar",
+    "rinkSelectedHint": "Posição marcada",
+    "rinkClearPosition": "Remover posição"
   },
   "footer": {
     "label": "Estado da aplicação",

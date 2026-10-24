@@ -9,12 +9,14 @@ export interface RinkPositionPickerProps {
   hint: string;
   touchHint?: string;
   hintAccessory?: ReactNode;
+  hideHint?: boolean;
   invalidLabel: string;
   positionLabel: (point: RinkPoint) => string;
   initialPosition?: RinkPoint | undefined;
   orientation?: RinkOrientation | undefined;
   disabled?: boolean;
   autoFocus?: boolean;
+  interaction?: "precision" | "tap";
   onStart: () => void;
   onSelect: (point: RinkPoint) => void;
   onCancelGesture: () => void;

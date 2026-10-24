@@ -16,7 +16,6 @@ import {
   getCardLineupEffect,
   getCardRemovalPlayers,
 } from "../../../../domain/matches/matchRules";
-import type { MatchPlayer } from "../../../../domain/matches/match.schema";
 import { Button } from "@mantine/core";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
 import { EventTimeForm } from "../EventTimeForm/EventTimeForm";
@@ -24,11 +23,19 @@ import {
   Shield,
   Swords,
   Square,
-  Crosshair,
+  Trophy,
   Target,
+  MoveUpRight,
   ShieldCheck,
+  Crosshair,
   Timer,
+  Hand,
+  ArrowLeftRight,
+  CircleDot,
+  CircleEllipsis,
+  UserRoundX,
 } from "lucide-react";
+import { EventPlayerChoices } from "./EventPlayerChoices";
 import { getEventDraftSteps } from "./eventDraftSteps";
 import { supportsRinkPosition } from "../../../../domain/matches/rinkPosition";
 import type { EventDraftFieldsProps } from "./EventDraftFields.interfaces";
@@ -42,9 +49,6 @@ export function EventDraftFields({
   const t = useTranslations("recorder");
   const { snapshot, state } = context;
   const { activePlayerIds } = state;
-  function playerLabel(player: MatchPlayer): string {
-    return `${player.jerseyNumber ? `#${player.jerseyNumber} · ` : ""}${player.playerNameAtMatch}`;
-  }
   const step = getEventDraftSteps(draft)[0];
   const cardReplacements = draft.matchPlayerId
     ? getCardReplacementPlayers(context, draft.matchPlayerId)
@@ -171,42 +175,22 @@ export function EventDraftFields({
       {step === "choosePlayer" && (
         <section>
           <h3>{t("choosePlayer")}</h3>
-          <ul className={st.players}>
-            {(draft.kind
+          <EventPlayerChoices
+            players={(draft.kind
               ? getEligiblePlayers(
                   context,
                   playerEventKindSchema.parse(draft.kind),
                 )
               : snapshot.players
-            )
-              .filter(
-                (player) =>
-                  draft.kind !== "card" ||
-                  !draft.colour ||
-                  getCardLineupEffect(context, player.id, draft.colour) !==
-                    null,
-              )
-              .map((player) => (
-                <li key={player.id}>
-                  <Button
-                    variant="default"
-                    onClick={() =>
-                      onAction({
-                        type: "selectPlayer",
-                        id: player.id,
-                      })
-                    }
-                  >
-                    <span
-                      className={st.playerLabel}
-                      title={playerLabel(player)}
-                    >
-                      {playerLabel(player)}
-                    </span>
-                  </Button>
-                </li>
-              ))}
-          </ul>
+            ).filter(
+              (player) =>
+                draft.kind !== "card" ||
+                !draft.colour ||
+                getCardLineupEffect(context, player.id, draft.colour) !== null,
+            )}
+            activePlayerIds={activePlayerIds}
+            onSelect={(id) => onAction({ type: "selectPlayer", id })}
+          />
         </section>
       )}
       {step === "chooseHalf" && (
@@ -235,10 +219,28 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseSubtype")}</h3>
           <div className={st.choices}>
-            {recoverySubtypeSchema.options.map((subtype) => (
+            {[
+              ...recoverySubtypeSchema.options.filter(
+                (subtype) => subtype !== "other",
+              ),
+              "other" as const,
+            ].map((subtype) => (
               <Button
                 key={subtype}
                 variant="default"
+                leftSection={
+                  subtype === "interception" ? (
+                    <ArrowLeftRight size={20} aria-hidden="true" />
+                  ) : subtype === "duel" ? (
+                    <Swords size={20} aria-hidden="true" />
+                  ) : subtype === "loose-ball" ? (
+                    <CircleDot size={20} aria-hidden="true" />
+                  ) : subtype === "intercepted-shot" ? (
+                    <Shield size={20} aria-hidden="true" />
+                  ) : (
+                    <CircleEllipsis size={20} aria-hidden="true" />
+                  )
+                }
                 onClick={() => onAction({ type: "selectSubtype", subtype })}
               >
                 {t(subtype)}
@@ -255,6 +257,15 @@ export function EventDraftFields({
               <Button
                 key={reason}
                 variant="default"
+                leftSection={
+                  reason === "intercepted-pass" ? (
+                    <ArrowLeftRight size={20} aria-hidden="true" />
+                  ) : reason === "failed-individual-action" ? (
+                    <UserRoundX size={20} aria-hidden="true" />
+                  ) : (
+                    <CircleEllipsis size={20} aria-hidden="true" />
+                  )
+                }
                 onClick={() => onAction({ type: "selectReason", reason })}
               >
                 {t(reason)}
@@ -271,6 +282,19 @@ export function EventDraftFields({
               <Button
                 key={outcome}
                 variant="default"
+                className={st.outcomeChoice}
+                data-outcome={outcome}
+                leftSection={
+                  outcome === "goal" ? (
+                    <Trophy size={20} aria-hidden="true" />
+                  ) : outcome === "on-target" ? (
+                    <Target size={20} aria-hidden="true" />
+                  ) : outcome === "off-target" ? (
+                    <MoveUpRight size={20} aria-hidden="true" />
+                  ) : (
+                    <Hand size={20} aria-hidden="true" />
+                  )
+                }
                 onClick={() => onAction({ type: "selectOutcome", outcome })}
               >
                 {t(outcome)}
@@ -362,28 +386,13 @@ export function EventDraftFields({
               <h3>
                 {t(side === "outgoing" ? "chooseOutgoing" : "chooseIncoming")}
               </h3>
-              <div className={st.choices}>
-                {options.map((player) => (
-                  <Button
-                    key={player.id}
-                    variant="default"
-                    onClick={() =>
-                      onAction({
-                        type: "selectSubstitute",
-                        side,
-                        id: player.id,
-                      })
-                    }
-                  >
-                    <span
-                      className={st.playerLabel}
-                      title={playerLabel(player)}
-                    >
-                      {playerLabel(player)}
-                    </span>
-                  </Button>
-                ))}
-              </div>
+              <EventPlayerChoices
+                players={options}
+                activePlayerIds={activePlayerIds}
+                onSelect={(id) =>
+                  onAction({ type: "selectSubstitute", side, id })
+                }
+              />
             </section>
           );
         })}
@@ -428,52 +437,51 @@ export function EventDraftFields({
                       : "choosePowerplayRemoval",
                   )}
                 </p>
-                <div className={st.choices}>
-                  {getCardRemovalPlayers(context, draft.matchPlayerId).map(
-                    (player) => (
-                      <Button
-                        key={player.id}
-                        onClick={() =>
-                          onAction({
-                            type: "confirmCard",
-                            effect: "remove",
-                            removedId: player.id,
-                          })
-                        }
-                      >
-                        {activePlayerIds.has(draft.matchPlayerId!)
-                          ? t("confirmCard")
-                          : playerLabel(player)}
-                      </Button>
-                    ),
-                  )}
-                </div>
+                {activePlayerIds.has(draft.matchPlayerId) ? (
+                  <Button
+                    onClick={() => {
+                      if (draft.matchPlayerId)
+                        onAction({
+                          type: "confirmCard",
+                          effect: "remove",
+                          removedId: draft.matchPlayerId,
+                        });
+                    }}
+                  >
+                    {t("confirmCard")}
+                  </Button>
+                ) : (
+                  <EventPlayerChoices
+                    players={getCardRemovalPlayers(
+                      context,
+                      draft.matchPlayerId,
+                    )}
+                    activePlayerIds={activePlayerIds}
+                    onSelect={(id) =>
+                      onAction({
+                        type: "confirmCard",
+                        effect: "remove",
+                        removedId: id,
+                      })
+                    }
+                  />
+                )}
               </>
             ) : (
               <>
                 <p>{t("cardNeedsReplacement")}</p>
                 <p>{t("cardQueuesPowerplay")}</p>
-                <div className={st.choices}>
-                  {cardReplacements.map((player) => (
-                    <Button
-                      key={player.id}
-                      onClick={() =>
-                        onAction({
-                          type: "confirmCard",
-                          effect: "replace",
-                          replacementId: player.id,
-                        })
-                      }
-                    >
-                      <span
-                        className={st.playerLabel}
-                        title={playerLabel(player)}
-                      >
-                        {playerLabel(player)}
-                      </span>
-                    </Button>
-                  ))}
-                </div>
+                <EventPlayerChoices
+                  players={cardReplacements}
+                  activePlayerIds={activePlayerIds}
+                  onSelect={(id) =>
+                    onAction({
+                      type: "confirmCard",
+                      effect: "replace",
+                      replacementId: id,
+                    })
+                  }
+                />
               </>
             )}
           </section>
