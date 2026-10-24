@@ -95,6 +95,12 @@ export function RecorderTimeline({
                       : "",
                 }),
               ];
+              if (
+                event.kind === "shot" &&
+                event.attemptType &&
+                event.attemptType !== "open-play"
+              )
+                details.push(t(event.attemptType), t("restartSpot"));
               if (event.kind === "powerplay-adjust")
                 details.push(
                   t("penaltyAdjustedTo", {

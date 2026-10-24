@@ -4,6 +4,8 @@ import type { MatchCommand } from "../../../contracts/matches-sync.schema";
 import type { Match, MatchPlayer } from "../../../domain/matches/match.schema";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { SyncConflictError } from "../sync/sync.errors";
+import { usesExpandedEventProtocol } from "../../../contracts/match-events-sync.schema";
+import { listMatchEvents } from "./matchEvents.repository";
 import {
   getOwnedMatchForUpdate,
   hasOwnedMatchReferences,
@@ -52,6 +54,13 @@ export async function applyMatchCommand(
       match.id,
     );
     if (!snapshot) throw new SyncConflictError("reference_unavailable");
+    if (
+      command.version < 2 &&
+      (await listMatchEvents(transaction, match.id)).some(
+        usesExpandedEventProtocol,
+      )
+    )
+      throw new SyncConflictError("event_conflict");
     let next: Match;
     try {
       next = applyMatchControl(match, command.action, command.match.updatedAt);

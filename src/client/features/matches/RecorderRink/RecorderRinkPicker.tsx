@@ -2,73 +2,54 @@
 
 import { useTranslations } from "next-intl";
 import { RinkPositionPicker } from "../../../components/RinkPositionPicker/RinkPositionPicker";
+import { HockeyRink } from "../../../components/HockeyRink/HockeyRink";
 import {
   getPositionHalf,
   toTeamPosition,
   toViewPosition,
 } from "../../../../domain/matches/rinkPosition";
-import { useControlMatch } from "../mutations/matchControl.mutations";
-import type { RinkAttackDirection } from "../../../../domain/matches/rinkPosition";
 import type { RecorderRinkPickerProps } from "./RecorderRink.interfaces";
-import { RecorderRinkDirection } from "./RecorderRinkDirection";
+import { RecorderRinkToolbar } from "./RecorderRinkToolbar";
 import st from "./RecorderRinkPicker.module.css";
 
 export function RecorderRinkPicker({
-  match,
   period,
   direction,
   position,
   disabled = false,
   autoFocus = false,
-  compactHint = false,
-  hintAccessory,
+  purpose = "position",
+  controlsDisabled,
   onStart,
   onSelect,
   onCancelGesture,
-  onDirectionPending,
+  onChangeDirection,
+  onClear,
 }: RecorderRinkPickerProps) {
   const t = useTranslations("recorder");
-  const mutation = useControlMatch();
-  function selectDirection(attackDirection: RinkAttackDirection): void {
-    onDirectionPending?.(true);
-    mutation.mutate(
-      {
-        id: match.id,
-        expectedRevision: match.revision,
-        action: { type: "period.direction", attackDirection },
-      },
-      { onSettled: () => onDirectionPending?.(false) },
-    );
-  }
+  const toolbar = (
+    <RecorderRinkToolbar
+      hint={t(
+        !direction
+          ? "attackDirection"
+          : purpose === "register"
+            ? "rinkRegisterHint"
+            : position
+              ? "rinkSelectedHint"
+              : "rinkAddPositionHint",
+      )}
+      disabled={controlsDisabled}
+      onChangeDirection={onChangeDirection}
+      onClear={position ? onClear : undefined}
+    />
+  );
   if (!direction)
     return (
-      <div className={st.directionChoice}>
-        <p>{t("rinkDirectionRequired")}</p>
-        <div className={st.directionButtons}>
-          <button
-            type="button"
-            className={st.directionOption}
-            disabled={disabled || mutation.isPending}
-            onClick={() => selectDirection("toward-x0")}
-          >
-            <RecorderRinkDirection direction="toward-x0" compact />
-            <span>{t("attackLeft")}</span>
-          </button>
-          <button
-            type="button"
-            className={st.directionOption}
-            disabled={disabled || mutation.isPending}
-            onClick={() => selectDirection("toward-x1")}
-          >
-            <RecorderRinkDirection direction="toward-x1" compact />
-            <span>{t("attackRight")}</span>
-          </button>
+      <div className={st.picker}>
+        <div className={st.unknownRink}>
+          <HockeyRink label={t("rinkDirectionRequired")} />
         </div>
-        {mutation.isError && (
-          <p role="alert" className={st.error}>
-            {t("controlFailed")}
-          </p>
-        )}
+        {toolbar}
       </div>
     );
   return (
@@ -76,9 +57,10 @@ export function RecorderRinkPicker({
       <RinkPositionPicker
         key={`${period}-${direction}`}
         label={t("rinkSelect")}
-        hint={t(compactHint ? "rinkDesktopHint" : "rinkHint")}
+        hint={t("rinkHint")}
         touchHint={t("rinkTouchHint")}
-        hintAccessory={hintAccessory}
+        hideHint
+        hintAccessory={toolbar}
         invalidLabel={t("rinkOutside")}
         positionLabel={(point) => {
           const half = getPositionHalf(toTeamPosition(point, direction));

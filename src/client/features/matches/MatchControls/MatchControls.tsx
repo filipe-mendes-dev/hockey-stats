@@ -7,7 +7,7 @@ import {
 } from "../../../../domain/matches/matchControl";
 import type { MatchControlAction } from "../../../../domain/matches/matchControl";
 import { ActionIcon, Button, Tooltip } from "@mantine/core";
-import { Flag, Pause, Play, TimerReset } from "lucide-react";
+import { ArrowRight, Pause, Play, TimerReset } from "lucide-react";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { DurationCounter } from "../../../components/DurationCounter/DurationCounter";
 import {
@@ -17,6 +17,7 @@ import {
 import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
+import { FinishFlag } from "./FinishFlag";
 import st from "./MatchControls.module.css";
 export function MatchControls({
   match,
@@ -82,6 +83,15 @@ export function MatchControls({
   }
   if (match.status !== "live") return null;
   const enteredTime = parseDurationFields(clockFields, duration);
+  const atZero = remaining === 0;
+  const finalPeriod = match.currentPeriod === match.periods.length;
+  function openFinish(): void {
+    open(finalPeriod ? "finish" : "period");
+  }
+  const primaryFinishLabel = t(finalPeriod ? "endMatch" : "nextPeriod");
+  const clockLabel = t(
+    running ? "pauseClock" : elapsed === 0 ? "startClock" : "resumeClock",
+  );
   const finishLabel = t(
     match.currentPeriod === match.periods.length ? "endMatch" : "endPeriod",
   );
@@ -99,35 +109,49 @@ export function MatchControls({
           </ActionIcon>
         </Tooltip>
         <Button
+          className={st.primary}
           size="sm"
           disabled={
-            disabled ||
-            busy ||
-            (!running && (duration === undefined || remaining === 0))
+            disabled || busy || (!atZero && !running && duration === undefined)
           }
           onClick={() =>
-            control({ type: running ? "clock.pause" : "clock.start" })
+            atZero
+              ? openFinish()
+              : control({ type: running ? "clock.pause" : "clock.start" })
           }
-          leftSection={running ? <Pause size={16} /> : <Play size={16} />}
-        >
-          {t(running ? "pauseClock" : "startClock")}
-        </Button>
-        <Tooltip label={finishLabel}>
-          <ActionIcon
-            variant="subtle"
-            aria-label={finishLabel}
-            disabled={disabled || busy}
-            onClick={() =>
-              open(
-                match.currentPeriod === match.periods.length
-                  ? "finish"
-                  : "period",
+          leftSection={
+            atZero ? (
+              finalPeriod ? (
+                <FinishFlag />
+              ) : (
+                <ArrowRight size={16} aria-hidden="true" />
               )
-            }
-          >
-            <Flag size={18} />
-          </ActionIcon>
-        </Tooltip>
+            ) : running ? (
+              <Pause size={16} />
+            ) : (
+              <Play size={16} />
+            )
+          }
+        >
+          {atZero ? primaryFinishLabel : clockLabel}
+        </Button>
+        <div className={st.finish}>
+          {!atZero && (
+            <Tooltip
+              label={finishLabel}
+              events={{ hover: true, focus: true, touch: false }}
+            >
+              <ActionIcon
+                variant="subtle"
+                aria-label={finishLabel}
+                disabled={disabled || busy}
+                onClick={openFinish}
+              >
+                <FinishFlag />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </div>
       </div>
       {duration === undefined && <p role="status">{t("durationRequired")}</p>}
       {mutation.isError && !panel && (

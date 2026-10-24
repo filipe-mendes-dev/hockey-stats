@@ -6,6 +6,18 @@ import type {
 
 export type RinkAttackDirection = "toward-x0" | "toward-x1";
 
+// Team-relative restart spots share the marks drawn on the rink.
+export const restartSpots = {
+  penalty: { x: 0.5, y: 0.79 },
+  "direct-free-hit": { x: 0.5, y: 0.74 },
+} as const;
+
+export function getRestartSpot(
+  attemptType: "penalty" | "direct-free-hit",
+): RinkPosition {
+  return { ...restartSpots[attemptType] };
+}
+
 export function toTeamPosition(
   point: RinkPosition,
   direction: RinkAttackDirection,

@@ -1,6 +1,6 @@
 # Product requirements
 
-Benchline Stats is a responsive rink-hockey application for an observer managing players, teams and live matches on a personal device. The prototype prioritizes reliable local capture and synchronization. A complete dark, responsive UI revamp is now proceeding page by page through [Design revamp](design-revamp.md); advanced analysis remains deferred.
+Benchline Stats is a responsive rink-hockey application for an observer managing players, teams and live matches on a personal device. The prototype prioritizes reliable local capture and synchronization. The responsive recorder and completed-match analysis are implemented for review; broader analytics remain deferred.
 
 ## Current prototype scope
 
@@ -9,12 +9,16 @@ Benchline Stats is a responsive rink-hockey application for an observer managing
 - Team forms offer Senior, U-19, U-17, U-15, U-13 and Veteran as category presets, while accepting custom category text. A year picker stores seasons as 2026/27; existing nonstandard season text stays editable. Both fields remain optional. New Teams default Season to the device's current starting year, such as 2026/27; it remains editable and clearable. Editing preserves saved values.
 - Matches: choose a team, opponent and call-up; optionally specify date and venue; configure two equal halves during creation; save an incomplete call-up; edit details/call-up before starting.
 - Start with exactly four field players and one goalkeeper, using the saved duration. Category defaults per half are 25 minutes for Senior/U-19/Veteran, 20 for U-17/U-15 and 18 for U-13. Duration remains editable during creation and pre-start detail editing; missing/custom categories require a choice. Existing records remain readable. The recorder can set attack direction for the current live period; cup-specific extra periods remain deferred.
-- Live tracking: recovery, loss, shot, player-attributed foul, yellow/blue/red card, paired substitution, clock-linked powerplay expiry/correction, fifth-player entry, opponent goal and score correction.
+- Live tracking: recovery including intercepted shots, loss, open-play/penalty/direct-free-hit shots, goalkeeper saves requiring simple/difficult classification for new recordings, own/opponent timeouts, player-attributed foul, yellow/blue/red card, paired substitution, clock-linked powerplay expiry/correction, fifth-player entry, opponent goal and score correction.
 - Countdown clock with start/pause, manual adjustment and explicit period/match completion.
-- Timeline and durable Undo of the latest eligible locally recorded event. Finished matches open a read-only summary with the final result, period-filtered team statistics, linked event map/timeline and individual player statistics including recorded playing time, shot outcomes, recoveries/losses, fouls and cards.
+- Timeline and durable Undo of the latest eligible locally recorded event. Finishing a match replaces the live URL with its read-only summary. Old live/Start links resolve to the current lifecycle screen. The summary includes the final result, period-filtered team statistics, linked event map/timeline and individual player statistics including recorded playing time, shot outcomes and types, goalkeeper saves and attributed conceded goals, recoveries/losses, fouls and cards.
 - English and European Portuguese throughout, including offline use.
 
 The canonical entity name is Match. Event attribution uses its MatchPlayer snapshot. See [Domain model](domain-model.md) for exact rules and [Recorder UX](recorder-ux.md) for entry behavior.
+
+## Shot entry
+
+Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and sharing/export remain separate backlog work.
 
 ## Entity removal
 
@@ -43,7 +47,7 @@ Explicit sign-out requires confirmation and a warning for unsynced work, then de
 - Keep unfinished drafts only while the modal is visible. Cancel writes nothing; reload discards unfinished selection.
 - Every event includes its period. Substitution, fifth-player entry, non-yellow card and powerplay completion require game time. Other events may omit it.
 - New recoveries/losses require a defensive/attacking half; entry without coordinates requests an explicit choice; legacy absent location remains unknown. New score corrections affect the opponent only; our goals remain tied to shot history.
-- Optional coordinates contain both normalized team-relative x/y values. Rink-first entry follows the observer view and captures time/direction at first valid contact. Desktop shows the rink; phones open a dedicated picker with hold/drag magnification and release-to-continue. Recovery/loss half follows the point, with explicit choice on the halfway line. No rink selection means no coordinates.
+- Optional observed coordinates contain both normalized team-relative x/y values. New penalties/direct free hits use fixed team-relative restart-spot coordinates. Rink-first entry follows the observer view and captures time/direction at first valid contact. Desktop shows the rink shortcut. Spatial event dialogs include optional position selection, with direct hold/drag precision and magnification. Recovery/loss half follows the point, with explicit choice on the halfway line. Ordinary events without rink selection have no coordinates; set pieces carry their fixed restart spot.
 - Hide incompatible actions and players. Recheck the same rules inside local and server transactions.
 - Keep four or five players on the field and at most one goalkeeper. Outstanding powerplay limits the team to four. Ordinary substitutions exchange two players atomically.
 - Yellow has no lineup/powerplay effect. Blue/red affect team capacity even for bench recipients. The third blue triggers permanent red-card exclusion. Team-penalty timers use two minutes for blue and four for direct red, follow playing time and run sequentially; remaining time is correctable. Temporary individual suspension restrictions remain deferred.

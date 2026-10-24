@@ -12,16 +12,6 @@
 .submit {
   margin-inline-start: auto;
 }
-.positionPreview {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-  gap: 0.25rem;
-}
-.positionPreview button {
-  justify-self: end;
-  max-width: 100%;
-}
 @media (max-width: 36rem) {
   .submit {
     flex: 1;

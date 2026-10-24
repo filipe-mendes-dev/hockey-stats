@@ -2,19 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ActionIcon, Menu } from "@mantine/core";
-import {
-  ArrowLeft,
-  ArrowLeftRight,
-  Ellipsis,
-  Globe,
-  Info,
-  Trophy,
-} from "lucide-react";
+import { ArrowLeft, Ellipsis, Globe, Info, Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
 import { SyncStatusPanel } from "../../sync/SyncStatusPanel/SyncStatusPanel";
 import { LanguagePicker } from "../../../components/LanguagePicker/LanguagePicker";
-import { RecorderDirectionDialog } from "./RecorderDirectionDialog";
 import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
 import type { RecorderHeaderProps } from "./RecorderHeader.interfaces";
 import st from "./RecorderHeader.module.css";
@@ -26,9 +18,7 @@ export function RecorderHeader({
 }: RecorderHeaderProps) {
   const t = useTranslations("recorder");
   const matches = useTranslations("matches");
-  const [panel, setPanel] = useState<"sync" | "language" | "direction" | null>(
-    null,
-  );
+  const [panel, setPanel] = useState<"sync" | "language" | null>(null);
   const matchId = match.id;
   return (
     <nav className={st.nav} aria-label={t("matchOptions")}>
@@ -62,12 +52,6 @@ export function RecorderHeader({
             {t("score-adjustment")}
           </Menu.Item>
           <Menu.Item
-            leftSection={<ArrowLeftRight size={16} />}
-            onClick={() => setPanel("direction")}
-          >
-            {t("attackDirection")}
-          </Menu.Item>
-          <Menu.Item
             leftSection={<Info size={16} />}
             onClick={() => setPanel("sync")}
           >
@@ -81,10 +65,7 @@ export function RecorderHeader({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-      {panel === "direction" && (
-        <RecorderDirectionDialog match={match} onClose={() => setPanel(null)} />
-      )}
-      {panel && panel !== "direction" && (
+      {panel && (
         <RecorderDialog
           title={t(panel === "sync" ? "syncDetails" : "language")}
           onClose={() => setPanel(null)}

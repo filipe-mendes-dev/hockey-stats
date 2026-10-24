@@ -3,6 +3,8 @@ import {
   matchEventSchema,
   addMatchEventInputSchema,
   versionFourMatchEventInputSchema,
+  versionFiveMatchEventInputSchema,
+  versionSixMatchEventInputSchema,
   toMatchEventInput,
 } from "../domain/matches/matchEvent.schema";
 import type { MatchEvent } from "../domain/matches/matchEvent.schema";
@@ -13,6 +15,8 @@ const commandFields = {
     z.literal(3),
     z.literal(4),
     z.literal(5),
+    z.literal(6),
+    z.literal(7),
   ]),
   operationId: z.uuidv4(),
   expectedRevision: z.int().positive(),
@@ -24,18 +28,23 @@ export const createMatchEventCommandSchema = z
     (command) =>
       command.event.revision === 1 &&
       command.event.deletedAt === undefined &&
-      (command.version === 5
+      (command.version >= 6 || !usesExpandedEventProtocol(command.event)) &&
+      (command.version === 7
         ? isCurrentEvent(command.event, command.operationId, true)
-        : command.version === 4
-          ? !usesTimedPowerplayProtocol(command.event) &&
-            isVersionFourEvent(command.event, command.operationId)
-          : command.version === 3
-            ? !usesEventContextProtocol(command.event) &&
-              !usesTimedPowerplayProtocol(command.event) &&
-              isCurrentEvent(command.event, command.operationId, false)
-            : command.version === 2
-              ? isVersionTwoEvent(command.event)
-              : isLegacyEvent(command.event)),
+        : command.version === 6
+          ? isVersionSixEvent(command.event, command.operationId)
+          : command.version === 5
+            ? isVersionFiveEvent(command.event, command.operationId)
+            : command.version === 4
+              ? !usesTimedPowerplayProtocol(command.event) &&
+                isVersionFourEvent(command.event, command.operationId)
+              : command.version === 3
+                ? !usesEventContextProtocol(command.event) &&
+                  !usesTimedPowerplayProtocol(command.event) &&
+                  isCurrentEvent(command.event, command.operationId, false)
+                : command.version === 2
+                  ? isVersionTwoEvent(command.event)
+                  : isLegacyEvent(command.event)),
   );
 export const undoMatchEventCommandSchema = z
   .object({ ...commandFields, kind: z.literal("matchEvent.undo") })
@@ -43,6 +52,7 @@ export const undoMatchEventCommandSchema = z
     (command) =>
       command.event.revision === 2 &&
       command.event.deletedAt !== undefined &&
+      (command.version >= 6 || !usesExpandedEventProtocol(command.event)) &&
       (command.version >= 5 || !usesTimedPowerplayProtocol(command.event)) &&
       (command.version >= 3 ||
         (command.version === 2
@@ -121,12 +131,41 @@ export function usesTimedPowerplayProtocol(event: MatchEvent): boolean {
     (event.kind === "card" && event.powerplayDurationMs !== undefined)
   );
 }
+export function usesExpandedEventProtocol(event: MatchEvent): boolean {
+  return (
+    event.kind === "goalkeeper-save" ||
+    event.kind === "timeout" ||
+    (event.kind === "shot" && event.attemptType !== undefined) ||
+    (event.kind === "opponent-goal" && event.matchPlayerId !== undefined) ||
+    (event.kind === "ball-recovery" && event.subtype === "intercepted-shot")
+  );
+}
 function isVersionFourEvent(event: MatchEvent, operationId: string): boolean {
   try {
     versionFourMatchEventInputSchema.parse(
       toMatchEventInput(event, operationId),
     );
     return true;
+  } catch {
+    return false;
+  }
+}
+
+function isVersionFiveEvent(event: MatchEvent, operationId: string): boolean {
+  try {
+    return versionFiveMatchEventInputSchema.safeParse(
+      toMatchEventInput(event, operationId),
+    ).success;
+  } catch {
+    return false;
+  }
+}
+
+function isVersionSixEvent(event: MatchEvent, operationId: string): boolean {
+  try {
+    return versionSixMatchEventInputSchema.safeParse(
+      toMatchEventInput(event, operationId),
+    ).success;
   } catch {
     return false;
   }

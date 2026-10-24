@@ -8,9 +8,9 @@ import { RecorderContext } from "../RecorderContext/RecorderContext";
 import { MatchEventUnavailableError } from "../matchEvents.service";
 import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
 import { EventDraftFields } from "./EventDraftFields";
-import { HockeyRink } from "../../../components/HockeyRink/HockeyRink";
 import { RecorderRinkPicker } from "../RecorderRink/RecorderRinkPicker";
-import { toViewPosition } from "../../../../domain/matches/rinkPosition";
+import { supportsRinkPosition } from "../../../../domain/matches/rinkPosition";
+import { getEventDraftHalf } from "./eventDraft";
 import { getEventDraftSteps } from "./eventDraftSteps";
 import type { EventEntryDialogProps } from "./EventEntryDialog.interfaces";
 import st from "./EventEntryDialog.module.css";
@@ -22,47 +22,69 @@ export function EventEntryDialog({
   onAction,
   onRetry,
   rink,
-  liveElapsedMs,
 }: EventEntryDialogProps) {
   const t = useTranslations("recorder");
-  const [directionPending, setDirectionPending] = useState(false);
-  const locked = phase === "saving" || directionPending;
+  const locked = phase === "saving" || rink.gestureActive;
   const scoreFormId = useId();
   const [opponentScore, setOpponentScore] = useState<number | string>(
     context.state.opponentScore,
   );
-  const scoreCorrection = draft?.kind === "score-adjustment";
+  const scoreCorrection = draft.kind === "score-adjustment";
   const validScore =
     typeof opponentScore === "number" &&
     Number.isInteger(opponentScore) &&
     opponentScore >= 0 &&
     Math.abs(opponentScore - context.state.opponentScore) <= 2147483647 &&
     opponentScore !== context.state.opponentScore;
-  const remaining = draft ? getEventDraftSteps(draft) : [];
+  const remaining = getEventDraftSteps(draft);
   const heading = useRef<HTMLHeadingElement>(null);
   const step = remaining[0];
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-  }, [step, rink.picking]);
+  }, [step]);
   const player = context.snapshot.players.find(
-    (entry) => entry.id === draft?.matchPlayerId,
+    (entry) => entry.id === draft.matchPlayerId,
   );
+  const specialAttempt =
+    draft.kind === "shot" &&
+    (draft.attemptType === "penalty" ||
+      draft.attemptType === "direct-free-hit");
+  const showRink =
+    !specialAttempt &&
+    !draft.selectingSetPiece &&
+    draft.entry !== "game" &&
+    (!draft.kind || supportsRinkPosition(draft.kind));
   const outgoing = context.snapshot.players.find(
-    (entry) => entry.id === draft?.outgoingMatchPlayerId,
+    (entry) => entry.id === draft.outgoingMatchPlayerId,
   );
   const incoming = context.snapshot.players.find(
-    (entry) => entry.id === draft?.incomingMatchPlayerId,
+    (entry) => entry.id === draft.incomingMatchPlayerId,
   );
+  const rinkHalf =
+    draft.kind === "ball-recovery" || draft.kind === "ball-loss"
+      ? getEventDraftHalf(draft)
+      : undefined;
   const selectionDetails = [
-    draft?.kind ? t(draft.kind) : undefined,
-    draft?.rinkHalf ? t(draft.rinkHalf) : undefined,
-    draft?.colour ? t(draft.colour) : undefined,
+    draft.kind ? t(draft.kind) : undefined,
+    rinkHalf ? t(rinkHalf) : undefined,
+    draft.colour ? t(draft.colour) : undefined,
+    specialAttempt && draft.attemptType ? t(draft.attemptType) : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
   return (
     <RecorderDialog
-      title={t(rink.picking ? "recordOnRink" : "newEvent")}
+      title={
+        specialAttempt && draft.attemptType
+          ? t(draft.attemptType)
+          : draft.selectingSetPiece
+            ? t("set-piece")
+            : draft.kind
+              ? t(draft.kind)
+              : draft.entry === "game"
+                ? t("gameEvent")
+                : t("newEvent")
+      }
       pending={locked}
       onClose={() => onAction({ type: "cancel" })}
       footer={
@@ -92,70 +114,56 @@ export function EventEntryDialog({
       <div className={st.content}>
         <RecorderContext
           match={context.snapshot.match}
-          period={draft?.period ?? context.snapshot.match.currentPeriod}
-          elapsedMs={draft ? draft.gameTime?.elapsedMs : liveElapsedMs}
+          period={draft.period}
+          elapsedMs={draft.gameTime?.elapsedMs}
           primary={
             player?.playerNameAtMatch ??
             (outgoing
               ? [outgoing.playerNameAtMatch, incoming?.playerNameAtMatch]
                   .filter(Boolean)
                   .join(" → ")
-              : draft?.kind
-                ? t(draft.kind)
-                : t("newEvent"))
+              : specialAttempt && draft.attemptType
+                ? t(draft.attemptType)
+                : draft.entry === "game" && !draft.kind
+                  ? t("gameEvent")
+                  : draft.kind
+                    ? t(draft.kind)
+                    : t("newEvent"))
           }
           secondary={player || outgoing ? selectionDetails : undefined}
-          kind={draft?.kind}
+          kind={draft.kind}
         />
-        {rink.picking && (
+        {showRink && (
           <RecorderRinkPicker
-            autoFocus
-            match={context.snapshot.match}
-            period={draft?.period ?? context.snapshot.match.currentPeriod}
+            period={draft.period}
             direction={rink.direction}
-            position={draft?.position}
+            position={draft.position}
+            disabled={phase !== "collecting"}
+            controlsDisabled={locked || phase === "failed"}
             onStart={rink.onStart}
             onSelect={rink.onSelect}
             onCancelGesture={rink.onCancelGesture}
-            onDirectionPending={setDirectionPending}
+            onChangeDirection={rink.onChangeDirection}
+            onClear={
+              draft.position
+                ? () => onAction({ type: "clearPosition" })
+                : undefined
+            }
           />
         )}
-        {!rink.picking && draft?.position && rink.direction && (
-          <div className={st.positionPreview}>
-            <HockeyRink
-              label={t("rinkSelected")}
-              position={toViewPosition(draft.position, rink.direction)}
-              orientation={{
-                attackingEnd: rink.direction === "toward-x0" ? "left" : "right",
-                attackLabel: t("rinkAttack"),
-                defenceLabel: t("rinkDefence"),
-              }}
-            />
-            <Button
-              variant="subtle"
-              size="sm"
-              disabled={phase !== "collecting"}
-              onClick={rink.onEdit}
-            >
-              {t("rinkChangePosition")}
-            </Button>
-          </div>
-        )}
-        {!rink.picking &&
-          draft &&
-          phase === "collecting" &&
-          !scoreCorrection && (
-            <>
-              <h2 ref={heading} className={st.heading} tabIndex={-1}>
-                {step === "eventTimeRequired" &&
-                context.snapshot.match.periods.find(
-                  (period) => period.number === draft.period,
-                )?.durationMs === undefined
-                  ? t("elapsedTime")
-                  : step
-                    ? t(step)
-                    : t("saving")}
-              </h2>
+        {phase === "collecting" && !scoreCorrection && (
+          <>
+            <h2 ref={heading} className={st.heading} tabIndex={-1}>
+              {step === "eventTimeRequired" &&
+              context.snapshot.match.periods.find(
+                (period) => period.number === draft.period,
+              )?.durationMs === undefined
+                ? t("elapsedTime")
+                : step
+                  ? t(step)
+                  : t("saving")}
+            </h2>
+            <div inert={rink.gestureActive}>
               <EventDraftFields
                 draft={draft}
                 context={context}
@@ -166,9 +174,10 @@ export function EventEntryDialog({
                 }
                 onAction={onAction}
               />
-            </>
-          )}
-        {!rink.picking && phase === "collecting" && scoreCorrection && (
+            </div>
+          </>
+        )}
+        {phase === "collecting" && scoreCorrection && (
           <ScoreCorrectionForm
             formId={scoreFormId}
             ownName={context.snapshot.match.teamNameAtMatch}

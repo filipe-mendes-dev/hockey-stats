@@ -12,6 +12,7 @@ import {
   usesPowerplayProtocol,
   usesEventContextProtocol,
   usesTimedPowerplayProtocol,
+  usesExpandedEventProtocol,
 } from "../../../contracts/match-events-sync.schema";
 import { matchRecordingSchema } from "../../../contracts/matches-sync.schema";
 import {
@@ -61,6 +62,8 @@ export async function applyMatchEventCommand(
   )
     throw new SyncConflictError("reference_unavailable");
   const events = await listMatchEvents(transaction, match.id);
+  if (command.version < 6 && events.some(usesExpandedEventProtocol))
+    throw new SyncConflictError("event_conflict");
   if (command.version < 3 && events.some(usesPowerplayProtocol))
     throw new SyncConflictError("event_conflict");
   if (command.version < 4 && events.some(usesEventContextProtocol))

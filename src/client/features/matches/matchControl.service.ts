@@ -34,7 +34,7 @@ export async function controlMatch(input: ControlMatchInput) {
         entityId: match.id,
         status: "pending",
         command: {
-          version: 1,
+          version: 2,
           operationId,
           kind: "match.control",
           expectedRevision: current.match.revision,
