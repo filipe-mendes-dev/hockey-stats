@@ -54,6 +54,15 @@ export interface EventDraft {
   ownDelta?: number;
   opponentDelta?: number;
 }
+export function getEventDraftHalf(
+  draft: Pick<EventDraft, "position" | "rinkHalf">,
+): RinkHalf | undefined {
+  return (
+    (draft.position ? getPositionHalf(draft.position) : undefined) ??
+    draft.rinkHalf
+  );
+}
+
 export type EventDraftState =
   | { phase: "idle" }
   | { phase: "collecting"; draft: EventDraft }
@@ -301,7 +310,17 @@ export function transitionEventDraft(
     case "selectHalf":
       return state.draft.kind === "ball-recovery" ||
         state.draft.kind === "ball-loss"
-        ? { ...state, draft: { ...state.draft, rinkHalf: action.rinkHalf } }
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              rinkHalf:
+                getEventDraftHalf({
+                  ...state.draft,
+                  rinkHalf: action.rinkHalf,
+                }) ?? action.rinkHalf,
+            },
+          }
         : state;
     case "selectSubtype":
       return state.draft.kind === "ball-recovery"
@@ -365,6 +384,9 @@ export function completeEventDraft(
   void saveConfirmed;
   const result = addMatchEventInputSchema.safeParse({
     ...fields,
+    ...(draft.kind === "ball-recovery" || draft.kind === "ball-loss"
+      ? { rinkHalf: getEventDraftHalf(draft) }
+      : {}),
     ...(draft.kind === "shot"
       ? { attemptType: draft.attemptType ?? "open-play" }
       : {}),

@@ -10,6 +10,7 @@ import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
 import { EventDraftFields } from "./EventDraftFields";
 import { RecorderRinkPicker } from "../RecorderRink/RecorderRinkPicker";
 import { supportsRinkPosition } from "../../../../domain/matches/rinkPosition";
+import { getEventDraftHalf } from "./eventDraft";
 import { getEventDraftSteps } from "./eventDraftSteps";
 import type { EventEntryDialogProps } from "./EventEntryDialog.interfaces";
 import st from "./EventEntryDialog.module.css";
@@ -59,9 +60,13 @@ export function EventEntryDialog({
   const incoming = context.snapshot.players.find(
     (entry) => entry.id === draft.incomingMatchPlayerId,
   );
+  const rinkHalf =
+    draft.kind === "ball-recovery" || draft.kind === "ball-loss"
+      ? getEventDraftHalf(draft)
+      : undefined;
   const selectionDetails = [
     draft.kind ? t(draft.kind) : undefined,
-    draft.rinkHalf ? t(draft.rinkHalf) : undefined,
+    rinkHalf ? t(rinkHalf) : undefined,
     draft.colour ? t(draft.colour) : undefined,
     specialAttempt && draft.attemptType ? t(draft.attemptType) : undefined,
   ]

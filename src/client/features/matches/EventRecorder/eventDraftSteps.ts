@@ -1,3 +1,4 @@
+import { getEventDraftHalf } from "./eventDraft";
 import type { EventDraft } from "./eventDraft";
 export type EventDraftStep =
   | "chooseAction"
@@ -35,7 +36,7 @@ export function getEventDraftSteps(draft: EventDraft): EventDraftStep[] {
     steps.push("choosePlayer");
   if (
     (draft.kind === "ball-recovery" || draft.kind === "ball-loss") &&
-    !draft.rinkHalf
+    !getEventDraftHalf(draft)
   )
     steps.push("chooseHalf");
   if (draft.kind === "ball-recovery" && !draft.subtype)
