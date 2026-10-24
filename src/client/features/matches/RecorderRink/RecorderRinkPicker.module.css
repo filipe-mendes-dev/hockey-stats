@@ -1,43 +1,7 @@
 .picker {
   min-width: 0;
 }
-.directionChoice {
-  display: grid;
-  gap: 1rem;
-}
-.directionChoice p {
-  margin: 0;
-}
-.directionButtons {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-.directionOption {
-  display: grid;
-  gap: 0.75rem;
-  min-width: 0;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border-action);
-  border-radius: var(--radius-control);
-  background: var(--color-surface-glass);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-  overflow-wrap: anywhere;
-}
-.directionOption:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
-}
-.directionOption:hover:enabled {
-  border-color: var(--color-action);
-}
-.directionOption:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-.error {
-  color: var(--color-error);
+.unknownRink {
+  width: 100%;
+  aspect-ratio: 1016 / 516;
 }

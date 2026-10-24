@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { restartSpots } from "./rinkPosition";
 export const rinkPositionSchema = z.strictObject({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
@@ -14,6 +15,7 @@ export const playerEventKindSchema = z.enum([
   "card",
   "substitution",
   "player-in",
+  "goalkeeper-save",
 ]);
 export const matchEventKindSchema = z.enum([
   ...playerEventKindSchema.options,
@@ -23,13 +25,22 @@ export const matchEventKindSchema = z.enum([
   "player-out",
   "opponent-goal",
   "score-adjustment",
+  "timeout",
 ]);
 export const recoverySubtypeSchema = z.enum([
   "interception",
   "duel",
   "loose-ball",
   "other",
+  "intercepted-shot",
 ]);
+export const attemptTypeSchema = z.enum([
+  "open-play",
+  "penalty",
+  "direct-free-hit",
+]);
+export const saveDifficultySchema = z.enum(["simple", "difficult"]);
+export const timeoutTeamSchema = z.enum(["own", "opponent"]);
 export const lossReasonSchema = z.enum([
   "intercepted-pass",
   "failed-individual-action",
@@ -67,6 +78,17 @@ const shot = z.strictObject({
   ...spatial,
   kind: playerEventKindSchema.extract(["shot"]),
   outcome: shotOutcomeSchema,
+  attemptType: attemptTypeSchema.optional(),
+});
+const goalkeeperSave = z.strictObject({
+  ...player,
+  kind: z.literal("goalkeeper-save"),
+  difficulty: saveDifficultySchema.optional(),
+});
+const timeout = z.strictObject({
+  ...base,
+  kind: z.literal("timeout"),
+  team: timeoutTeamSchema,
 });
 const foul = z.strictObject({
   ...spatial,
@@ -154,6 +176,7 @@ const powerplayAdjust = z.strictObject({
 const opponentGoal = z.strictObject({
   ...base,
   kind: matchEventKindSchema.extract(["opponent-goal"]),
+  matchPlayerId: z.uuidv4().optional(),
 });
 const scoreAdjustment = z
   .strictObject({
@@ -165,7 +188,7 @@ const scoreAdjustment = z
   .refine((event) => event.ownDelta !== 0 || event.opponentDelta !== 0);
 const identity = { id: z.uuidv4(), operationId: z.uuidv4() };
 const commonEventInputs = [
-  shot.extend(identity),
+  shot.omit({ attemptType: true }).extend(identity),
   foul.extend(identity),
   currentCard.safeExtend(identity),
   substitution.safeExtend(identity),
@@ -174,25 +197,80 @@ const commonEventInputs = [
     entryReason: z.literal("powerplay-ended"),
   }),
   powerplayEnd.extend(identity),
-  opponentGoal.extend(identity),
+  opponentGoal.omit({ matchPlayerId: true }).extend(identity),
 ] as const;
 export const versionThreeMatchEventInputSchema = z.discriminatedUnion("kind", [
-  recoveryFieldsSchema.extend(identity),
+  recoveryFieldsSchema.extend({
+    ...identity,
+    subtype: recoverySubtypeSchema.exclude(["intercepted-shot"]),
+  }),
   loss.extend(identity),
   ...commonEventInputs,
   scoreAdjustment.safeExtend(identity),
 ]);
 export const versionFourMatchEventInputSchema = z.discriminatedUnion("kind", [
-  recoveryFieldsSchema.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  recoveryFieldsSchema.extend({
+    ...identity,
+    rinkHalf: rinkHalfSchema,
+    subtype: recoverySubtypeSchema.exclude(["intercepted-shot"]),
+  }),
   loss.extend({ ...identity, rinkHalf: rinkHalfSchema }),
   ...commonEventInputs,
   scoreAdjustment.safeExtend({ ...identity, ownDelta: z.literal(0) }),
 ]);
 
-export const addMatchEventInputSchema = z
+export const versionFiveMatchEventInputSchema = z
   .discriminatedUnion("kind", [
     ...versionFourMatchEventInputSchema.options,
     powerplayAdjust.extend(identity),
+  ])
+  .refine(
+    (event) =>
+      event.kind !== "card" ||
+      !event.startsPowerplay ||
+      event.powerplayDurationMs !== undefined,
+  );
+
+const expandedEventInputs = [
+  loss.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  foul.extend(identity),
+  currentCard.safeExtend(identity),
+  substitution.safeExtend(identity),
+  playerIn.safeExtend({
+    ...identity,
+    entryReason: z.literal("powerplay-ended"),
+  }),
+  powerplayEnd.extend(identity),
+  scoreAdjustment.safeExtend({ ...identity, ownDelta: z.literal(0) }),
+  shot
+    .extend({ ...identity, attemptType: attemptTypeSchema })
+    .refine((event) => {
+      if (event.attemptType === "open-play") return true;
+      const spot = restartSpots[event.attemptType];
+      return event.position?.x === spot.x && event.position?.y === spot.y;
+    }),
+  recoveryFieldsSchema.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  opponentGoal.extend(identity),
+  timeout.extend(identity),
+  powerplayAdjust.extend(identity),
+] as const;
+
+export const versionSixMatchEventInputSchema = z
+  .discriminatedUnion("kind", [
+    ...expandedEventInputs,
+    goalkeeperSave.extend(identity),
+  ])
+  .refine(
+    (event) =>
+      event.kind !== "card" ||
+      !event.startsPowerplay ||
+      event.powerplayDurationMs !== undefined,
+  );
+
+export const addMatchEventInputSchema = z
+  .discriminatedUnion("kind", [
+    ...expandedEventInputs,
+    goalkeeperSave.extend({ ...identity, difficulty: saveDifficultySchema }),
   ])
   .refine(
     (event) =>
@@ -225,6 +303,8 @@ export const matchEventSchema = z
     playerOut.extend(stored),
     opponentGoal.extend(stored),
     scoreAdjustment.safeExtend(stored),
+    goalkeeperSave.extend(stored),
+    timeout.extend(stored),
   ])
   .refine(
     (event) =>
@@ -233,9 +313,33 @@ export const matchEventSchema = z
       (event.deletedAt === undefined ||
         (event.deletedAt >= event.createdAt &&
           event.deletedAt === event.updatedAt)),
-  );
+  )
+  .refine((event) => {
+    if (
+      event.kind !== "shot" ||
+      event.attemptType === undefined ||
+      event.attemptType === "open-play"
+    )
+      return true;
+    const spot = restartSpots[event.attemptType];
+    return event.position?.x === spot.x && event.position?.y === spot.y;
+  });
 const matchEventRuleInputSchema = z.discriminatedUnion("kind", [
-  ...versionThreeMatchEventInputSchema.options,
+  loss.extend(identity),
+  foul.extend(identity),
+  currentCard.safeExtend(identity),
+  substitution.safeExtend(identity),
+  playerIn.safeExtend({
+    ...identity,
+    entryReason: z.literal("powerplay-ended"),
+  }),
+  powerplayEnd.extend(identity),
+  scoreAdjustment.safeExtend(identity),
+  shot.extend(identity),
+  recoveryFieldsSchema.extend(identity),
+  opponentGoal.extend(identity),
+  goalkeeperSave.extend(identity),
+  timeout.extend(identity),
   powerplayAdjust.extend(identity),
 ]);
 export type RinkHalf = z.infer<typeof rinkHalfSchema>;
@@ -251,6 +355,9 @@ export type RecoverySubtype = z.infer<typeof recoverySubtypeSchema>;
 export type LossReason = z.infer<typeof lossReasonSchema>;
 export type ShotOutcome = z.infer<typeof shotOutcomeSchema>;
 export type CardColour = z.infer<typeof cardColourSchema>;
+export type AttemptType = z.infer<typeof attemptTypeSchema>;
+export type SaveDifficulty = z.infer<typeof saveDifficultySchema>;
+export type TimeoutTeam = z.infer<typeof timeoutTeamSchema>;
 export function toMatchEventInput(
   event: MatchEvent,
   operationId: string,
@@ -286,6 +393,10 @@ export function getEventDetail(event: MatchEvent) {
       return event.outcome;
     case "card":
       return event.colour;
+    case "goalkeeper-save":
+      return event.difficulty;
+    case "timeout":
+      return event.team;
     default:
       return undefined;
   }

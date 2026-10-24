@@ -75,6 +75,17 @@ export function RecorderPlayers({
         .map((player) => (
           <div key={player.id} className={st.keeper}>
             {playerButton(player)}
+            <Button
+              variant="subtle"
+              size="sm"
+              disabled={
+                disabled ||
+                !getAvailableEventKinds(context).includes("goalkeeper-save")
+              }
+              onClick={() => onPick({ kind: "goalkeeper-save" })}
+            >
+              {t("goalkeeper-save")}
+            </Button>
           </div>
         ))}
       {bench.length > 0 && (

@@ -68,6 +68,8 @@ export function MatchEventAnalysis({
     { value: "ball-loss", label: t("losses") },
     { value: "team-foul", label: t("fouls") },
     { value: "card", label: t("cards") },
+    { value: "goalkeeper-save", label: t("saves") },
+    { value: "timeout", label: t("timeouts") },
   ];
   const scoped = useMemo(
     () =>
@@ -95,6 +97,10 @@ export function MatchEventAnalysis({
       "ball-loss": scoped.filter((event) => event.kind === "ball-loss").length,
       "team-foul": scoped.filter((event) => event.kind === "team-foul").length,
       card: scoped.filter((event) => event.kind === "card").length,
+      "goalkeeper-save": scoped.filter(
+        (event) => event.kind === "goalkeeper-save",
+      ).length,
+      timeout: scoped.filter((event) => event.kind === "timeout").length,
     }),
     [scoped],
   );
@@ -139,6 +145,12 @@ export function MatchEventAnalysis({
               : "",
         }).trim(),
       ];
+      if (
+        event.kind === "shot" &&
+        event.attemptType &&
+        event.attemptType !== "open-play"
+      )
+        parts.push(recorder(event.attemptType), recorder("restartSpot"));
       if (event.kind === "ball-recovery" || event.kind === "ball-loss")
         parts.push(recorder(event.rinkHalf ?? "locationUnknown"));
       if (event.kind === "powerplay-adjust")
@@ -261,6 +273,30 @@ export function MatchEventAnalysis({
     segments: StatisticsSegment[];
   }>(() => {
     const statistics = getActionStatistics(filtered);
+    if (category === "goalkeeper-save")
+      return {
+        title: recorder("chooseSave"),
+        segments: (["simple", "difficult"] as const).map((difficulty) => ({
+          id: difficulty,
+          label: recorder(difficulty),
+          value: filtered.filter(
+            (event) =>
+              event.kind === "goalkeeper-save" &&
+              event.difficulty === difficulty,
+          ).length,
+          tone: difficulty === "simple" ? "action" : "blue",
+        })),
+      };
+    if (category === "timeout")
+      return {
+        title: t("timeouts"),
+        segments: (["own", "opponent"] as const).map((team) => ({
+          id: team,
+          label: recorder(team),
+          value: statistics.timeouts[team],
+          tone: team === "own" ? "action" : "muted",
+        })),
+      };
     if (category === "card")
       return {
         title: t("cardBreakdown"),
@@ -275,7 +311,13 @@ export function MatchEventAnalysis({
       return {
         title: t("recoveryBreakdown"),
         segments: (
-          ["interception", "duel", "loose-ball", "other"] as const
+          [
+            "interception",
+            "duel",
+            "loose-ball",
+            "intercepted-shot",
+            "other",
+          ] as const
         ).map((subtype, index) => ({
           id: subtype,
           label: recorder(subtype),

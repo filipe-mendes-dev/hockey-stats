@@ -83,7 +83,7 @@ export const startMatchCommandSchema = matchSnapshotSchema
   );
 export const controlMatchCommandSchema = matchSnapshotSchema
   .safeExtend({
-    version: z.literal(1),
+    version: z.union([z.literal(1), z.literal(2)]),
     operationId: z.uuidv4(),
     kind: z.literal("match.control"),
     expectedRevision: z.int().positive(),

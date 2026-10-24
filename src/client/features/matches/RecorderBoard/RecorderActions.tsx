@@ -55,10 +55,10 @@ export function RecorderActions({
           variant="subtle"
           size="sm"
           disabled={disabled}
-          onClick={() => onPick({ kind: "opponent-goal" })}
+          onClick={() => onPick({ entry: "game" })}
           leftSection={<RecorderActionIcon kind="opponent-goal" size={16} />}
         >
-          {t("opponent-goal")}
+          {t("gameEvent")}
         </Button>
       </div>
     </section>

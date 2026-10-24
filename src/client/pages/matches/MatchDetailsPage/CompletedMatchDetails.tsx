@@ -14,6 +14,7 @@ import { MatchResult } from "../../../features/matches/MatchResult/MatchResult";
 import { TeamStatistics } from "../../../features/statistics/TeamStatistics/TeamStatistics";
 import { MatchEventAnalysis } from "../../../features/statistics/MatchEventAnalysis/MatchEventAnalysis";
 import { PlayerStatistics } from "../../../features/statistics/PlayerStatistics/PlayerStatistics";
+import { GoalkeeperStatistics } from "../../../features/statistics/GoalkeeperStatistics/GoalkeeperStatistics";
 import type { CompletedMatchDetailsProps } from "./CompletedMatchDetails.interfaces";
 import st from "./CompletedMatchDetails.module.css";
 
@@ -137,8 +138,20 @@ export function CompletedMatchDetails({
             </div>
           </section>
           <PlayerStatistics
-            statistics={statistics.players}
+            statistics={statistics.players.filter(
+              (row) => row.player.role === "field-player",
+            )}
             team={statistics.team}
+            periodLabel={periodLabel}
+            selectedPlayerId={selectedPlayerId}
+            onSelectPlayer={selectPlayer}
+            analysisId={analysisId}
+          />
+          <GoalkeeperStatistics
+            statistics={statistics.players}
+            unattributedConcededGoals={
+              statistics.team.unattributedConcededGoals
+            }
             periodLabel={periodLabel}
             selectedPlayerId={selectedPlayerId}
             onSelectPlayer={selectPlayer}

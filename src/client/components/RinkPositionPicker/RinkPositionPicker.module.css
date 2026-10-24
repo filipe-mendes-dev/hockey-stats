@@ -17,6 +17,9 @@
   cursor: default;
   opacity: 0.5;
 }
+.target[data-interaction="tap"] {
+  touch-action: pan-y pinch-zoom;
+}
 .target:focus-visible {
   outline: 2px solid var(--color-focus);
 }

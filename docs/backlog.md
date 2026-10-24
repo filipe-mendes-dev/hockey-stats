@@ -16,7 +16,7 @@ This file contains deferred work, not instructions to implement it. Current beha
 - Cup-specific extra periods/extra time and the corresponding preparation and lifecycle UI. The redesigned preparation flow assumes two regulation halves; cup formats remain deferred.
 - Live duration correction with explicit clock/event-history rules. Match duration is configured during creation and editable before starting; changing it during recording is lower priority.
 - Official foul thresholds/resets, competition presets and regulation edge cases.
-- Goalkeeper-specific events and possession metrics; assists and opponent Player tracking.
+- Additional goalkeeper metrics beyond the recorded save/conceded-goal summary; possession metrics, assists and opponent Player tracking. General opponent-shot capture is outside the agreed recorder scope.
 - Individual temporary suspension expiry. Team powerplay timers, remaining-time correction and automatic fifth-player prompts are implemented in the current increment.
 - Complete penalty duration/accumulation rules, automatic yellow consequences and match abandonment when a valid lineup cannot be maintained.
 - Cross-match analytics, heatmaps, zones, playing-time reports and season dashboards. Per-match recorded playing time belongs to the approved completed summary.
@@ -33,9 +33,18 @@ This file contains deferred work, not instructions to implement it. Current beha
 - Background Sync, server push/WebSockets and separately deployed API infrastructure only when needed.
 - Monotonic/wall-clock reconciliation, drift diagnostics and clock handoff.
 - Physical-device installation/offline checks, a full browser-family pass, independent-user account switching and observer exercises.
-- Export/import, manual and automated backup, recovery tooling and restore exercises.
+- Shareable read-only match-statistics links. Discuss access, revocation and live-versus-snapshot behavior later. A well-formatted PDF is a possible export format, not yet agreed. Keep sharing/export outside the current recorder branch.
+- General export/import, manual and automated backup, recovery tooling and restore exercises.
 - Retire legacy dynamic Player/Team URLs if no longer needed; current fixed query views already support offline delivery.
 - Dependency advisory triage before a release. Keep upgrades separate from this prototype cleanup; do not force unrelated dependency rewrites.
+
+## One-off historical import
+
+Convert only `jogo-2026-10-21.json` after a dry-run review, using the supplied PDF/screenshot as supporting evidence. General import tooling remains deferred. Confirm source-player mappings, team/starters and coordinate bounds before normalization; Z1/Z2 identify halves but do not establish pixel bounds.
+
+Resolve the three unattributed fouls, Santiago's blocked shot and saved penalty sharing a timestamp, incomplete blue-card lineup consequences, a backwards second-half event time and missing wall-clock/period-end times. Never invent attribution or played time, relax foul validation or silently reorder source history. Confirm any exclusions explicitly.
+
+The later converter needs source-ID mapping, duplicate-import protection, account-scoped atomic writes and normal synchronization. Sharing/export decisions remain separate.
 
 ## Accounts and additional product scope
 

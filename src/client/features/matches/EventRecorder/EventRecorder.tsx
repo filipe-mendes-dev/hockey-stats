@@ -16,6 +16,7 @@ import { PowerplayCorrectionDialog } from "../PowerplayCorrectionDialog/Powerpla
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
 import { MatchControls } from "../MatchControls/MatchControls";
 import { MatchScoreboard } from "../MatchScoreboard/MatchScoreboard";
+import { RecorderDirectionDialog } from "../RecorderBoard/RecorderDirectionDialog";
 import { RecorderHeader } from "../RecorderBoard/RecorderHeader";
 import { RecorderPlayers } from "../RecorderBoard/RecorderPlayers";
 import { RecorderActions } from "../RecorderBoard/RecorderActions";
@@ -39,10 +40,10 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const [store] = useState(createEventDraftStore);
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const state = useStore(store, (entry) => entry.state);
-  const [controlsBusy, setControlsBusy] = useState(false);
-  const [rinkPicking, setRinkPicking] = useState(false);
+  const [clockControlsBusy, setClockControlsBusy] = useState(false);
+  const [directionOpen, setDirectionOpen] = useState(false);
+  const controlsBusy = clockControlsBusy || directionOpen;
   const [rinkGesture, setRinkGesture] = useState(false);
-  const [rinkElapsedMs, setRinkElapsedMs] = useState<number>();
   const [rinkDirection, setRinkDirection] = useState<RinkAttackDirection>();
   const pendingRink = useRef<{
     draft: EventDraft;
@@ -99,7 +100,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       readOnly ||
       state.phase !== "idle" ||
       controlsBusy ||
-      rinkPicking ||
       rinkGesture ||
       correction ||
       undo.isPending ||
@@ -122,7 +122,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     readOnly,
     state.phase,
     controlsBusy,
-    rinkPicking,
     rinkGesture,
     correction,
     undo.isPending,
@@ -135,7 +134,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   useEffect(() => {
     if (
       state.phase !== "idle" ||
-      rinkPicking ||
       rinkGesture ||
       store.getState().state.phase !== "idle" ||
       !returnFocusTo.current
@@ -147,7 +145,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       if (trigger.isConnected) trigger.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [state.phase, store, rinkPicking, rinkGesture]);
+  }, [state.phase, store, rinkGesture]);
   function save(input: AddMatchEventInput): void {
     void add
       .mutateAsync(input)
@@ -161,7 +159,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   function dispatch(action: EventDraftAction): void {
     if (action.type === "cancel") {
       pendingRink.current = null;
-      setRinkPicking(false);
       setRinkGesture(false);
     }
     store.getState().dispatch(action);
@@ -173,13 +170,12 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     save(input);
   }
   function handleOpenEvent(
-    initial: Pick<EventDraft, "matchPlayerId" | "kind">,
+    initial: Pick<EventDraft, "matchPlayerId" | "kind" | "entry">,
   ): void {
     if (
       store.getState().state.phase !== "idle" ||
       undo.isPending ||
       controlsBusy ||
-      rinkPicking ||
       rinkGesture ||
       correction !== null ||
       !events.data ||
@@ -193,29 +189,34 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         : null;
     add.reset();
     setRinkDirection(undefined);
+    const goalkeeper = snapshot.players.find(
+      (player) =>
+        player.role === "goalkeeper" &&
+        derivedState.activePlayerIds.has(player.id),
+    );
     dispatch({
       type: "open",
-      draft: captureEventDraft(
-        snapshot.match,
-        initial,
-        derivedState.powerplayCardEventIds[0],
-      ),
+      draft: {
+        ...captureEventDraft(
+          snapshot.match,
+          initial,
+          derivedState.powerplayCardEventIds[0],
+        ),
+        ...(goalkeeper ? { capturedGoalkeeperId: goalkeeper.id } : {}),
+        ...(initial.kind === "goalkeeper-save" && goalkeeper
+          ? { matchPlayerId: goalkeeper.id }
+          : {}),
+      },
     });
   }
 
-  function openRink(): void {
-    if (disabled || controlsBusy || readOnly) return;
-    returnFocusTo.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    add.reset();
-    setRinkPicking(true);
-  }
-
   function startRinkGesture(): void {
+    if (draft) {
+      if (state.phase === "collecting" && selectedDirection)
+        setRinkGesture(true);
+      return;
+    }
     if (
-      draft ||
       !currentDirection ||
       readOnly ||
       controlsBusy ||
@@ -226,16 +227,14 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       return;
     if (!pendingRink.current) {
       pendingRink.current = {
-        draft: captureEventDraft(snapshot.match, {}),
+        draft: captureEventDraft(snapshot.match, { entry: "rink" }),
         direction: currentDirection,
       };
-      if (!rinkPicking)
-        returnFocusTo.current =
-          document.activeElement instanceof HTMLElement
-            ? document.activeElement
-            : null;
+      returnFocusTo.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
     }
-    setRinkElapsedMs(pendingRink.current.draft.gameTime?.elapsedMs);
     setRinkGesture(true);
   }
 
@@ -266,7 +265,6 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     }
     pendingRink.current = null;
     setRinkGesture(false);
-    setRinkPicking(false);
   }
 
   function retry(): void {
@@ -277,169 +275,139 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   }
   const disabled =
     state.phase !== "idle" ||
-    rinkPicking ||
     rinkGesture ||
     correction !== null ||
     undo.isPending ||
     !events.data ||
     events.isError;
   const rinkProps = {
-    match: snapshot.match,
     inert: controlsBusy,
+    controlsDisabled: disabled,
     period: draft?.period ?? snapshot.match.currentPeriod,
     direction: selectedDirection,
     position: draft?.position,
     disabled:
       state.phase !== "idle" ||
-      rinkPicking ||
       correction !== null ||
       undo.isPending ||
       !events.data ||
       events.isError,
-    onOpen: openRink,
+    onChangeDirection: () => setDirectionOpen(true),
     onStart: startRinkGesture,
     onSelect: selectRinkPosition,
     onCancelGesture: cancelRinkGesture,
   };
+  if (readOnly) return null;
   return (
     <div className={st.recorder} data-live-recorder={!readOnly}>
-      {!readOnly && (
-        <div className={st.board}>
-          <div className={st.sticky} inert={controlsBusy}>
-            <RecorderHeader
-              match={snapshot.match}
-              disabled={
-                state.phase !== "idle" ||
-                rinkPicking ||
-                rinkGesture ||
-                correction !== null ||
-                undo.isPending
-              }
-              scoreDisabled={disabled}
-              onScoreAdjust={() =>
-                handleOpenEvent({ kind: "score-adjustment" })
-              }
-            />
-            <MatchScoreboard
-              match={snapshot.match}
-              now={now}
-              powerplays={
-                events.data && !events.isError ? derivedState.powerplays : []
-              }
-              onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
-              ownScore={
-                events.data && !events.isError
-                  ? derivedState.ownScore
-                  : undefined
-              }
-              opponentScore={
-                events.data && !events.isError
-                  ? derivedState.opponentScore
-                  : undefined
-              }
-              disabled={disabled}
-            />
-          </div>
-          <MatchControls
+      <div className={st.board}>
+        <div className={st.sticky} inert={controlsBusy}>
+          <RecorderHeader
             match={snapshot.match}
-            now={now}
             disabled={
               state.phase !== "idle" ||
-              rinkPicking ||
               rinkGesture ||
               correction !== null ||
               undo.isPending
             }
-            onBusyChange={setControlsBusy}
+            scoreDisabled={disabled}
+            onScoreAdjust={() => handleOpenEvent({ kind: "score-adjustment" })}
           />
-          <div className={st.capture} inert={controlsBusy}>
-            <RecorderActions
-              context={context}
-              disabled={disabled}
-              onPick={handleOpenEvent}
-              undoDisabled={
-                readOnly ||
-                rinkPicking ||
-                rinkGesture ||
-                correction !== null ||
-                !candidate.data ||
-                undo.isPending ||
-                state.phase !== "idle"
-              }
-              undoPending={undo.isPending}
-              onUndo={() => {
-                if (candidate.data)
-                  undo.mutate({
-                    matchId: snapshot.match.id,
-                    eventId: candidate.data.id,
-                  });
-              }}
-            />
-            <RecorderRink {...rinkProps} presentation="compact" />
-            <RecorderPlayers
-              context={context}
-              disabled={disabled}
-              onPick={handleOpenEvent}
-            />
-            {undo.isError && (
-              <p className={st.error} role="alert">
-                {t("undoFailed")}
-              </p>
-            )}
-            {candidate.isError && (
-              <p className={st.error}>{t("undoUnavailable")}</p>
-            )}
-          </div>
+          <MatchScoreboard
+            match={snapshot.match}
+            now={now}
+            powerplays={
+              events.data && !events.isError ? derivedState.powerplays : []
+            }
+            onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
+            ownScore={
+              events.data && !events.isError ? derivedState.ownScore : undefined
+            }
+            opponentScore={
+              events.data && !events.isError
+                ? derivedState.opponentScore
+                : undefined
+            }
+            disabled={disabled}
+          />
         </div>
-      )}
-      {readOnly && (
-        <section className={st.readOnlyScore} aria-label={t("scoreTitle")}>
-          <strong>
-            {snapshot.match.teamNameAtMatch}:{" "}
-            {events.data && !events.isError ? derivedState.ownScore : "…"}
-          </strong>
-          <strong>
-            {snapshot.match.opponentName}:{" "}
-            {events.data && !events.isError ? derivedState.opponentScore : "…"}
-          </strong>
-          <p>{t("completedSummary")}</p>
-          {events.data && !events.isError && (
-            <p>
-              {t(
-                derivedState.isPowerplay
-                  ? "powerplayActive"
-                  : "powerplayInactive",
-                {
-                  maximum: String(derivedState.maxOnField),
-                  queued: String(
-                    Math.max(0, derivedState.powerplayCardEventIds.length - 1),
-                  ),
-                },
-              )}
+        <MatchControls
+          match={snapshot.match}
+          now={now}
+          disabled={
+            directionOpen ||
+            state.phase !== "idle" ||
+            rinkGesture ||
+            correction !== null ||
+            undo.isPending
+          }
+          onBusyChange={setClockControlsBusy}
+        />
+        <div className={st.capture} inert={controlsBusy}>
+          <RecorderActions
+            context={context}
+            disabled={disabled}
+            onPick={handleOpenEvent}
+            undoDisabled={
+              readOnly ||
+              rinkGesture ||
+              correction !== null ||
+              !candidate.data ||
+              undo.isPending ||
+              state.phase !== "idle"
+            }
+            undoPending={undo.isPending}
+            onUndo={() => {
+              if (candidate.data)
+                undo.mutate({
+                  matchId: snapshot.match.id,
+                  eventId: candidate.data.id,
+                });
+            }}
+          />
+          <RecorderPlayers
+            context={context}
+            disabled={disabled}
+            onPick={handleOpenEvent}
+          />
+          {undo.isError && (
+            <p className={st.error} role="alert">
+              {t("undoFailed")}
             </p>
           )}
-        </section>
-      )}
+          {candidate.isError && (
+            <p className={st.error}>{t("undoUnavailable")}</p>
+          )}
+        </div>
+      </div>
       <div className={st.review}>
-        {!readOnly && <RecorderRink {...rinkProps} presentation="desktop" />}
+        <RecorderRink {...rinkProps} />
         <RecorderTimeline
           snapshot={snapshot}
           events={events.data}
           loading={events.isPending}
           failed={events.isError}
           onRetry={() => void events.refetch()}
-          expanded={readOnly}
-          scrollable={!readOnly}
+          scrollable
         />
       </div>
-      {correction && !readOnly && (
+      {directionOpen && (
+        <RecorderDirectionDialog
+          match={snapshot.match}
+          onClose={() => {
+            setRinkDirection(undefined);
+            setDirectionOpen(false);
+          }}
+        />
+      )}
+      {correction && (
         <PowerplayCorrectionDialog
           match={snapshot.match}
           penalties={correction}
           onClose={() => setCorrection(null)}
         />
       )}
-      {(draft || rinkPicking) && !readOnly && (
+      {draft && !directionOpen && (
         <EventEntryDialog
           draft={draft}
           context={draftContext}
@@ -447,14 +415,13 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           error={add.error}
           onAction={dispatch}
           onRetry={retry}
-          liveElapsedMs={rinkGesture ? rinkElapsedMs : elapsedMs}
           rink={{
-            picking: rinkPicking,
+            gestureActive: rinkGesture,
+            onChangeDirection: () => setDirectionOpen(true),
             direction: selectedDirection,
             onStart: startRinkGesture,
             onSelect: selectRinkPosition,
             onCancelGesture: cancelRinkGesture,
-            onEdit: () => setRinkPicking(true),
           }}
         />
       )}

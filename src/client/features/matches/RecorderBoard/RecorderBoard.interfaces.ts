@@ -4,7 +4,9 @@ import type { EventDraft } from "../EventRecorder/eventDraft";
 export interface RecorderPlayersProps {
   context: MatchRuleContext;
   disabled: boolean;
-  onPick: (initial: Pick<EventDraft, "matchPlayerId" | "kind">) => void;
+  onPick: (
+    initial: Pick<EventDraft, "matchPlayerId" | "kind" | "entry">,
+  ) => void;
 }
 export interface RecorderActionsProps extends RecorderPlayersProps {
   undoDisabled: boolean;

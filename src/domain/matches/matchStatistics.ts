@@ -1,4 +1,4 @@
-import type { MatchEvent } from "./matchEvent.schema";
+import type { MatchEvent, AttemptType } from "./matchEvent.schema";
 import type { MatchPlayer, MatchSnapshot } from "./match.schema";
 import { derivePlayingTime } from "./playingTime";
 
@@ -18,6 +18,19 @@ export interface ActionStatistics {
   losses: number;
   fouls: number;
   cards: CardStatistics;
+  shotTypes: Record<AttemptType | "unknown", ShotTypeStatistics>;
+  saves: number;
+  simpleSaves: number;
+  difficultSaves: number;
+  unclassifiedSaves: number;
+  concededGoals: number;
+  unattributedConcededGoals: number;
+  timeouts: { own: number; opponent: number };
+}
+
+export interface ShotTypeStatistics {
+  attempts: number;
+  goals: number;
 }
 
 export interface PlayerMatchStatistics extends ActionStatistics {
@@ -51,16 +64,46 @@ export function getActionStatistics(
     losses: 0,
     fouls: 0,
     cards: { yellow: 0, blue: 0, red: 0 },
+    shotTypes: {
+      "open-play": { attempts: 0, goals: 0 },
+      penalty: { attempts: 0, goals: 0 },
+      "direct-free-hit": { attempts: 0, goals: 0 },
+      unknown: { attempts: 0, goals: 0 },
+    },
+    saves: 0,
+    simpleSaves: 0,
+    difficultSaves: 0,
+    unclassifiedSaves: 0,
+    concededGoals: 0,
+    unattributedConcededGoals: 0,
+    timeouts: { own: 0, opponent: 0 },
   };
   for (const event of events) {
     if (event.deletedAt !== undefined) continue;
     switch (event.kind) {
       case "shot":
         statistics.shots += 1;
+        statistics.shotTypes[event.attemptType ?? "unknown"].attempts += 1;
+        if (event.outcome === "goal")
+          statistics.shotTypes[event.attemptType ?? "unknown"].goals += 1;
         if (event.outcome === "goal") statistics.goals += 1;
         else if (event.outcome === "on-target") statistics.onTarget += 1;
         else if (event.outcome === "off-target") statistics.offTarget += 1;
         else statistics.blocked += 1;
+        break;
+      case "goalkeeper-save":
+        statistics.saves += 1;
+        if (event.difficulty === "simple") statistics.simpleSaves += 1;
+        else if (event.difficulty === "difficult")
+          statistics.difficultSaves += 1;
+        else statistics.unclassifiedSaves += 1;
+        break;
+      case "opponent-goal":
+        statistics.concededGoals += 1;
+        if (!event.matchPlayerId) statistics.unattributedConcededGoals += 1;
+        break;
+      case "timeout":
+        statistics.timeouts[event.team] += 1;
         break;
       case "ball-recovery":
         statistics.recoveries += 1;

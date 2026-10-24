@@ -6,12 +6,11 @@ import type {
   EventDraftState,
 } from "./eventDraft";
 export interface EventEntryDialogProps {
-  draft: EventDraft | null;
+  draft: EventDraft;
   context: MatchRuleContext;
   phase: EventDraftState["phase"];
   error: unknown;
   onAction: (action: EventDraftAction) => void;
   onRetry: () => void;
   rink: RecorderRinkSession;
-  liveElapsedMs: number | undefined;
 }

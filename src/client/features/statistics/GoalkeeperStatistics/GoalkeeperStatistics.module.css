@@ -1,0 +1,71 @@
+.section {
+  min-width: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 2rem;
+  margin-top: 2rem;
+}
+.section h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-action);
+}
+.section p {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+}
+.players article {
+  min-width: 0;
+  padding: 1rem;
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+.players article[data-selected="true"] {
+  background: var(--color-surface-selection);
+}
+.identity {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.identity span {
+  flex-shrink: 0;
+  color: var(--color-action);
+}
+.identity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.players dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 0;
+}
+.players dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.players dd {
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}

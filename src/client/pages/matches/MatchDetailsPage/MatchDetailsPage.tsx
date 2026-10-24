@@ -55,7 +55,7 @@ export function MatchDetailsPage() {
         )}
       </section>
     );
-  if (params.get("edit") === "call-up")
+  if (snapshot.match.status === "setup" && params.get("edit") === "call-up")
     return <EditMatchCallUpPage key={snapshot.match.id} snapshot={snapshot} />;
   if (snapshot.match.status === "completed")
     return (

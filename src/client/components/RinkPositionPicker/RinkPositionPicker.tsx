@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
+import { HockeyRinkLabels } from "../HockeyRink/HockeyRinkLabels";
 import { HockeyRink } from "../HockeyRink/HockeyRink";
 import type {
   RinkPoint,
@@ -36,12 +37,14 @@ export function RinkPositionPicker({
   hint,
   touchHint,
   hintAccessory,
+  hideHint = false,
   invalidLabel,
   positionLabel,
   initialPosition,
   orientation,
   disabled = false,
   autoFocus = false,
+  interaction = "precision",
   onStart,
   onSelect,
   onCancelGesture,
@@ -52,6 +55,7 @@ export function RinkPositionPicker({
   const stage = useRef<HTMLDivElement>(null);
   const lens = useRef<HTMLDivElement>(null);
   const activePointer = useRef<number | null>(null);
+  const pointerOrigin = useRef({ x: 0, y: 0 });
   const keyboardStarted = useRef(false);
   const [position, setPosition] = useState(initialPosition);
   const [magnifying, setMagnifying] = useState(false);
@@ -138,17 +142,23 @@ export function RinkPositionPicker({
     if (disabled || !event.isPrimary || event.button !== 0) return;
     const point = readPoint(event);
     if (!point) return;
-    event.preventDefault();
+    if (interaction === "precision" || event.pointerType === "mouse")
+      event.preventDefault();
     event.currentTarget.focus({ preventScroll: true });
     activePointer.current = event.pointerId;
+    pointerOrigin.current = { x: event.clientX, y: event.clientY };
     event.currentTarget.setPointerCapture(event.pointerId);
     keyboardStarted.current = false;
     setSelecting(true);
     onStart();
-    move(event, point);
+    if (interaction === "precision") move(event, point);
   }
   function pointerUp(event: PointerEvent<HTMLDivElement>): void {
     if (activePointer.current !== event.pointerId) return;
+    if (interaction === "tap" && movedBeyondTap(event)) {
+      cancelGesture();
+      return;
+    }
     const point = readPoint(event);
     activePointer.current = null;
     setMagnifying(false);
@@ -161,6 +171,14 @@ export function RinkPositionPicker({
     setPosition(point);
     suppressReleaseClick();
     onSelect(point);
+  }
+  function movedBeyondTap(event: PointerEvent<HTMLDivElement>): boolean {
+    return (
+      Math.hypot(
+        event.clientX - pointerOrigin.current.x,
+        event.clientY - pointerOrigin.current.y,
+      ) > 10
+    );
   }
   function keyDown(event: KeyboardEvent<HTMLDivElement>): void {
     if (
@@ -206,11 +224,13 @@ export function RinkPositionPicker({
   }
   return (
     <div className={st.picker}>
+      {orientation && <HockeyRinkLabels {...orientation} />}
       <div ref={stage} className={st.stage}>
         <div
           ref={target}
           data-autofocus={autoFocus || undefined}
           className={st.target}
+          data-interaction={interaction}
           tabIndex={disabled ? -1 : 0}
           role="group"
           aria-label={label}
@@ -219,6 +239,10 @@ export function RinkPositionPicker({
           onPointerDown={pointerDown}
           onPointerMove={(event) => {
             if (activePointer.current !== event.pointerId) return;
+            if (interaction === "tap") {
+              if (movedBeyondTap(event)) cancelGesture();
+              return;
+            }
             const point = readPoint(event);
             if (point) move(event, point);
             else setInvalid(true);
@@ -262,7 +286,7 @@ export function RinkPositionPicker({
         </div>
       </div>
       <div className={st.hintRow}>
-        <p id={hintId} className={st.hint}>
+        <p id={hintId} className={hideHint ? st.announcement : st.hint}>
           <span className={st.pointerHint}>{hint}</span>
           <span className={st.touchHint}>{touchHint ?? hint}</span>
         </p>
