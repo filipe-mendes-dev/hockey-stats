@@ -11,9 +11,15 @@ import type {
   CardColour,
   RinkPosition,
   RinkHalf,
+  AttemptType,
+  SaveDifficulty,
+  TimeoutTeam,
 } from "../../../../domain/matches/matchEvent.schema";
 import { addMatchEventInputSchema } from "../../../../domain/matches/matchEvent.schema";
-import { getPositionHalf } from "../../../../domain/matches/rinkPosition";
+import {
+  getPositionHalf,
+  getRestartSpot,
+} from "../../../../domain/matches/rinkPosition";
 
 export interface EventDraft {
   id: string;
@@ -21,6 +27,13 @@ export interface EventDraft {
   matchId: string;
   period: number;
   capturedAt: number;
+  entry?: "game" | "rink";
+  capturedGoalkeeperId?: string;
+  selectingSetPiece?: boolean;
+  saveConfirmed?: boolean;
+  attemptType?: AttemptType;
+  difficulty?: SaveDifficulty;
+  team?: TimeoutTeam;
   gameTime?: MatchTime;
   position?: RinkPosition;
   rinkHalf?: RinkHalf;
@@ -53,6 +66,14 @@ export type EventDraftAction =
   | { type: "restoreChoices"; draft: EventDraft }
   | { type: "selectPlayer"; id: string }
   | { type: "setPosition"; position: RinkPosition }
+  | {
+      type: "selectGameEvent";
+      event: "opponent-goal" | "timeout" | "set-piece";
+    }
+  | { type: "openSetPiece" }
+  | { type: "selectAttemptType"; attemptType: "penalty" | "direct-free-hit" }
+  | { type: "confirmSave"; difficulty: SaveDifficulty }
+  | { type: "selectTimeoutTeam"; team: TimeoutTeam }
   | {
       type: "selectKind";
       kind: AddMatchEventInput["kind"];
@@ -96,6 +117,53 @@ export function transitionEventDraft(
       : state;
   if (state.phase !== "collecting") return state;
   switch (action.type) {
+    case "selectGameEvent":
+      if (state.draft.entry !== "game" || state.draft.kind) return state;
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          kind: action.event === "set-piece" ? "shot" : action.event,
+          ...(action.event === "set-piece" ? { selectingSetPiece: true } : {}),
+          ...(action.event === "opponent-goal" &&
+          state.draft.capturedGoalkeeperId
+            ? { matchPlayerId: state.draft.capturedGoalkeeperId }
+            : {}),
+        },
+      };
+    case "openSetPiece":
+      return state.draft.kind === "shot" && state.draft.entry !== "rink"
+        ? { ...state, draft: { ...state.draft, selectingSetPiece: true } }
+        : state;
+    case "selectAttemptType":
+      return state.draft.kind === "shot" &&
+        state.draft.selectingSetPiece &&
+        state.draft.entry !== "rink"
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              selectingSetPiece: false,
+              attemptType: action.attemptType,
+              position: getRestartSpot(action.attemptType),
+            },
+          }
+        : state;
+    case "confirmSave":
+      return state.draft.kind === "goalkeeper-save"
+        ? {
+            ...state,
+            draft: {
+              ...state.draft,
+              saveConfirmed: true,
+              difficulty: action.difficulty,
+            },
+          }
+        : state;
+    case "selectTimeoutTeam":
+      return state.draft.kind === "timeout"
+        ? { ...state, draft: { ...state.draft, team: action.team } }
+        : state;
     case "restoreChoices":
       return {
         phase: "collecting",
@@ -148,6 +216,11 @@ export function transitionEventDraft(
         delete draft.powerplayConfirmed;
         delete draft.outgoingMatchPlayerId;
         delete draft.incomingMatchPlayerId;
+        delete draft.attemptType;
+        delete draft.selectingSetPiece;
+        delete draft.saveConfirmed;
+        delete draft.difficulty;
+        delete draft.team;
       }
       if (action.kind === "substitution") {
         if (draft.matchPlayerId) {
@@ -159,6 +232,7 @@ export function transitionEventDraft(
       }
       if (action.kind === "substitution" || action.kind === "player-in")
         delete draft.position;
+      if (action.kind === "shot") draft.attemptType = "open-play";
       if (
         (action.kind === "ball-recovery" || action.kind === "ball-loss") &&
         draft.position
@@ -263,10 +337,29 @@ export function completeEventDraft(
   draft: EventDraft,
 ): AddMatchEventInput | null {
   if (draft.kind === "powerplay-end" && !draft.powerplayConfirmed) return null;
-  const { powerplayConfirmed, ...fields } = draft;
+  if (
+    draft.selectingSetPiece ||
+    (draft.kind === "goalkeeper-save" && !draft.saveConfirmed)
+  )
+    return null;
+  const {
+    powerplayConfirmed,
+    entry,
+    capturedGoalkeeperId,
+    selectingSetPiece,
+    saveConfirmed,
+    ...fields
+  } = draft;
   void powerplayConfirmed;
+  void entry;
+  void capturedGoalkeeperId;
+  void selectingSetPiece;
+  void saveConfirmed;
   const result = addMatchEventInputSchema.safeParse({
     ...fields,
+    ...(draft.kind === "shot"
+      ? { attemptType: draft.attemptType ?? "open-play" }
+      : {}),
     ...(draft.kind === "card"
       ? {
           startsPowerplay: draft.colour !== "yellow",
@@ -282,7 +375,7 @@ export function completeEventDraft(
 
 export function captureEventDraft(
   match: Match,
-  initial: Pick<EventDraft, "matchPlayerId" | "kind">,
+  initial: Pick<EventDraft, "matchPlayerId" | "kind" | "entry">,
   powerplayCardEventId?: string,
 ): EventDraft {
   const capturedAt = Date.now();

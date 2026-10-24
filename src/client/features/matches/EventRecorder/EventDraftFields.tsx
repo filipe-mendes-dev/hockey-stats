@@ -20,7 +20,15 @@ import type { MatchPlayer } from "../../../../domain/matches/match.schema";
 import { Button } from "@mantine/core";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
 import { EventTimeForm } from "../EventTimeForm/EventTimeForm";
-import { Shield, Swords, Square } from "lucide-react";
+import {
+  Shield,
+  Swords,
+  Square,
+  Crosshair,
+  Target,
+  ShieldCheck,
+  Timer,
+} from "lucide-react";
 import { getEventDraftSteps } from "./eventDraftSteps";
 import { supportsRinkPosition } from "../../../../domain/matches/rinkPosition";
 import type { EventDraftFieldsProps } from "./EventDraftFields.interfaces";
@@ -43,12 +51,96 @@ export function EventDraftFields({
     : [];
   return (
     <div className={st.fields}>
+      {step === "chooseGameEvent" && (
+        <div className={st.choices}>
+          {(["opponent-goal", "timeout", "set-piece"] as const).map((event) => (
+            <Button
+              key={event}
+              variant="default"
+              leftSection={
+                event === "set-piece" ? (
+                  <Crosshair size={20} aria-hidden="true" />
+                ) : (
+                  <RecorderActionIcon kind={event} />
+                )
+              }
+              onClick={() => onAction({ type: "selectGameEvent", event })}
+              disabled={
+                event === "set-piece" &&
+                getEligiblePlayers(context, "shot").length === 0
+              }
+            >
+              {t(event)}
+            </Button>
+          ))}
+        </div>
+      )}
+      {step === "chooseSetPiece" && (
+        <div className={st.choices}>
+          {(["penalty", "direct-free-hit"] as const).map((attemptType) => (
+            <Button
+              key={attemptType}
+              variant="default"
+              leftSection={
+                attemptType === "penalty" ? (
+                  <Target size={20} aria-hidden="true" />
+                ) : (
+                  <Crosshair size={20} aria-hidden="true" />
+                )
+              }
+              onClick={() =>
+                onAction({ type: "selectAttemptType", attemptType })
+              }
+            >
+              {t(attemptType)}
+            </Button>
+          ))}
+        </div>
+      )}
+      {step === "chooseTimeoutTeam" && (
+        <div className={st.choices}>
+          {(["own", "opponent"] as const).map((team) => (
+            <Button
+              key={team}
+              variant="default"
+              leftSection={<Timer size={20} aria-hidden="true" />}
+              onClick={() => onAction({ type: "selectTimeoutTeam", team })}
+            >
+              {t(team)}
+            </Button>
+          ))}
+        </div>
+      )}
+      {step === "chooseSave" && (
+        <section>
+          <div className={st.choices}>
+            {(["simple", "difficult"] as const).map((difficulty) => (
+              <Button
+                key={difficulty}
+                variant="default"
+                leftSection={
+                  difficulty === "simple" ? (
+                    <ShieldCheck size={20} aria-hidden="true" />
+                  ) : (
+                    <Shield size={20} aria-hidden="true" />
+                  )
+                }
+                onClick={() => onAction({ type: "confirmSave", difficulty })}
+              >
+                {t(difficulty)}
+              </Button>
+            ))}
+          </div>
+        </section>
+      )}
       {step === "chooseAction" && (
         <section>
           <h3>{t("chooseAction")}</h3>
           <div className={st.choices}>
             {getAvailableEventKinds(context, draft.matchPlayerId)
-              .filter((kind) => !draft.position || supportsRinkPosition(kind))
+              .filter(
+                (kind) => draft.entry !== "rink" || supportsRinkPosition(kind),
+              )
               .map((kind) => (
                 <Button
                   key={kind}
@@ -185,6 +277,15 @@ export function EventDraftFields({
               </Button>
             ))}
           </div>
+          {draft.entry !== "rink" &&
+            (!draft.attemptType || draft.attemptType === "open-play") && (
+              <Button
+                variant="subtle"
+                onClick={() => onAction({ type: "openSetPiece" })}
+              >
+                {t("set-piece")}
+              </Button>
+            )}
         </section>
       )}
       {step === "chooseColour" && (

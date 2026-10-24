@@ -173,7 +173,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     save(input);
   }
   function handleOpenEvent(
-    initial: Pick<EventDraft, "matchPlayerId" | "kind">,
+    initial: Pick<EventDraft, "matchPlayerId" | "kind" | "entry">,
   ): void {
     if (
       store.getState().state.phase !== "idle" ||
@@ -193,13 +193,24 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
         : null;
     add.reset();
     setRinkDirection(undefined);
+    const goalkeeper = snapshot.players.find(
+      (player) =>
+        player.role === "goalkeeper" &&
+        derivedState.activePlayerIds.has(player.id),
+    );
     dispatch({
       type: "open",
-      draft: captureEventDraft(
-        snapshot.match,
-        initial,
-        derivedState.powerplayCardEventIds[0],
-      ),
+      draft: {
+        ...captureEventDraft(
+          snapshot.match,
+          initial,
+          derivedState.powerplayCardEventIds[0],
+        ),
+        ...(goalkeeper ? { capturedGoalkeeperId: goalkeeper.id } : {}),
+        ...(initial.kind === "goalkeeper-save" && goalkeeper
+          ? { matchPlayerId: goalkeeper.id }
+          : {}),
+      },
     });
   }
 
@@ -226,7 +237,7 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
       return;
     if (!pendingRink.current) {
       pendingRink.current = {
-        draft: captureEventDraft(snapshot.match, {}),
+        draft: captureEventDraft(snapshot.match, { entry: "rink" }),
         direction: currentDirection,
       };
       if (!rinkPicking)

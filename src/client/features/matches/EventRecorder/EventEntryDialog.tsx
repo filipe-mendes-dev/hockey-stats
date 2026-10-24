@@ -47,6 +47,10 @@ export function EventEntryDialog({
   const player = context.snapshot.players.find(
     (entry) => entry.id === draft?.matchPlayerId,
   );
+  const specialAttempt =
+    draft?.kind === "shot" &&
+    (draft.attemptType === "penalty" ||
+      draft.attemptType === "direct-free-hit");
   const outgoing = context.snapshot.players.find(
     (entry) => entry.id === draft?.outgoingMatchPlayerId,
   );
@@ -57,12 +61,17 @@ export function EventEntryDialog({
     draft?.kind ? t(draft.kind) : undefined,
     draft?.rinkHalf ? t(draft.rinkHalf) : undefined,
     draft?.colour ? t(draft.colour) : undefined,
+    specialAttempt && draft?.attemptType ? t(draft.attemptType) : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
   return (
     <RecorderDialog
-      title={t(rink.picking ? "recordOnRink" : "newEvent")}
+      title={
+        specialAttempt && draft?.attemptType
+          ? t(draft.attemptType)
+          : t(rink.picking ? "recordOnRink" : "newEvent")
+      }
       pending={locked}
       onClose={() => onAction({ type: "cancel" })}
       footer={
@@ -120,27 +129,32 @@ export function EventEntryDialog({
             onDirectionPending={setDirectionPending}
           />
         )}
-        {!rink.picking && draft?.position && rink.direction && (
-          <div className={st.positionPreview}>
-            <HockeyRink
-              label={t("rinkSelected")}
-              position={toViewPosition(draft.position, rink.direction)}
-              orientation={{
-                attackingEnd: rink.direction === "toward-x0" ? "left" : "right",
-                attackLabel: t("rinkAttack"),
-                defenceLabel: t("rinkDefence"),
-              }}
-            />
-            <Button
-              variant="subtle"
-              size="sm"
-              disabled={phase !== "collecting"}
-              onClick={rink.onEdit}
-            >
-              {t("rinkChangePosition")}
-            </Button>
-          </div>
-        )}
+        {!specialAttempt &&
+          !draft?.selectingSetPiece &&
+          !rink.picking &&
+          draft?.position &&
+          rink.direction && (
+            <div className={st.positionPreview}>
+              <HockeyRink
+                label={t("rinkSelected")}
+                position={toViewPosition(draft.position, rink.direction)}
+                orientation={{
+                  attackingEnd:
+                    rink.direction === "toward-x0" ? "left" : "right",
+                  attackLabel: t("rinkAttack"),
+                  defenceLabel: t("rinkDefence"),
+                }}
+              />
+              <Button
+                variant="subtle"
+                size="sm"
+                disabled={phase !== "collecting"}
+                onClick={rink.onEdit}
+              >
+                {t("rinkChangePosition")}
+              </Button>
+            </div>
+          )}
         {!rink.picking &&
           draft &&
           phase === "collecting" &&
