@@ -25,10 +25,11 @@ CI uses Node.js 24, npm download caching and the existing scripts:
 npm ci --include=dev
 npm run format:check
 npm run lint
+npm run test:match-chronology
 npm run build
 ```
 
-`next build` checks TypeScript and generates the production service worker. A separate `npm run typecheck` would repeat type checking; the aggregate `npm run check` includes that extra pass and is therefore not used. CI builds once and does not also build a Docker image. Formatting follows the existing `.prettierignore`, which excludes docs. CI uses disposable build-time configuration, requires no production secrets or database and runs no tests.
+`next build` checks TypeScript and generates the production service worker. A separate `npm run typecheck` would repeat type checking; the aggregate `npm run check` includes that extra pass and is therefore not used. CI builds once and does not also build a Docker image. Formatting follows the existing `.prettierignore`, which excludes docs. CI uses disposable build-time configuration and requires no production secrets or database. The scoped chronology command typechecks and runs only the authorized match ordering, chronological-validation and playing-time tests using synthetic data. Broader automated testing remains deferred.
 
 The publishing workflow builds once inside Docker. It does not repeat npm installation/build on the runner. Buildx caches intermediate layers with `type=gha`, scope `benchline-amd64` and `mode=max`. The same Dockerfile, Compose services, database volume and external runtime configuration remain in use. Only official GitHub and Docker actions are used, pinned to verified commit SHAs with version comments.
 

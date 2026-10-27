@@ -524,6 +524,8 @@
       "invalid-event-time": "O tempo do evento está fora deste período.",
       "period-changed": "O período mudou. Inicia o evento novamente.",
       "invalid-history": "Esta alteração deixaria um histórico de eventos inválido.",
+      "chronology-conflict": "Este evento entra em conflito com a cronologia registada do jogo. Verifica o tempo e os jogadores.",
+      "unknown-history-time": "Não é possível validar esta alteração porque o histórico de tempos ou de jogadores em campo está incompleto.",
       "powerplay-unavailable": "Esta penalização de powerplay já não é a atual.",
       "lineup-full": "Não existe uma vaga disponível em campo."
     },

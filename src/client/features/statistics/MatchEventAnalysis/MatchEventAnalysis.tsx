@@ -5,7 +5,11 @@ import { ActionIcon, Button } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { ArrowRight, MousePointer2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
+import { deriveChronologicalMatchState } from "../../../../domain/matches/derivedMatchState";
+import {
+  getMatchEventsThroughEvent,
+  sortMatchEvents,
+} from "../../../../domain/matches/matchEventOrder";
 import { getEventDetail } from "../../../../domain/matches/matchEvent.schema";
 import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
 import {
@@ -83,9 +87,10 @@ export function MatchEventAnalysis({
   );
   const filtered = useMemo(
     () =>
-      scoped
-        .filter((event) => category === "all" || event.kind === category)
-        .sort((left, right) => right.order - left.order),
+      sortMatchEvents(
+        scoped.filter((event) => category === "all" || event.kind === category),
+        true,
+      ),
     [scoped, category],
   );
   const categoryCounts = useMemo<Record<StatisticsCategory, number>>(
@@ -175,9 +180,9 @@ export function MatchEventAnalysis({
         if (
           event.colour === "blue" &&
           event.startsPowerplay &&
-          (deriveMatchState(
+          (deriveChronologicalMatchState(
             snapshot,
-            events.filter((entry) => entry.order <= event.order),
+            getMatchEventsThroughEvent(events, event),
           ).blueCardCounts.get(event.matchPlayerId) ?? 0) >= 3
         )
           parts.push(recorder("thirdBlueRed"));

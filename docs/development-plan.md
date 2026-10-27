@@ -2,6 +2,8 @@
 
 Updated 2026-10-24. The prototype is implemented for review. Current behavior belongs in [Product requirements](product-requirements.md), [Domain model](domain-model.md), [Recorder UX](recorder-ux.md) and [Offline and sync](offline-sync.md). This file records delivery status, verification limits and remaining work; it is not a chronological implementation log.
 
+Chronology verification on 2026-10-26 adds the authorized focused automated tests for game-time ordering, chronological eligibility, penalty/Undo dependencies and playing time. The scoped command is also part of PR CI. Local production-browser checks used isolated disposable IndexedDB records to verify rejection without event/outbox writes, a valid late substitution, version-8 queuing and durable timeline/summary reload under offline network emulation. The completed summary also retained correct ordering and minutes at a 390px Portuguese viewport without horizontal overflow. The real recorded game and authenticated version-8 upload/download remain unverified. The production build passed after a retry; the installed Next.js runtime reported a known-vulnerability upgrade warning. No dependency changed.
+
 ## Current delivery
 
 | Area               | Implemented scope                                                                                                                                    |
@@ -30,7 +32,7 @@ Set pieces are available from Game event and ordinary Shot entry. They count as 
 - The original event expansion was exercised with authenticated uploads, independent-browser downloads, local PostgreSQL, receipt replay and server validation. Later UI/navigation refinements used disposable local IndexedDB records and did not repeat authenticated synchronization.
 - Earlier account/entity increments covered ownership/session checks, expected revisions, atomic rollback, deletion markers, sign-out failure handling and protected administrator accounts.
 
-These are targeted checks, not release certification. Automated tests were not read, added, changed or run. Disposable QA records and browser sessions were removed; user data was preserved.
+These are targeted checks, not release certification. The earlier recorder/navigation verification did not read, add, change or run automated tests; chronology now has the explicitly authorized focused tests described above. Disposable QA records and browser sessions were removed; user data was preserved.
 
 ## Remaining acceptance and next work
 

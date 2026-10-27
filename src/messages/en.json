@@ -524,6 +524,8 @@
       "invalid-event-time": "The event time is outside this period.",
       "period-changed": "The period changed. Start the event again.",
       "invalid-history": "This change would leave an invalid event history.",
+      "chronology-conflict": "This event conflicts with the registered game timeline. Check its time and players.",
+      "unknown-history-time": "This change cannot be verified because the recorded timing or lineup history is incomplete.",
       "powerplay-unavailable": "This powerplay penalty is no longer current.",
       "lineup-full": "There is no available place on the field."
     },

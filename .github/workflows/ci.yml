@@ -39,6 +39,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test match chronology
+        run: npm run test:match-chronology
+
       # next build includes TypeScript checking and service-worker generation.
       - name: Build and check TypeScript
         env:

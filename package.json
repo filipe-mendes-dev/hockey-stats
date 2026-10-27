@@ -23,6 +23,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
+    "test:match-chronology": "tsc --project tests/tsconfig.json --noEmit --incremental false && node scripts/test-match-chronology.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {

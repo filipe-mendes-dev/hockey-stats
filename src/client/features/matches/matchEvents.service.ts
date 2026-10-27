@@ -1,10 +1,11 @@
 import {
   isValidEventForMatch,
-  validateMatchEvent,
-  validateEventHistory,
   MatchRuleError,
 } from "../../../domain/matches/matchRules";
-import { deriveMatchState } from "../../../domain/matches/derivedMatchState";
+import {
+  validateChronologicalEventAddition,
+  validateChronologicalEventHistory,
+} from "../../../domain/matches/matchChronology";
 import {
   addMatchEventInputSchema,
   eventMatchesInput,
@@ -75,11 +76,6 @@ export async function addMatchEvent(
       snapshot.match.updatedAt,
     );
     const { operationId, ...eventFields } = fields;
-    const eligibility = validateMatchEvent(
-      { snapshot, state: deriveMatchState(snapshot, events, fields) },
-      fields,
-    );
-    if (!eligibility.allowed) throw new MatchRuleError(eligibility.reason);
     const event = matchEventSchema.parse({
       ...eventFields,
       order: (events.at(-1)?.order ?? 0) + 1,
@@ -87,11 +83,14 @@ export async function addMatchEvent(
       createdAt: now,
       updatedAt: now,
     });
-    if (
-      !isValidEventForMatch(snapshot, event) ||
-      !deriveMatchState(snapshot, [...events, event]).valid
-    )
+    if (!isValidEventForMatch(snapshot, event))
       throw new MatchEventUnavailableError();
+    const decision = validateChronologicalEventAddition(
+      snapshot,
+      events,
+      event,
+    );
+    if (!decision.allowed) throw new MatchRuleError(decision.reason);
     await insertMatchEvent(event);
     await updateMatch({
       ...snapshot.match,
@@ -108,7 +107,7 @@ export async function addMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 7,
+        version: 8,
         operationId,
         kind: "matchEvent.create",
         expectedRevision: snapshot.match.revision,
@@ -153,7 +152,7 @@ export async function undoMatchEvent(
       deletedAt: now,
     });
     const events = await listMatchEvents(input.matchId);
-    const historyDecision = validateEventHistory(
+    const historyDecision = validateChronologicalEventHistory(
       snapshot,
       events.map((entry) => (entry.id === event.id ? event : entry)),
     );
@@ -172,7 +171,7 @@ export async function undoMatchEvent(
       entityId: event.matchId,
       status: "pending",
       command: {
-        version: 7,
+        version: 8,
         operationId,
         kind: "matchEvent.undo",
         expectedRevision: snapshot.match.revision,
