@@ -1,0 +1,30 @@
+.marker {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-icon);
+  color: var(--event-color);
+  background: transparent;
+  cursor: pointer;
+}
+.marker[data-active="true"],
+.marker:hover,
+.marker:focus-visible {
+  z-index: 3;
+}
+.marker[data-active="true"] {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+@media (pointer: coarse) {
+  .marker {
+    width: 44px;
+    height: 44px;
+  }
+}
