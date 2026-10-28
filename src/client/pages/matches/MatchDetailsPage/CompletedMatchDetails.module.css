@@ -1,9 +1,12 @@
 .page {
+  --statistics-section-size: 1.125rem;
+  --statistics-panel-size: 1rem;
+  --statistics-label-size: 0.8125rem;
   width: 100%;
   max-width: 64rem;
   min-width: 0;
   margin-inline: auto;
-  padding-block: 0.5rem 1rem;
+  padding-block: 0 1rem;
   overflow-wrap: anywhere;
 }
 .navigation {
@@ -13,7 +16,7 @@
   gap: 1rem;
 }
 .team {
-  margin-top: 2rem;
+  margin-top: 0.75rem;
   min-width: 0;
 }
 .heading {
@@ -24,35 +27,29 @@
   flex-wrap: wrap;
 }
 .heading h2 {
-  color: var(--color-action);
+  color: var(--color-text);
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-size: var(--statistics-section-size);
+  font-weight: 600;
 }
-.heading p {
-  margin: 0.25rem 0 0;
+.headingCopy {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+}
+.headingCopy > span {
+  padding-inline-start: 0.75rem;
+  border-inline-start: 1px solid var(--color-border-subtle);
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-.periods {
-  width: 22rem;
-  max-width: 100%;
-  flex-shrink: 0;
+  font-size: 0.75rem;
 }
 .analysisAnchor {
   scroll-margin-top: 6rem;
 }
-.readOnly {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  margin: 1.75rem 0 0;
-}
 @media (max-width: 36rem) {
   .page {
     padding-block: 0;
-  }
-  .periods {
-    width: 100%;
   }
   .heading {
     gap: 1rem;

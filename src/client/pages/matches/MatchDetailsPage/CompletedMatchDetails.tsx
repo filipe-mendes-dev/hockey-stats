@@ -2,7 +2,7 @@
 
 import { DeleteEntityAction } from "../../../features/removal/DeleteEntityAction/DeleteEntityAction";
 import { useId, useMemo, useRef, useState } from "react";
-import { SegmentedControl } from "@mantine/core";
+import { MatchPeriodFilter } from "../../../features/statistics/MatchPeriodFilter/MatchPeriodFilter";
 import { useTranslations } from "next-intl";
 import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
 import { getMatchStatistics } from "../../../../domain/matches/matchStatistics";
@@ -10,8 +10,10 @@ import { BackLink } from "../../../components/BackLink/BackLink";
 import { EntityDataStatus } from "../../../components/EntityDataStatus/EntityDataStatus";
 import { DeliveryStatus } from "../../../features/sync/DeliveryStatus/DeliveryStatus";
 import { useMatchEvents } from "../../../features/matches/queries/matchEvents.queries";
+import { useTeam } from "../../../features/teams/queries/teams.queries";
 import { MatchResult } from "../../../features/matches/MatchResult/MatchResult";
 import { TeamStatistics } from "../../../features/statistics/TeamStatistics/TeamStatistics";
+import { MatchTimeoutStatistics } from "../../../features/statistics/MatchTimeoutStatistics/MatchTimeoutStatistics";
 import { MatchEventAnalysis } from "../../../features/statistics/MatchEventAnalysis/MatchEventAnalysis";
 import { PlayerStatistics } from "../../../features/statistics/PlayerStatistics/PlayerStatistics";
 import { GoalkeeperStatistics } from "../../../features/statistics/GoalkeeperStatistics/GoalkeeperStatistics";
@@ -25,6 +27,7 @@ export function CompletedMatchDetails({
   const statisticsText = useTranslations("statistics");
   const recorder = useTranslations("recorder");
   const events = useMatchEvents(snapshot.match.id);
+  const team = useTeam(snapshot.match.teamId);
   const [period, setPeriod] = useState<number>();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>();
   const analysisId = useId();
@@ -49,19 +52,23 @@ export function CompletedMatchDetails({
       ? statisticsText("allMatch")
       : t("periodLabel", { number: period });
 
+  function viewPlayer(id: string): void {
+    setSelectedPlayerId(id);
+    analysisRef.current?.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+  }
+
   function selectPlayer(id: string): void {
-    setSelectedPlayerId(selectedPlayerId === id ? undefined : id);
-    if (selectedPlayerId !== id)
-      analysisRef.current?.scrollIntoView({
-        block: "start",
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-      });
+    if (selectedPlayerId === id) setSelectedPlayerId(undefined);
+    else viewPlayer(id);
   }
 
   return (
-    <div className={st.page}>
+    <div className={st.page} data-completed-match>
       <div className={st.navigation}>
         <BackLink href="/app/matches" label={t("back")} />
         <div className={st.deliveryActions}>
@@ -83,6 +90,7 @@ export function CompletedMatchDetails({
       </div>
       <MatchResult
         match={snapshot.match}
+        category={team.data?.category}
         score={events.isError ? undefined : score}
         periods={events.isError ? undefined : statistics?.periodScores}
       />
@@ -100,29 +108,14 @@ export function CompletedMatchDetails({
         <>
           <section className={st.team} aria-labelledby={teamHeading}>
             <div className={st.heading}>
-              <div>
+              <div className={st.headingCopy}>
                 <h2 id={teamHeading}>{statisticsText("teamTitle")}</h2>
-                <p>{snapshot.match.teamNameAtMatch}</p>
+                <span>{snapshot.match.teamNameAtMatch}</span>
               </div>
-              <SegmentedControl
-                className={st.periods}
-                fullWidth={false}
-                aria-label={statisticsText("periodFilter")}
-                value={period === undefined ? "all" : String(period)}
-                onChange={(value) =>
-                  setPeriod(
-                    snapshot.match.periods.find(
-                      (entry) => String(entry.number) === value,
-                    )?.number,
-                  )
-                }
-                data={[
-                  { value: "all", label: statisticsText("allMatch") },
-                  ...snapshot.match.periods.map((entry) => ({
-                    value: String(entry.number),
-                    label: t("periodLabel", { number: entry.number }),
-                  })),
-                ]}
+              <MatchPeriodFilter
+                periods={snapshot.match.periods}
+                value={period}
+                onChange={setPeriod}
               />
             </div>
             <TeamStatistics statistics={statistics.team} />
@@ -137,6 +130,12 @@ export function CompletedMatchDetails({
                 onSelectPlayer={selectPlayer}
               />
             </div>
+            <MatchTimeoutStatistics
+              ownTeam={snapshot.match.teamNameAtMatch}
+              opponentTeam={snapshot.match.opponentName}
+              timeouts={statistics.team.timeouts}
+              periodLabel={periodLabel}
+            />
           </section>
           <PlayerStatistics
             statistics={statistics.players.filter(
@@ -158,7 +157,6 @@ export function CompletedMatchDetails({
             onSelectPlayer={selectPlayer}
             analysisId={analysisId}
           />
-          <p className={st.readOnly}>{statisticsText("readOnly")}</p>
         </>
       )}
     </div>
