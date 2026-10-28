@@ -28,6 +28,10 @@
   }
 }
 
+.main:has([data-completed-match]) {
+  padding-top: 0.5rem;
+}
+
 .main[data-auth-page="true"] {
   display: grid;
   place-items: center;

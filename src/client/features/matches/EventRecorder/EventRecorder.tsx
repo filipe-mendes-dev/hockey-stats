@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useTranslations } from "next-intl";
 import type {
@@ -13,7 +13,8 @@ import { getClockElapsed } from "../../../../domain/matches/matchControl";
 import { getAvailableEventKinds } from "../../../../domain/matches/matchRules";
 import type { PowerplayPenalty } from "../../../../domain/matches/powerplay";
 import { PowerplayCorrectionDialog } from "../PowerplayCorrectionDialog/PowerplayCorrectionDialog";
-import { deriveMatchState } from "../../../../domain/matches/derivedMatchState";
+import { deriveChronologicalMatchState } from "../../../../domain/matches/derivedMatchState";
+import { getMatchEventsAtTime } from "../../../../domain/matches/matchEventOrder";
 import { MatchControls } from "../MatchControls/MatchControls";
 import { MatchScoreboard } from "../MatchScoreboard/MatchScoreboard";
 import { RecorderDirectionDialog } from "../RecorderBoard/RecorderDirectionDialog";
@@ -58,11 +59,27 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
   const events = useMatchEvents(snapshot.match.id);
   const candidate = useLatestUndoEvent(snapshot.match.id);
   const elapsedMs = getClockElapsed(snapshot.match, now);
-  const derivedState = deriveMatchState(snapshot, events.data ?? [], {
+  const matchState = useMemo(
+    () => deriveChronologicalMatchState(snapshot, events.data ?? []),
+    [snapshot, events.data],
+  );
+  const clockTime = {
     period: snapshot.match.currentPeriod,
     gameTime: elapsedMs === undefined ? undefined : { elapsedMs },
-  });
-  const context = { snapshot, state: derivedState };
+  };
+  const derivedState = deriveChronologicalMatchState(
+    snapshot,
+    getMatchEventsAtTime(events.data ?? [], clockTime),
+    clockTime,
+  );
+  const context = {
+    snapshot,
+    state: {
+      ...derivedState,
+      ownScore: matchState.ownScore,
+      opponentScore: matchState.opponentScore,
+    },
+  };
   const add = useAddMatchEvent();
   const undo = useUndoMatchEvent();
   const draft = state.phase === "idle" ? null : state.draft;
@@ -78,7 +95,18 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
     ? (rinkDirection ?? currentDirection)
     : currentDirection;
   const draftContext = draft
-    ? { snapshot, state: deriveMatchState(snapshot, events.data ?? [], draft) }
+    ? {
+        snapshot,
+        state: {
+          ...deriveChronologicalMatchState(
+            snapshot,
+            getMatchEventsAtTime(events.data ?? [], draft),
+            draft,
+          ),
+          ownScore: matchState.ownScore,
+          opponentScore: matchState.opponentScore,
+        },
+      }
     : context;
   useEffect(() => {
     if (readOnly || snapshot.match.clock?.runningSince === undefined) return;
@@ -321,11 +349,11 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
             }
             onCorrectPowerplay={() => setCorrection(derivedState.powerplays)}
             ownScore={
-              events.data && !events.isError ? derivedState.ownScore : undefined
+              events.data && !events.isError ? matchState.ownScore : undefined
             }
             opponentScore={
               events.data && !events.isError
-                ? derivedState.opponentScore
+                ? matchState.opponentScore
                 : undefined
             }
             disabled={disabled}

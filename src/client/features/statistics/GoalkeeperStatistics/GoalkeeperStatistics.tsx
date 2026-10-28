@@ -6,6 +6,7 @@ import { formatMatchTime } from "../../../../domain/matches/matchControl";
 import { CardCounts } from "../CardCounts/CardCounts";
 import type { GoalkeeperStatisticsProps } from "./GoalkeeperStatistics.interfaces";
 import st from "./GoalkeeperStatistics.module.css";
+import { MatchPlayerIdentity } from "../MatchPlayerIdentity/MatchPlayerIdentity";
 
 export function GoalkeeperStatistics({
   statistics,
@@ -32,44 +33,47 @@ export function GoalkeeperStatistics({
             key={row.player.id}
             data-selected={selectedPlayerId === row.player.id}
           >
-            <button
-              type="button"
-              className={st.identity}
-              onClick={() => onSelectPlayer(row.player.id)}
-              aria-pressed={selectedPlayerId === row.player.id}
-              aria-controls={analysisId}
-              aria-label={t("selectPlayer", {
-                name: row.player.playerNameAtMatch,
-              })}
-            >
-              <span>
-                {row.player.jerseyNumber ? `#${row.player.jerseyNumber}` : ""}
-              </span>
-              <strong>{row.player.playerNameAtMatch}</strong>
-            </button>
-            <dl>
-              {(
-                [
-                  "saves",
-                  "simpleSaves",
-                  "difficultSaves",
-                  "concededGoals",
-                  "fouls",
-                ] as const
-              ).map((key) => (
+            <div className={st.cardHeading}>
+              <button
+                type="button"
+                className={st.identity}
+                onClick={() => onSelectPlayer(row.player.id)}
+                aria-pressed={selectedPlayerId === row.player.id}
+                aria-controls={analysisId}
+                aria-label={t("selectPlayer", {
+                  name: row.player.playerNameAtMatch,
+                })}
+              >
+                <MatchPlayerIdentity player={row.player} />
+              </button>
+              <dl className={st.playingTime}>
+                <div>
+                  <dt>{t("playingTime")}</dt>
+                  <dd>
+                    {row.playingTimeMs === undefined
+                      ? t("unavailable")
+                      : formatMatchTime(row.playingTimeMs)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <dl className={st.primary}>
+              {(["saves", "concededGoals"] as const).map((key) => (
                 <div key={key}>
                   <dt>{t(key)}</dt>
                   <dd>{format.number(row[key])}</dd>
                 </div>
               ))}
-              <div>
-                <dt>{t("playingTime")}</dt>
-                <dd>
-                  {row.playingTimeMs === undefined
-                    ? t("unavailable")
-                    : formatMatchTime(row.playingTimeMs)}
-                </dd>
-              </div>
+            </dl>
+            <dl className={st.details}>
+              {(["simpleSaves", "difficultSaves", "fouls"] as const).map(
+                (key) => (
+                  <div key={key}>
+                    <dt>{t(key)}</dt>
+                    <dd>{format.number(row[key])}</dd>
+                  </div>
+                ),
+              )}
               <div>
                 <dt>{t("cards")}</dt>
                 <dd>

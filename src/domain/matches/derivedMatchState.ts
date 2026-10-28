@@ -1,8 +1,9 @@
 import type { MatchSnapshot } from "./match.schema";
 import { getPlayingTime } from "./powerplay";
 import type { PowerplayPenalty } from "./powerplay";
-import type { MatchTime } from "./matchEvent.schema";
 import type { MatchEvent } from "./matchEvent.schema";
+import { sortMatchEvents } from "./matchEventOrder";
+import type { MatchEventTime } from "./matchEventOrder";
 export interface DerivedMatchState {
   activePlayerIds: ReadonlySet<string>;
   ejectedPlayerIds: ReadonlySet<string>;
@@ -19,7 +20,27 @@ export interface DerivedMatchState {
 export function deriveMatchState(
   snapshot: MatchSnapshot,
   events: readonly MatchEvent[],
-  time?: { period: number; gameTime?: MatchTime | undefined },
+  time?: MatchEventTime,
+): DerivedMatchState {
+  return replayMatchState(
+    snapshot,
+    [...events].sort((a, b) => a.order - b.order),
+    time,
+  );
+}
+
+export function deriveChronologicalMatchState(
+  snapshot: MatchSnapshot,
+  events: readonly MatchEvent[],
+  time?: MatchEventTime,
+): DerivedMatchState {
+  return replayMatchState(snapshot, sortMatchEvents(events), time);
+}
+
+function replayMatchState(
+  snapshot: MatchSnapshot,
+  events: readonly MatchEvent[],
+  time?: MatchEventTime,
 ): DerivedMatchState {
   const active = new Set(
     snapshot.players
@@ -55,7 +76,7 @@ export function deriveMatchState(
   let ownScore = 0;
   let opponentScore = 0;
   let valid = true;
-  for (const event of [...events].sort((a, b) => a.order - b.order)) {
+  for (const event of events) {
     if (event.deletedAt !== undefined) continue;
     const eventTime = getPlayingTime(
       snapshot.match,

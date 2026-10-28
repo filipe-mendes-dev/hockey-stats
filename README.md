@@ -42,6 +42,8 @@ npm run start
 
 `check` runs formatting verification, lint, typecheck and a production build. It does not run tests. `start` serves that build. Individual commands are `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm run build`. CLI arguments pass through, for example `npm run dev -- --port 3001`.
 
+`npm run test:match-chronology` typechecks and runs the authorized chronology, event-validation and playing-time tests under `tests/domain/matches`. It uses Node's built-in test runner and the installed esbuild package, bundles into a temporary directory and removes those generated files afterward. It does not access a database or change recorded games. Broader tests remain outside this scope.
+
 ## VPS deployment
 
 Production uses one application image and PostgreSQL 18. Compose selects a versioned image through `BENCHLINE_IMAGE`, loads external credentials and retains database storage across releases. Local deployment checks are complete. GitHub Actions validates PRs and publishes release images to GHCR; VPS deployment is pending.

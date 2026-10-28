@@ -1,8 +1,15 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Tooltip, UnstyledButton } from "@mantine/core";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import {
+  ActionIcon,
+  Collapse,
+  Select,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
+import { useReducedMotion } from "@mantine/hooks";
+import { ArrowDown, ArrowUp, ChevronDown } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import type { PlayerMatchStatistics } from "../../../../domain/matches/matchStatistics";
 import { formatMatchTime } from "../../../../domain/matches/matchControl";
@@ -13,6 +20,9 @@ import type {
   PlayerStatisticsProps,
 } from "./PlayerStatistics.interfaces";
 import st from "./PlayerStatistics.module.css";
+import { MatchPlayerIdentity } from "../MatchPlayerIdentity/MatchPlayerIdentity";
+import { PlayerStatisticsItem } from "./PlayerStatisticsItem";
+import { PlayerStatisticsMetrics } from "./PlayerStatisticsMetrics";
 
 function cardTotal(statistics: PlayerMatchStatistics): number {
   return statistics.cards.yellow + statistics.cards.blue + statistics.cards.red;
@@ -31,27 +41,39 @@ export function PlayerStatistics({
   periodLabel,
   selectedPlayerId,
   onSelectPlayer,
+  onViewPlayer,
   analysisId,
 }: PlayerStatisticsProps) {
   const t = useTranslations("statistics");
-  const assignment = useTranslations("teamPlayers");
   const format = useFormatter();
   const { locale } = useLanguage();
   const heading = useId();
+  const totalsDetails = useId();
+  const reducedMotion = useReducedMotion();
+  const [totalsExpanded, setTotalsExpanded] = useState(false);
+  const [expandedPlayer, setExpandedPlayer] = useState<string>();
   const [sort, setSort] = useState<{
     column: PlayerStatisticsColumn;
     ascending: boolean;
   }>({ column: "playingTimeMs", ascending: false });
   const collator = new Intl.Collator(locale, { sensitivity: "base" });
-  const columns: readonly { key: PlayerStatisticsColumn; label: string }[] = [
+  const columns: readonly {
+    key: PlayerStatisticsColumn;
+    label: string;
+    detail?: string;
+  }[] = [
     { key: "player", label: t("player") },
     { key: "playingTimeMs", label: t("played") },
     { key: "shots", label: t("total") },
     { key: "goals", label: t("goals") },
-    { key: "onTarget", label: t("onTargetShort") },
+    {
+      key: "onTarget",
+      label: t("onTargetShort"),
+      detail: t("nonGoalOnTarget"),
+    },
     { key: "offTarget", label: t("offTarget") },
-    { key: "blocked", label: t("blocked") },
-    { key: "recoveries", label: t("recoveriesShort") },
+    { key: "blocked", label: t("blockedShort"), detail: t("blocked") },
+    { key: "recoveries", label: t("recoveriesShort"), detail: t("recoveries") },
     { key: "losses", label: t("losses") },
     { key: "fouls", label: t("fouls") },
     { key: "cards", label: t("cards") },
@@ -66,6 +88,27 @@ export function PlayerStatistics({
     "losses",
     "fouls",
   ] as const;
+  const maxima = new Map<Exclude<PlayerStatisticsColumn, "player">, number>();
+  for (const { key } of columns) {
+    if (key !== "player")
+      maxima.set(
+        key,
+        Math.max(0, ...statistics.map((row) => sortValue(row, key) ?? 0)),
+      );
+  }
+
+  function metricAttributes(
+    row: PlayerMatchStatistics,
+    column: Exclude<PlayerStatisticsColumn, "player">,
+  ) {
+    const value = sortValue(row, column);
+    const highest =
+      value !== undefined && value > 0 && value === maxima.get(column);
+    return {
+      "data-maximum": highest,
+      title: highest ? t("columnMaximum") : undefined,
+    };
+  }
   const sorted = [...statistics].sort((left, right) => {
     const names = collator.compare(
       left.player.playerNameAtMatch,
@@ -92,13 +135,7 @@ export function PlayerStatistics({
           aria-controls={analysisId}
           onClick={() => onSelectPlayer(row.player.id)}
         >
-          <span className={st.number} aria-hidden="true">
-            {row.player.jerseyNumber || "—"}
-          </span>
-          <span className={st.identity}>
-            <strong>{row.player.playerNameAtMatch}</strong>
-            <span>{assignment(row.player.role)}</span>
-          </span>
+          <MatchPlayerIdentity player={row.player} />
         </UnstyledButton>
       </Tooltip>
     );
@@ -167,7 +204,10 @@ export function PlayerStatistics({
                 >
                   <UnstyledButton
                     className={st.sort}
-                    aria-label={t("sortColumn", { column: column.label })}
+                    title={column.detail ?? column.label}
+                    aria-label={t("sortColumn", {
+                      column: column.detail ?? column.label,
+                    })}
                     onClick={() =>
                       setSort({
                         column: column.key,
@@ -197,10 +237,13 @@ export function PlayerStatistics({
                 data-selected={selectedPlayerId === row.player.id}
               >
                 <th scope="row">{identity(row)}</th>
-                <td>{playingTime(row)}</td>
+                <td {...metricAttributes(row, "playingTimeMs")}>
+                  {playingTime(row)}
+                </td>
                 {actionColumns.map((key) => (
                   <td
                     key={key}
+                    {...metricAttributes(row, key)}
                     className={
                       row[key] === 0
                         ? st.zero
@@ -212,7 +255,7 @@ export function PlayerStatistics({
                     {format.number(row[key])}
                   </td>
                 ))}
-                <td>
+                <td {...metricAttributes(row, "cards")}>
                   {cardTotal(row) ? (
                     <CardCounts cards={row.cards} />
                   ) : (
@@ -237,54 +280,85 @@ export function PlayerStatistics({
         </table>
       </div>
       <div className={st.mobile}>
-        {sorted.map((row) => (
-          <article
-            key={row.player.id}
-            className={st.mobileRow}
-            data-selected={selectedPlayerId === row.player.id}
+        <div className={st.mobileSort}>
+          <Select
+            aria-label={t("sortPlayers")}
+            value={sort.column}
+            data={columns.map((column) => ({
+              value: column.key,
+              label:
+                column.key === "shots"
+                  ? t("shots")
+                  : (column.detail ?? column.label),
+            }))}
+            onChange={(value) => {
+              const column = columns.find((entry) => entry.key === value);
+              if (column)
+                setSort({
+                  column: column.key,
+                  ascending: column.key === "player",
+                });
+            }}
+            allowDeselect={false}
+          />
+          <ActionIcon
+            aria-label={t(sort.ascending ? "sortDescending" : "sortAscending")}
+            onClick={() =>
+              setSort((previous) => ({
+                ...previous,
+                ascending: !previous.ascending,
+              }))
+            }
           >
-            <div className={st.mobileHeading}>
-              {identity(row)}
-              <div className={st.played}>
-                {playingTime(row)}
-                <span>{t("playingTime")}</span>
-              </div>
-            </div>
-            <dl className={st.mobileMain}>
-              {(["goals", "shots", "recoveries", "losses"] as const).map(
-                (key) => (
-                  <div key={key}>
-                    <dt>{t(key)}</dt>
-                    <dd
-                      className={
-                        key === "goals" && row.goals ? st.goals : undefined
-                      }
-                    >
-                      {format.number(row[key])}
-                    </dd>
-                  </div>
-                ),
-              )}
-            </dl>
-            <dl className={st.mobileOutcomes}>
-              {(["onTarget", "offTarget", "blocked"] as const).map((key) => (
-                <div key={key}>
-                  <dt>{t(key === "onTarget" ? "nonGoalOnTarget" : key)}</dt>
-                  <dd>{format.number(row[key])}</dd>
-                </div>
-              ))}
-            </dl>
-            <div className={st.discipline}>
-              <span>
-                {t("fouls")} {format.number(row.fouls)}
-              </span>
-              <span>
-                {t("cards")} {format.number(cardTotal(row))}
-              </span>
-              {cardTotal(row) > 0 && <CardCounts cards={row.cards} />}
-            </div>
-          </article>
+            {sort.ascending ? (
+              <ArrowUp size={16} aria-hidden="true" />
+            ) : (
+              <ArrowDown size={16} aria-hidden="true" />
+            )}
+          </ActionIcon>
+        </div>
+        {sorted.map((row) => (
+          <PlayerStatisticsItem
+            key={row.player.id}
+            row={row}
+            expanded={expandedPlayer === row.player.id}
+            selected={selectedPlayerId === row.player.id}
+            maxima={maxima}
+            analysisId={analysisId}
+            onToggle={() =>
+              setExpandedPlayer((previous) =>
+                previous === row.player.id ? undefined : row.player.id,
+              )
+            }
+            onSelect={() => onViewPlayer(row.player.id)}
+          />
         ))}
+        <div className={st.mobileTotals}>
+          <UnstyledButton
+            className={st.totalsToggle}
+            aria-expanded={totalsExpanded}
+            aria-controls={totalsDetails}
+            onClick={() => setTotalsExpanded((previous) => !previous)}
+          >
+            {t("teamTotal")}
+            <span className={st.expander} aria-hidden="true">
+              <ChevronDown
+                size={16}
+                className={st.chevron}
+                data-expanded={totalsExpanded}
+              />
+            </span>
+          </UnstyledButton>
+          <Collapse
+            className={st.totalsDetails}
+            id={totalsDetails}
+            expanded={totalsExpanded}
+            transitionDuration={reducedMotion ? 0 : 200}
+            transitionTimingFunction="ease-out"
+          >
+            <PlayerStatisticsMetrics statistics={team} />
+          </Collapse>
+        </div>
       </div>
       <div className={st.notes}>
         <p>{t("shotNote")}</p>

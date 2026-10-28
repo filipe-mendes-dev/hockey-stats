@@ -3,6 +3,7 @@
 import { memo } from "react";
 import type { CSSProperties } from "react";
 import { HockeyRink } from "../HockeyRink/HockeyRink";
+import { MatchEventIcon } from "../MatchEventIcon/MatchEventIcon";
 import type { RinkPoint } from "../HockeyRink/HockeyRink.interfaces";
 import type {
   EventRinkProps,
@@ -19,6 +20,7 @@ function markerPosition(position: RinkPoint): CSSProperties {
 
 export function EventRink({
   label,
+  fit = false,
   markers,
   activeId,
   selectedId,
@@ -26,27 +28,30 @@ export function EventRink({
   onSelect,
 }: EventRinkProps) {
   return (
-    <div
-      className={st.rink}
-      role="group"
-      aria-label={label}
-      data-highlighting={Boolean(activeId)}
-    >
-      <HockeyRink
-        label={label}
-        color="var(--color-text-muted)"
-        backgroundColor="var(--color-surface)"
-      />
-      {markers.map((marker) => (
-        <MemoizedMarker
-          key={marker.id}
-          marker={marker}
-          active={activeId === marker.id}
-          selected={selectedId === marker.id}
-          onPreview={onPreview}
-          onSelect={onSelect}
+    <div className={st.frame} data-fit={fit}>
+      <div
+        className={st.rink}
+        role="group"
+        aria-label={label}
+        data-highlighting={Boolean(activeId)}
+      >
+        <HockeyRink
+          label={label}
+          color="var(--color-text-muted)"
+          backgroundColor="var(--color-surface)"
+          lineGradient="right"
         />
-      ))}
+        {markers.map((marker) => (
+          <MemoizedMarker
+            key={marker.id}
+            marker={marker}
+            active={activeId === marker.id}
+            selected={selectedId === marker.id}
+            onPreview={onPreview}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -63,7 +68,7 @@ function EventRinkMarkerButton({
       type="button"
       className={st.marker}
       style={markerPosition(marker.position)}
-      data-tone={marker.tone}
+      data-event-tone={marker.tone}
       data-active={active}
       aria-label={marker.label}
       aria-pressed={selected}
@@ -75,23 +80,7 @@ function EventRinkMarkerButton({
       onFocus={() => onPreview(marker.id)}
       onBlur={() => onPreview(undefined)}
     >
-      <svg viewBox="-14 -14 28 28" className={st.symbol} aria-hidden="true">
-        <circle className={st.activeRing} r="12" />
-        {marker.shape === "circle" && <circle r="4.5" />}
-        {marker.shape === "circle" && marker.emphasized && (
-          <circle className={st.goalRing} r="8" />
-        )}
-        {marker.shape === "diamond" && <path d="M0 -5.5L5.5 0L0 5.5L-5.5 0Z" />}
-        {marker.shape === "cross" && (
-          <path className={st.cross} d="M-4 -4L4 4M4 -4L-4 4" />
-        )}
-        {marker.shape === "square" && (
-          <rect x="-4.5" y="-4.5" width="9" height="9" rx="1.5" />
-        )}
-        {marker.shape === "card" && (
-          <rect x="-4" y="-6" width="8" height="12" rx="1.5" />
-        )}
-      </svg>
+      <MatchEventIcon kind={marker.kind} size={14} />
     </button>
   );
 }

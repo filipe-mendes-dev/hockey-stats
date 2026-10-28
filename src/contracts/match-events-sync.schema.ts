@@ -17,6 +17,7 @@ const commandFields = {
     z.literal(5),
     z.literal(6),
     z.literal(7),
+    z.literal(8),
   ]),
   operationId: z.uuidv4(),
   expectedRevision: z.int().positive(),
@@ -29,7 +30,7 @@ export const createMatchEventCommandSchema = z
       command.event.revision === 1 &&
       command.event.deletedAt === undefined &&
       (command.version >= 6 || !usesExpandedEventProtocol(command.event)) &&
-      (command.version === 7
+      (command.version >= 7
         ? isCurrentEvent(command.event, command.operationId, true)
         : command.version === 6
           ? isVersionSixEvent(command.event, command.operationId)

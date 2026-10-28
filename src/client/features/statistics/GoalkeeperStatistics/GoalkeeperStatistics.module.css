@@ -1,18 +1,19 @@
 .section {
   min-width: 0;
   border-top: 1px solid var(--color-border-subtle);
-  padding-top: 2rem;
-  margin-top: 2rem;
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 .section h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--color-action);
+  font-size: var(--statistics-section-size, 1.125rem);
+  font-weight: 600;
+  color: var(--color-text);
 }
 .section p {
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .players {
@@ -23,19 +24,33 @@
 .players article {
   min-width: 0;
   padding: 1rem;
-  border-radius: var(--radius-surface);
-  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-glass-elevated),
+    var(--color-surface-glass)
+  );
+  box-shadow: inset 0 1px 0 var(--color-surface-highlight);
 }
 .players article[data-selected="true"] {
-  background: var(--color-surface-selection);
+  border-color: var(--color-border-action);
+}
+.cardHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 .identity {
+  --match-player-name-size: 1rem;
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: center;
   min-width: 0;
   max-width: 100%;
-  min-height: 2.75rem;
+  flex: 1;
+  min-height: 2rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -44,21 +59,33 @@
   text-align: start;
   cursor: pointer;
 }
-.identity span {
-  flex-shrink: 0;
-  color: var(--color-action);
-}
-.identity strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-}
-.players dl {
+.primary,
+.details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.875rem;
-  margin-bottom: 0;
+  gap: 0.75rem;
+  margin: 0;
+}
+.primary {
+  padding-block: 0.75rem;
+  margin-block: 0.75rem;
+  border-block: 1px solid var(--color-border-subtle);
+}
+.primary dd {
+  font-size: 1.625rem;
+  font-weight: 600;
+}
+.details {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.playingTime {
+  margin: 0;
+  text-align: end;
+  flex-shrink: 0;
+}
+.playingTime dd {
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 .players dt {
   color: var(--color-text-muted);
@@ -68,4 +95,14 @@
 .players dd {
   margin: 0.25rem 0 0;
   font-variant-numeric: tabular-nums;
+}
+@media (max-width: 36rem) {
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (pointer: coarse) {
+  .identity {
+    min-height: 2.75rem;
+  }
 }

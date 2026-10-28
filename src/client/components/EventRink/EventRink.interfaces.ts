@@ -1,14 +1,15 @@
 import type { RinkMarker } from "../HockeyRink/HockeyRink.interfaces";
 import type { StatisticsTone } from "../StatisticsBreakdown/StatisticsBreakdown.interfaces";
+import type { MatchEvent } from "../../../domain/matches/matchEvent.schema";
 
 export interface EventRinkMarker extends RinkMarker {
-  shape: "circle" | "diamond" | "cross" | "square" | "card";
+  kind: MatchEvent["kind"];
   tone: StatisticsTone;
-  emphasized: boolean;
 }
 
 export interface EventRinkProps {
   label: string;
+  fit?: boolean;
   markers: readonly EventRinkMarker[];
   activeId: string | undefined;
   selectedId: string | undefined;

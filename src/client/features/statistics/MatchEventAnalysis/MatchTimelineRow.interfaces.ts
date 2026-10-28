@@ -6,9 +6,7 @@ export interface MatchTimelineRowProps {
   description: MatchEventDescription;
   active: boolean;
   selected: boolean;
-  compact: boolean;
   id: string;
-  detailId: string;
   onPreview: (id: string | undefined) => void;
   onSelect: (id: string) => void;
   onClear: () => void;

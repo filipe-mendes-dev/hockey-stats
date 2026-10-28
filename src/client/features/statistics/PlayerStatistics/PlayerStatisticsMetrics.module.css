@@ -1,0 +1,34 @@
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem 1rem;
+  margin: 0.875rem 0;
+  font-size: 0.8125rem;
+}
+.metrics > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.metrics dt {
+  color: var(--color-text-muted);
+  overflow-wrap: normal;
+}
+.metrics dd {
+  margin: 0;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.metrics dd[data-maximum="true"] {
+  font-weight: 700;
+}
+.metrics dd[data-goal="true"] {
+  color: var(--color-action);
+}
+@media (max-width: 22rem) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}

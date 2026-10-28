@@ -1,55 +1,84 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { getHalfDurationMinutes } from "../../../../domain/matches/matchFormat";
+import { CalendarDays, House, MapPin } from "lucide-react";
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { formatMatchDate } from "../date";
-import { MatchStatusBadge } from "../MatchStatusBadge/MatchStatusBadge";
 import type { MatchResultProps } from "./MatchResult.interfaces";
 import st from "./MatchResult.module.css";
 
-export function MatchResult({ match, score, periods }: MatchResultProps) {
+export function MatchResult({
+  match,
+  category,
+  score,
+  periods,
+}: MatchResultProps) {
   const t = useTranslations("matches");
   const statistics = useTranslations("statistics");
   const format = useFormatter();
   const { locale } = useLanguage();
-  const duration = getHalfDurationMinutes(match.periods);
-  const metadata = [
-    match.scheduledDate
-      ? formatMatchDate(match.scheduledDate, locale)
-      : undefined,
-    match.venueRole ? t(match.venueRole) : undefined,
-    duration === undefined
-      ? undefined
-      : t("matchFormat", { minutes: duration }),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const teams = useTranslations("teams");
+  const opponentFirst = match.venueRole === "away";
+  const participants = opponentFirst
+    ? [
+        { name: match.opponentName, own: false },
+        { name: match.teamNameAtMatch, own: true },
+      ]
+    : [
+        { name: match.teamNameAtMatch, own: true },
+        { name: match.opponentName, own: false },
+      ];
+  const VenueIcon = match.venueRole === "home" ? House : MapPin;
+
+  function participant(index: number) {
+    const team = participants[index];
+    if (!team) return null;
+    return (
+      <div className={st.team} data-side={index === 0 ? "left" : "right"}>
+        <h2>{team.name}</h2>
+      </div>
+    );
+  }
   return (
     <section className={st.result} aria-label={t("summaryTitle")}>
       <h1 className={st.srOnly}>{t("summaryTitle")}</h1>
       <div className={st.metadata}>
-        <MatchStatusBadge status={match.status} />
-        {metadata && <span>{metadata}</span>}
+        {match.scheduledDate && (
+          <time className={st.date} dateTime={match.scheduledDate}>
+            <CalendarDays size={16} aria-hidden="true" />
+            {formatMatchDate(match.scheduledDate, locale)}
+          </time>
+        )}
+        {match.venueRole && (
+          <span className={st.venue}>
+            <VenueIcon size={12} aria-hidden="true" />
+            {t(match.venueRole)}
+          </span>
+        )}
+        {category && (
+          <span className={st.category} title={teams("category")}>
+            {category}
+          </span>
+        )}
       </div>
       <div className={st.scoreboard}>
-        <div className={st.team} data-own>
-          <h2>{match.teamNameAtMatch}</h2>
-        </div>
+        {participant(0)}
         <div
           className={st.score}
           role="group"
           aria-label={statistics("finalScore")}
         >
           <strong>
-            {score ? format.number(score.own) : "…"}
+            {score
+              ? format.number(opponentFirst ? score.opponent : score.own)
+              : "…"}
             <span aria-hidden="true">:</span>
-            {score ? format.number(score.opponent) : "…"}
+            {score
+              ? format.number(opponentFirst ? score.own : score.opponent)
+              : "…"}
           </strong>
         </div>
-        <div className={st.team}>
-          <h2>{match.opponentName}</h2>
-        </div>
+        {participant(1)}
       </div>
       {periods && (
         <dl className={st.periods}>
@@ -65,7 +94,7 @@ export function MatchResult({ match, score, periods }: MatchResultProps) {
               >
                 {!period.reliable || period.own < 0 || period.opponent < 0
                   ? statistics("unavailable")
-                  : `${format.number(period.own)} : ${format.number(period.opponent)}`}
+                  : `${format.number(opponentFirst ? period.opponent : period.own)} : ${format.number(opponentFirst ? period.own : period.opponent)}`}
               </dd>
             </div>
           ))}

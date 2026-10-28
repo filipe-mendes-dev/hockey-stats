@@ -22,5 +22,6 @@ export interface PlayerStatisticsProps {
   periodLabel: string;
   selectedPlayerId: string | undefined;
   onSelectPlayer: (id: string) => void;
+  onViewPlayer: (id: string) => void;
   analysisId: string;
 }
