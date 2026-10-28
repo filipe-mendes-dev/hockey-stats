@@ -32,7 +32,7 @@ export function StatisticsBreakdown({
         <h4 id={heading}>{title}</h4>
         <span>{totalLabel}</span>
       </div>
-      <Progress.Root size={7} className={st.track} aria-label={title}>
+      <Progress.Root size={9} className={st.track} aria-label={title}>
         {segments
           .filter((segment) => segment.value > 0)
           .map((segment) => (

@@ -1,0 +1,35 @@
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.category {
+  font-size: 0.8125rem;
+  border-color: var(--color-border-subtle);
+}
+.count {
+  margin-inline-start: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.compact {
+  display: none;
+}
+@media (pointer: fine) {
+  .categories .category {
+    min-height: 2rem;
+    padding-block: 0.25rem;
+    padding-inline: 0.625rem;
+    font-size: 0.75rem;
+  }
+}
+@media (max-width: 50rem) {
+  .categories {
+    display: none;
+  }
+  .compact {
+    display: block;
+    width: min(100%, 24rem);
+  }
+}

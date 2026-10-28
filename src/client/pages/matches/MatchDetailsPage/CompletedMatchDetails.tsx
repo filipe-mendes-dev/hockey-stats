@@ -134,6 +134,7 @@ export function CompletedMatchDetails({
                 period={period}
                 selectedPlayerId={selectedPlayerId}
                 onClearPlayer={() => setSelectedPlayerId(undefined)}
+                onSelectPlayer={selectPlayer}
               />
             </div>
           </section>
