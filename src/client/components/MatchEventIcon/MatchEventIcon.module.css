@@ -1,0 +1,14 @@
+.recovery > path:first-child {
+  fill: currentColor;
+}
+.recovery > path:last-child {
+  stroke: var(--color-background);
+  stroke-width: 2.5;
+}
+.foul > path:nth-child(2) {
+  fill: currentColor;
+}
+.foul > .cutout {
+  stroke: var(--color-background);
+  stroke-width: 2.5;
+}

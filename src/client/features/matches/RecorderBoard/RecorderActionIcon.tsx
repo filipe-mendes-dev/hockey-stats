@@ -1,39 +1,8 @@
-import {
-  ArrowDownToLine,
-  ArrowLeftRight,
-  ArrowUpFromLine,
-  CircleMinus,
-  Crosshair,
-  Flag,
-  Hand,
-  ShieldCheck,
-  Square,
-  Target,
-  Trophy,
-  Timer,
-} from "lucide-react";
+import { MatchEventIcon } from "../../../components/MatchEventIcon/MatchEventIcon";
 import type { RecorderActionIconProps } from "./RecorderBoard.interfaces";
-const icons = {
-  "ball-recovery": ShieldCheck,
-  "ball-loss": CircleMinus,
-  shot: Crosshair,
-  "team-foul": Hand,
-  card: Square,
-  substitution: ArrowLeftRight,
-  "player-in": ArrowDownToLine,
-  "player-out": ArrowUpFromLine,
-  "opponent-goal": Target,
-  "score-adjustment": Trophy,
-  "powerplay-end": Flag,
-  "powerplay-adjust": Flag,
-  "suspension-end": Flag,
-  "goalkeeper-save": ShieldCheck,
-  timeout: Timer,
-};
 export function RecorderActionIcon({
   kind,
   size = 20,
 }: RecorderActionIconProps) {
-  const Icon = icons[kind];
-  return <Icon size={size} strokeWidth={1.7} aria-hidden="true" />;
+  return <MatchEventIcon kind={kind} size={size} />;
 }

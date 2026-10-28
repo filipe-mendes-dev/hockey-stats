@@ -15,6 +15,7 @@ const colours: Record<StatisticsTone, string> = {
   muted: "var(--color-text-muted)",
   yellow: "var(--color-card-yellow)",
   red: "var(--color-card-red)",
+  neutral: "var(--color-text)",
 };
 
 export function StatisticsBreakdown({

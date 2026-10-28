@@ -1,4 +1,5 @@
-export type StatisticsTone = "action" | "blue" | "muted" | "yellow" | "red";
+export type StatisticsTone =
+  "action" | "blue" | "muted" | "yellow" | "red" | "neutral";
 
 export interface StatisticsSegment {
   id: string;

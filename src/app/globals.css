@@ -55,6 +55,13 @@
   --color-card-red: var(--color-error);
   --color-card-red-surface: rgb(255 170 165 / 8%);
   --color-card-red-border: rgb(255 170 165 / 40%);
+  --color-event-positive: var(--color-action);
+  --color-event-shot: var(--color-card-blue);
+  --color-event-negative: var(--color-card-red);
+  --color-event-caution: var(--color-card-yellow);
+  --color-event-neutral: var(--color-text-muted);
+  --color-lineup-player: var(--color-action);
+  --color-lineup-goalkeeper: var(--color-card-blue);
   --radius-control: 0.875rem;
   --radius-input: 1.25rem;
   --radius-button: 1.25rem;
@@ -64,6 +71,22 @@
   font-family: system-ui, sans-serif;
   color: var(--color-text);
   background: var(--color-background);
+}
+
+[data-event-tone] {
+  --event-color: var(--color-event-positive);
+}
+[data-event-tone="blue"] {
+  --event-color: var(--color-event-shot);
+}
+[data-event-tone="red"] {
+  --event-color: var(--color-event-negative);
+}
+[data-event-tone="yellow"] {
+  --event-color: var(--color-event-caution);
+}
+[data-event-tone="muted"] {
+  --event-color: var(--color-event-neutral);
 }
 
 *,

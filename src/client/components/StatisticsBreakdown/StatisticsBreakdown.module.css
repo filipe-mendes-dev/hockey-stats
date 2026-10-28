@@ -60,6 +60,9 @@
 .swatch[data-tone="red"] {
   background: var(--color-card-red);
 }
+.swatch[data-tone="neutral"] {
+  background: var(--color-text);
+}
 @media (prefers-reduced-motion: reduce) {
   .track * {
     transition: none;
