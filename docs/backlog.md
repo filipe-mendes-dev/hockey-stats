@@ -8,6 +8,9 @@ This file contains deferred work, not instructions to implement it. Current beha
 
 ## Next product work
 
+- Imminent, next branch: automatically switch the recorder's attack direction at halftime, retaining a manual override. Keep full-match analysis normalized to attack right. Review explicitly configured next-half directions before defining the transition rule; do not rewrite previously captured coordinates when changing the recorder direction.
+- Imminent, next branch: repair the production match's historical coordinates after confirming the actual first-half attack side and affected events. Audit any derived recovery/loss half values and fixed set-piece positions. Preserve event identities, timestamps, lineup history and counts; review the exact coordinate changes before running a repair.
+- High priority: complete semantic-colour adoption in live recorder choices and dialogs, and review any remaining icon variants. MatchEventIcon already supplies the canonical event glyphs to completed analysis and RecorderActionIcon. Agree final player/goalkeeper pill colours before extending them. Keep event identity distinct from selection, delivery status and validation errors, and retain accessible text cues.
 - Recorder UI/UX refinement: control placement, faster selection, long timelines, touch ergonomics and observer feedback.
 - Cross-match spatial filters, heatmaps and analytics. The approved completed-match summary includes saved-event overlays and linked marker/timeline selection using the shared rink renderer and stored normalized team-relative x/y; missing coordinates remain unknown.
 - Recovery and permanent purging policies beyond the approved Player/Team logical deletion, Match deletion and membership removal workflows.
