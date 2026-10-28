@@ -9,6 +9,7 @@ const entries = {
   matchEventOrder: "tests/domain/matches/matchEventOrder.test.ts",
   matchChronology: "tests/domain/matches/matchChronology.test.ts",
   playingTime: "tests/domain/matches/playingTime.test.ts",
+  lineupTimeline: "tests/domain/matches/lineupTimeline.test.ts",
 };
 try {
   await build({
