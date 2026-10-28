@@ -145,6 +145,7 @@ export function CompletedMatchDetails({
             periodLabel={periodLabel}
             selectedPlayerId={selectedPlayerId}
             onSelectPlayer={selectPlayer}
+            onViewPlayer={viewPlayer}
             analysisId={analysisId}
           />
           <GoalkeeperStatistics
