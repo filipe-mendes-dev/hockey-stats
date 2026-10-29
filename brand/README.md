@@ -38,6 +38,10 @@ Cards are borderless and use darker glass normally, with a lighter surface on ho
 
 The redundant Quick access heading is removed. Reduced top spacing/card heights and an adaptive grid fit regular and administrator layouts with the footer at 1366×768. Phone introductions retain a 24px inset at the normal text scale, a neutral eyebrow and a 28–32px title. Long text and enlarged/narrow layouts may grow and scroll.
 
+## Result headers
+
+Completed-match headers use a static Glass watermark on the right at 5% desktop and 3.5% phone opacity, fading toward the score. Its background stays inside the result height. The phone watermark extends through the inherited page inset to the screen edge; score/metadata/team text keeps its safe padding. It introduces no horizontal scrolling or header-height change and does not affect score calculations.
+
 ## Verification
 
 See [Development plan](../docs/development-plan.md) for production-browser evidence and remaining release checks. Source checks and production compilation are repeated for each staged branding snapshot. No package, recording or authentication workflow changes are part of this branding work.

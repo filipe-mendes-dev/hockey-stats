@@ -32,6 +32,8 @@ Sign-in uses a dark form column and a rink-hockey photograph with mint branding 
 
 Home cards are borderless with cropped symbol watermarks. Record a match uses a restrained translucent mint wash, a simple filled play triangle and the diagonal navigation arrow. Tiles use a darker glass surface normally and a lighter surface on hover, without dimming text. Leading icons scale to 1.25 and arrows to 1.2 over 300ms; reduced-motion preferences disable movement. Watermarks keep a fixed size. The page removes the redundant Quick access heading and reduces top spacing/card heights so normal desktop content fits at 1366×768, including the administrator tile and footer. The adaptive grid and mobile introduction retain safe text insets, long labels and scrolling on narrow or enlarged-text layouts.
 
+Completed-match result headers use the static Glass symbol on the right at 5% desktop and 3.5% phone opacity, fading toward the score. Its background ends within the result area above statistics. On phones it extends through the page's horizontal padding to the viewport edge; metadata, team names and scores retain their safe inset. It must not add horizontal scrolling, change header height or affect score ordering/calculations.
+
 ## Shot entry
 
 Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and sharing/export remain separate backlog work.

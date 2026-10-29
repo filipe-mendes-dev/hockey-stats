@@ -44,6 +44,8 @@ The responsive sign-in page uses the approved 40/60 form/photo composition, one 
 
 Home tiles use darker default glass, lighter hover, borderless surfaces and static cropped watermarks. The play icon is filled, icon/arrow scales are 1.25/1.2 over 300ms and reduced motion disables movement. Quick access is removed. Prior production-browser checks fitted regular and administrator layouts, including the footer, within 1366×768 and found no horizontal overflow at 390px or 320px with enlarged text.
 
+Result headers use the Glass watermark at 5% desktop / 3.5% phone opacity. The inherited page inset lets the phone background reach the exact 390px/320px edge through a 16px/20px gutter. Score text retains its inset. Production-browser review with long names and enlarged text found no horizontal overflow or header-height change. A worker-controlled offline reload retained the completed result and symbol while an uncached request failed.
+
 Each branding commit snapshot is checked independently for TypeScript, scoped source ESLint, formatting and production compilation. Earlier production-browser review covered desktop/phone layouts, language switching, keyboard/focus/touch tooltip access, restored dialog focus, reduced motion and worker-controlled offline reloads. The installed Next.js runtime reports an existing security advisory and may stop a build before an unchanged retry succeeds; dependencies are unchanged. No automated tests are read, added, changed or run. Review contexts preserve real account and Match data. Physical-device, deployed and other-browser checks remain outstanding.
 
 ## Current delivery
