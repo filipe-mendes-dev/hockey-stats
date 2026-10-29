@@ -47,3 +47,5 @@ Inline Player creation reuses the players namespace and adds teamPlayers.createP
 Player name editing adds players.editTitle, players.save, players.changed and players.updateFailed in both catalogs, reusing existing Name, required-name, Cancel and Saving labels. The edit-specific failure message retains the draft and asks the user to retry saving.
 
 Recorder labels cover Game event, shot attempt types, required save difficulty, timeout team and intercepted-shot recovery. Statistics labels cover recorded goalkeeper totals and attributed conceded goals. Position guidance distinguishes registration from optional selection; narrow controls retain accessible translated labels/tooltips. Which half? / Em que meio-campo? is used only without a derived half. Start/Resume and Next half stay short. Canonical domain values remain untranslated, and locale changes preserve draft identity, time and coordinates.
+
+The flag-only language trigger retains its translated accessible name; language names and the current selection remain in the dropdown. BENCHLINE and STATS are canonical brand text and remain untranslated.

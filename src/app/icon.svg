@@ -1,4 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#172f36" />
-  <path d="M11 8h6a4 4 0 0 1 0 8h-6m0 0h7a4 4 0 0 1 0 8h-7V8" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" />
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none"><title>Benchline Stats</title><rect width="256" height="256" rx="48" fill="#141518"/><g transform="translate(16 37.36416184971098) scale(1.0789980732177264)"><svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="207.6" height="168" viewBox="0 0 207.6 168" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="speedline-symbol-navy-symbol">
+<g id="Speedline / Symbol">
+<use xlink:href="#stroke0_0_4" fill="url(#paint0_linear_0_4)"/>
+<use xlink:href="#stroke0_0_4" fill="url(#paint1_linear_0_4)"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="24.0178" y1="9.14852" x2="174.879" y2="167.161" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0.5"/>
+<stop offset="0.36" stop-color="white" stop-opacity="0.04"/>
+<stop offset="0.45" stop-color="white" stop-opacity="0.28"/>
+<stop offset="0.49" stop-color="white" stop-opacity="0"/>
+<stop offset="1" stop-color="white" stop-opacity="0.02"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_4" x1="33.6" y1="0" x2="171.313" y2="170.174" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E1EFE9"/>
+<stop offset="0.45" stop-color="#B8D8CE"/>
+<stop offset="1" stop-color="#79AE9C"/>
+</linearGradient>
+<path id="stroke0_0_4" d="M75.6 0H157.6C183.6 0 196.6 15 192.2 37C189 53 179.8 64 165.4 71C182.2 77 189.6 90 186 108C181.6 130 165.4 146 145.6 150L142 168H124L128.8 144H52.8L48 168H30L36 138H10C7.33333 138 6.26667 136.667 6.8 134L8.8 124C9.33333 121.333 10.9333 120 13.6 120H125.6C130.6 120 134.2 117 135 113C135.8 109 133.4 106 128.4 106H28.4C25.7333 106 24.6667 104.667 25.2 102L27.2 92C27.7333 89.3333 29.3333 88 32 88H132C137 88 140.6 85 141.4 81C142.2 77 139.8 74 134.8 74H54.8L68.4 6C69 3 72.6 0 75.6 0Z"/>
+</defs>
 </svg>
+</g></svg>

@@ -1,0 +1,27 @@
+# Benchline Stats branding
+
+The application uses the approved Glass Speedline symbol and a shared two-line wordmark, bold mint BENCHLINE above white STATS. Favicons and installed-app icons use the symbol without text.
+
+## Design source
+
+[Logo library in Figma](https://www.figma.com/design/wPgxfn4L9sKQryHjmujqQA?node-id=4-17) contains the approved Glass symbol. [BrandLogo](../src/client/components/BrandLogo/BrandLogo.tsx) owns the current system-sans wordmark and its compact/prominent layouts. The refined Figma wordmark is still pending because the MCP tool-call limit blocked edits.
+
+## Identity and icons
+
+- [symbol-glass.svg](../public/brand/symbol-glass.svg) is the cropped Glass symbol used by the shared logo and decorative watermarks.
+- [icon.svg](../src/app/icon.svg) and [favicon.ico](../src/app/favicon.ico) are symbol-only favicons. The ICO includes 16px, 32px and 48px sizes.
+- [icon-192.png](../public/icons/icon-192.png) and [icon-512.png](../public/icons/icon-512.png) are standard PWA icons.
+- [icon-maskable-512.png](../public/icons/icon-maskable-512.png) keeps the mark inside the centered safe circle with a radius of 40% of the canvas size.
+- [apple-touch-icon.png](../public/icons/apple-touch-icon.png) is the opaque 180px Apple icon.
+
+The symbol geometry and Glass fills come from Figma Icon / Glass. Installed icons retain the dark application background. Exploration boards and review screenshots stay outside the repository.
+
+## Navigation and offline assets
+
+The header is 61px tall with 8px block padding and a 34px compact symbol. Desktop pills are visually 36px tall within 44px targets. Navigation is centered independently of the logo/account widths and collapses at 73.75em. The flag trigger retains full language names and the selected state in its dropdown. Mobile hamburger/drawer behavior stays unchanged; glyph offsets preserve centered 44px targets and drawer language/sign-out actions share one row.
+
+The service worker precaches the shared SVG, installed-app icons and favicons with their asset revisions. Branding preserves the waiting-update policy and never forces a reload during recording.
+
+## Verification
+
+See [Development plan](../docs/development-plan.md) for production-browser evidence and remaining release checks. Source checks and production compilation are repeated for each staged branding snapshot. No package, recording or authentication workflow changes are part of this branding work.

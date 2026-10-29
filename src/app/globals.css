@@ -24,7 +24,7 @@
   --shadow-floating: 0 8px 24px rgb(0 0 0 / 24%);
   --surface-blur: 20px;
   --app-header-control-height: 2.75rem;
-  --app-header-padding-block: 0.625rem;
+  --app-header-padding-block: 0.5rem;
   --app-header-height: calc(
     var(--app-header-control-height) + 2 * var(--app-header-padding-block) + 1px
   );
@@ -102,10 +102,4 @@ body {
 :where(a, button, select, [tabindex]):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
-}
-
-@media (max-width: 36rem) {
-  :root {
-    --app-header-padding-block: 0.5rem;
-  }
 }

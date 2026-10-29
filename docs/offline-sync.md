@@ -88,7 +88,7 @@ If the server sign-out request fails, including while offline, the current UI re
 
 `/app` is the public static launch target. Precache generic documents and full RSC payloads for the paths in `src/offline-pages.ts`, including Players/Teams details and Match creation/view/Start/live. Query IDs select IndexedDB records without requiring separate cached URLs. Initial application installation must happen online, and feature data must have been downloaded or created locally.
 
-Never cache personalized server HTML, auth redirects or API responses. Unsupported routes and speculative/segmented prefetches have no generic fallback. Distinguish HTML navigation from full RSC responses. Both language catalogs and feature code ship in the required asset graph. Local language-picker flag SVGs are included in the explicit public-asset precache patterns.
+Never cache personalized server HTML, auth redirects or API responses. Unsupported routes and speculative/segmented prefetches have no generic fallback. Distinguish HTML navigation from full RSC responses. Both language catalogs and feature code ship in the required asset graph. Local language-picker flags, the Glass header SVG and installed-app PNG icons are included in the explicit public-asset precache patterns. The SVG/ICO favicons are also precached. Asset revisions participate in worker update detection, so branding remains available offline and follows the existing waiting-update policy.
 
 Offline readiness requires verified cached files plus successful storage initialization. Native installation alone is insufficient. Unknown IDs show unavailable. Legacy dynamic Player/Team documents remain outside the offline guarantee.
 

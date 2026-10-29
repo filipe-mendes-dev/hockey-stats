@@ -13,7 +13,10 @@ export const metadata: Metadata = {
   title: "Benchline Stats",
   applicationName: "Benchline Stats",
   appleWebApp: { capable: true, title: "Benchline Stats" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  icons: {
+    icon: { url: "/icon.svg", type: "image/svg+xml", sizes: "any" },
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#141518" };

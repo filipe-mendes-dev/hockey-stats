@@ -34,6 +34,12 @@ Mobile team totals now use an independent Mantine Collapse with the same 200ms e
 
 The phone summary now retains 8px internal metric insets and a 4px value/detail gap so text does not touch column dividers. Production-browser checks at 390px and 320px covered English/Portuguese notes and card counts without metric or page overflow; a normal offline reload retained the same spacing. Each incremental commit snapshot receives an isolated non-test TypeScript check. Existing branding changes remain outside the statistics commits.
 
+## Branding and entry-page refinement
+
+The approved Glass identity uses a shared mint/white two-line wordmark, symbol-only favicons/PWA icons and a 61px header with 44px control targets. Desktop navigation is independently centered, language selection is flag-only and the existing mobile drawer retains its behavior with optical glyph alignment. The refined Figma wordmark remains pending because the MCP tool-call limit blocked file edits.
+
+Each branding commit snapshot is checked independently for TypeScript, scoped source ESLint, formatting and production compilation. Earlier production-browser review covered desktop/phone layouts, language switching, keyboard/focus/touch tooltip access, restored dialog focus, reduced motion and worker-controlled offline reloads. The installed Next.js runtime reports an existing security advisory and may stop a build before an unchanged retry succeeds; dependencies are unchanged. No automated tests are read, added, changed or run. Review contexts preserve real account and Match data. Physical-device, deployed and other-browser checks remain outstanding.
+
 ## Current delivery
 
 | Area               | Implemented scope                                                                                                                                    |
