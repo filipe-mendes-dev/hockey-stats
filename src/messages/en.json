@@ -888,5 +888,12 @@
     "actionFor": "{action}: {name}",
     "changed": "This record changed or was removed. Cancel and reopen to load the latest version.",
     "failed": "Could not save the removal on this device. Try again."
+  },
+  "sharing": {
+    "retry": "Retry",
+    "unavailableTitle": "Match unavailable",
+    "unavailableDescription": "This link is unavailable or sharing has stopped.",
+    "failedTitle": "Statistics temporarily unavailable",
+    "failedDescription": "The statistics could not be loaded. Please try again."
   }
 }

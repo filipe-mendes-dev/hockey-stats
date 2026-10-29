@@ -888,5 +888,12 @@
     "actionFor": "{action}: {name}",
     "changed": "Este registo foi alterado ou removido. Cancele e volte a abrir para carregar a versão mais recente.",
     "failed": "Não foi possível guardar a remoção neste dispositivo. Tente novamente."
+  },
+  "sharing": {
+    "retry": "Tentar novamente",
+    "unavailableTitle": "Jogo indisponível",
+    "unavailableDescription": "Esta ligação está indisponível ou a partilha foi desativada.",
+    "failedTitle": "Estatísticas temporariamente indisponíveis",
+    "failedDescription": "Não foi possível carregar as estatísticas. Tente novamente."
   }
 }
