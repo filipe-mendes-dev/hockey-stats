@@ -1,5 +1,19 @@
 .result {
+  position: relative;
+  isolation: isolate;
   padding-block: 0.25rem 0.5rem;
+}
+.result::before {
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 15rem;
+  background: url("/brand/symbol-glass.svg") right top / 15rem auto no-repeat;
+  opacity: 0.05;
+  mask-image: linear-gradient(90deg, transparent, black 55%);
+  pointer-events: none;
+  content: "";
 }
 .metadata {
   display: flex;
@@ -116,6 +130,13 @@
   white-space: nowrap;
 }
 @media (max-width: 36rem) {
+  .result::before {
+    inset-inline-end: calc(-1 * var(--app-page-padding-inline, 1rem));
+    width: 9.375rem;
+    background-size: 9.375rem auto;
+    opacity: 0.035;
+    mask-image: linear-gradient(90deg, transparent, black 75%);
+  }
   .scoreboard {
     grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 6rem) minmax(0, 1fr);
     gap: 0.625rem;
