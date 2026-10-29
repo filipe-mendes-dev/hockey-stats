@@ -40,6 +40,8 @@ The approved Glass identity uses a shared mint/white two-line wordmark, symbol-o
 
 The production footer shows copyright, Beta, the current package version, Contact and clickable sync status. Its device dialog retains synchronization/storage/worker details and update actions. The standalone Details button is removed; status warnings remain visible and phone layouts wrap safely. Sign-in hides the shared footer while worker registration remains mounted.
 
+The responsive sign-in page uses the approved 40/60 form/photo composition, one white Welcome heading, localized placeholders, accessible connection tooltip and a visible quiet watermark. A minimal version/contact row balances the top controls. Production review measured a roughly 10–15px upward visual offset when space permits and matching 52px photo side/bottom insets at desktop width. Short/enlarged-text layouts retain scrolling. Beta-access requests remain deferred.
+
 Each branding commit snapshot is checked independently for TypeScript, scoped source ESLint, formatting and production compilation. Earlier production-browser review covered desktop/phone layouts, language switching, keyboard/focus/touch tooltip access, restored dialog focus, reduced motion and worker-controlled offline reloads. The installed Next.js runtime reports an existing security advisory and may stop a build before an unchanged retry succeeds; dependencies are unchanged. No automated tests are read, added, changed or run. Review contexts preserve real account and Match data. Physical-device, deployed and other-browser checks remain outstanding.
 
 ## Current delivery

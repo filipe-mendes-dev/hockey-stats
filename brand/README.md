@@ -26,6 +26,12 @@ The service worker precaches the shared SVG, installed-app icons and favicons wi
 
 The implemented footer shows © 2026 Benchline Stats, Beta, the version from package.json and a mailto link to contact@filipemendes.dev. Clicking sync status opens the existing device/sync dialog with keyboard access and focus restoration. A separate Details button is no longer shown. Offline/pending/blocked/storage/update feedback remains visible. Healthy offline-file readiness is available inside the dialog. Phone layouts wrap without horizontal scrolling. The shared footer is hidden on sign-in while its worker hook stays mounted.
 
+## Sign-in
+
+Sign-in owns its compact logo/language row, one white Welcome heading, localized username/password placeholders and connection guidance in a hover/focus/touch information tooltip. From 48em it uses a 40/60 form/photo split; phones show only the form. Balanced outer tracks position the form independently of the top controls and the minimal version/contact row, with a small upward visual adjustment when height permits. A quiet decorative symbol watermark remains visible at all widths.
+
+[rink-hockey.webp](../public/brand/rink-hockey.webp) is the approved generated photograph, compressed to WebP. It depicts a generic rink-hockey scene rather than a real match. The logo, text and mint overlays stay separate HTML/CSS elements. Photo text uses matching bottom/side insets. The photograph is outside precaching because sign-in remains online. Username/password validation and authentication behavior are unchanged. Beta-access requests remain deferred.
+
 ## Verification
 
 See [Development plan](../docs/development-plan.md) for production-browser evidence and remaining release checks. Source checks and production compilation are repeated for each staged branding snapshot. No package, recording or authentication workflow changes are part of this branding work.

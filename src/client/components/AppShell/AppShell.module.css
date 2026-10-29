@@ -33,14 +33,10 @@
 }
 
 .main[data-auth-page="true"] {
-  display: grid;
-  place-items: center;
-  padding: clamp(2rem, 6vh, 5rem) 1rem;
-  background: radial-gradient(
-    ellipse at 50% 40%,
-    var(--color-canvas-highlight),
-    transparent 65%
-  );
+  display: flex;
+  max-width: none;
+  padding: 0;
+  scroll-margin-top: 0;
 }
 
 .main:focus {

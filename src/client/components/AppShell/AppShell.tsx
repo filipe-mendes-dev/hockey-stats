@@ -88,18 +88,20 @@ export function AppShell({ children }: AppShellProps) {
       <a className={st.skipLink} href="#main-content">
         {t("shell.skipToContent")}
       </a>
-      <AppHeader
-        homeHref={isSignIn ? "/sign-in" : "/app"}
-        accountAction={
-          showAccountActions
-            ? {
-                label: pending ? t("auth.signingOut") : t("auth.signOut"),
-                pending,
-                onClick: () => setConfirmingSignOut(true),
-              }
-            : undefined
-        }
-      />
+      {!isSignIn && (
+        <AppHeader
+          homeHref={isSignIn ? "/sign-in" : "/app"}
+          accountAction={
+            showAccountActions
+              ? {
+                  label: pending ? t("auth.signingOut") : t("auth.signOut"),
+                  pending,
+                  onClick: () => setConfirmingSignOut(true),
+                }
+              : undefined
+          }
+        />
+      )}
       {failed && !confirmingSignOut && (
         <p className={st.error} role="alert">
           {t(`auth.${failed}`)}

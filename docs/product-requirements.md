@@ -28,6 +28,8 @@ Use the approved Glass Speedline symbol with a shared two-line wordmark, bold mi
 
 The footer shows © 2026 Benchline Stats, Beta and the package version, alongside clickable synchronization status and Contact. Status opens the existing device/sync dialog; there is no separate Details button. Contact opens an email to contact@filipemendes.dev. Prefer one row where space permits, with compact wrapping on phones. Pending, offline, blocked, storage failures and available updates remain visible. Healthy offline-file readiness belongs in the device dialog. The shared footer is omitted on sign-in while its service-worker hook remains mounted.
 
+Sign-in uses a dark form column and a rink-hockey photograph with mint branding from 48em. Phones retain the form without the photo panel. The page owns its compact logo/language controls, one white Welcome heading, localized username/password placeholders and a quiet decorative symbol watermark at all widths. Balanced outer tracks position the form independently of the top controls and the minimal version/contact row, with a small upward visual adjustment when space permits. Photo copy has matching bottom and side insets. Connection guidance is available through a hover/focus/touch information tooltip. Username/password validation, errors and authentication behavior remain unchanged. Beta-access requests remain deferred.
+
 ## Shot entry
 
 Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and sharing/export remain separate backlog work.

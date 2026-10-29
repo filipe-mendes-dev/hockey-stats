@@ -51,3 +51,5 @@ Recorder labels cover Game event, shot attempt types, required save difficulty, 
 The flag-only language trigger retains its translated accessible name; language names and the current selection remain in the dropdown. BENCHLINE and STATS are canonical brand text and remain untranslated.
 
 The footer namespace supplies copyright, Beta, version and Contact in both catalogs. The copyright year uses ungrouped numeric formatting; the version comes from package metadata and the contact address remains canonical.
+
+Sign-in uses auth.welcome, brandEyebrow, brandHeadline and brandDescription in both catalogs. auth.connectionHelp labels the hover/focus/touch information trigger; auth.offlineHint remains its existing guidance. auth.usernamePlaceholder and auth.passwordPlaceholder supplement visible labels. Sign-in reuses footer version/contact messages. Language switching preserves entered credentials.
