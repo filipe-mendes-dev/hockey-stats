@@ -1,6 +1,6 @@
 # Development plan and prototype status
 
-Updated 2026-10-24. The prototype is implemented for review. Current behavior belongs in [Product requirements](product-requirements.md), [Domain model](domain-model.md), [Recorder UX](recorder-ux.md) and [Offline and sync](offline-sync.md). This file records delivery status, verification limits and remaining work; it is not a chronological implementation log.
+Updated 2026-10-29. The prototype is implemented for review. Current behavior belongs in [Product requirements](product-requirements.md), [Domain model](domain-model.md), [Recorder UX](recorder-ux.md) and [Offline and sync](offline-sync.md). This file records delivery status, verification limits and remaining work; it is not a chronological implementation log.
 
 Chronology verification on 2026-10-26 adds the authorized focused automated tests for game-time ordering, chronological eligibility, penalty/Undo dependencies and playing time. The scoped command is also part of PR CI. Local production-browser checks used isolated disposable IndexedDB records to verify rejection without event/outbox writes, a valid late substitution, version-8 queuing and durable timeline/summary reload under offline network emulation. The completed summary also retained correct ordering and minutes at a 390px Portuguese viewport without horizontal overflow. The real recorded game and authenticated version-8 upload/download remain unverified. The production build passed after a retry; the installed Next.js runtime reported a known-vulnerability upgrade warning. No dependency changed.
 
@@ -34,6 +34,20 @@ Mobile team totals now use an independent Mantine Collapse with the same 200ms e
 
 The phone summary now retains 8px internal metric insets and a 4px value/detail gap so text does not touch column dividers. Production-browser checks at 390px and 320px covered English/Portuguese notes and card counts without metric or page overflow; a normal offline reload retained the same spacing. Each incremental commit snapshot receives an isolated non-test TypeScript check. Existing branding changes remain outside the statistics commits.
 
+## Completed-match sharing implementation
+
+The agreed scope and acceptance criteria are in [Completed-match sharing](match-sharing.md). Server-only revocable permissions, authenticated owner controls, the shared statistics presentation and the public SSR route are implemented for review. SQL migration 0016 adds only match_share. JSON debugging export remains separate.
+
+Non-test acceptance on 2026-10-28 used an isolated production server, browser contexts and a disposable PostgreSQL database. TypeScript, source ESLint, formatting, matching catalog keys, documentation links and whitespace checks passed. A synthetic recording retained revision 40 and 11 stored events while exposing only its 10 active events. Public all-match/period totals and playing time matched existing calculations. SSR HTML excluded account/reusable identity data, undone records and capture/persistence timestamps. Unauthenticated viewers created no IndexedDB database, made no account/sync API calls and cached no share pages.
+
+Owner/account/origin/completion/revision rejection, concurrent creation, copy, revoked-link 404, fresh links, clipboard fallback, blocked-operation gating with revocation still available, owner disable/enable, safe sync downloads and temporary-failure presentation passed. English/laptop and Portuguese/390px layouts had no horizontal overflow or public console errors. Period/category filtering and linked event selection worked without API calls. The owner summary survived an offline reload while an uncached API request was unreachable. Disposable blocked work was removed. Match deletion and the existing account-cleanup sequence each removed sharing rows and returned public 404. A final restart on the generated output retained SSR content and unauthenticated chrome even with an owner session. Disposable browser databases, caches and workers were cleared; the isolated pages, localhost server and disposable PostgreSQL container were removed. Real recordings and the primary checkout were untouched.
+
+Release verification remains incomplete: each production build compiled, passed TypeScript, generated routes and bundled the production worker, then exited 1 with the installed Next.js security advisory. The reused local dependency installation reports Next.js 16.4.0 while package.json requests 16.4.2. Reconcile and upgrade that installation separately, then obtain a successful full build before release. Dependencies were not installed or changed. Physical-device/browser-family and deployed Nginx checks remain unverified. No automated tests were read, added, changed or run for sharing.
+
+Local diagnosis on 2026-10-29 found that migration 0016 was the sole pending migration in the primary development database. Its missing table caused the sharing failure. Applying the migration created an empty sharing table without changing existing Matches or events. Read-only verification found all 17 migrations applied; an unknown public token then returned 404 instead of a temporary database failure, while unauthenticated owner management remained 401. Creating/copying a link in the user's signed-in browser remains unverified after that local fix. Production migration status was not inspected or changed.
+
+Incremental delivery on `feature/match-sharing-export` separates the statistics presentation refactor, server permissions/API, public SSR page, owner controls and documentation. Each of the four code increments passed TypeScript, scoped ESLint, formatting and whitespace checks in an isolated staged snapshot without relying on later uncommitted files. Branding commits remain on their separate branch. These checks do not replace the outstanding release and signed-in browser checks above.
+
 ## Current delivery
 
 | Area               | Implemented scope                                                                                                                                    |
@@ -45,6 +59,7 @@ The phone summary now retains 8px internal metric insets and a 4px value/detail 
 | Recording          | Recovery/loss, shot types, required-classification goalkeeper saves, timeouts, own player-attributed fouls, cards, substitutions and opponent goals. |
 | Clock and lineup   | Anchored countdown, adjustment, timed team powerplay, fifth-player entry and explicit half/match completion.                                         |
 | Completed analysis | Final/period results, team/player/goalkeeper statistics and linked event map/timeline.                                                               |
+| Match sharing      | Revocable links for synchronized completed Matches, public SSR statistics and online owner controls.                                                 |
 | Durability         | IndexedDB, shared outbox, versioned commands, owner-scoped APIs, receipts, downloads and local latest-event Undo.                                    |
 
 ## Match event expansion
@@ -68,7 +83,7 @@ These are targeted checks, not release certification. The earlier recorder/navig
 
 - Physical-phone ergonomics, other browser families and an actual upgrade from an older cached client remain unverified.
 - Broader multi-account/device switching, simultaneous recording, blocked-conflict recovery and target-device performance require separate acceptance.
-- The historical one-off converter, shareable statistics links, possible PDF export and other deferred features remain in the [Backlog](backlog.md).
+- The historical one-off converter, private JSON debugging export, possible PDF export and other deferred features remain in the [Backlog](backlog.md). Public sharing implementation and release limits are recorded above.
 - Further product work needs explicit scope approval. Do not infer that a feature is implemented because a contract permits an optional field.
 
 ## Deployment status

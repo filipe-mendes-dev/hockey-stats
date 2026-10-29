@@ -24,7 +24,7 @@ The canonical entity name is Match. Event attribution uses its MatchPlayer snaps
 
 ## Shot entry
 
-Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and sharing/export remain separate backlog work.
+Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and private export remain separate backlog work. Public completed-match sharing is described below.
 
 ## Entity removal
 
@@ -73,6 +73,10 @@ The implementation should support these scenarios in a production build:
 8. Pause sync on expiry or account mismatch; retain local work. Sign-out cleanup must not be reversed by late responses.
 9. Switch language without losing draft, clock or pending work. Support narrow screens, enlarged text and keyboard/touch access.
 10. End periods explicitly and complete the Match. Reopen it as a read-only summary.
+
+## Completed-match sharing
+
+Owners can enable one revocable public link for a synchronized completed Match. The server-rendered page shows the existing statistics, player snapshots, timeline, rink map and lineup analysis with unauthenticated chrome. It reads the current server recording and calculation rules without duplicating Match data. Creation requires an enabled owner session and matching server revision. Revocation is online-only. See [Completed-match sharing](match-sharing.md) for access, data boundaries and acceptance requirements. Private JSON debugging export remains deferred.
 
 ## Deferred scope
 

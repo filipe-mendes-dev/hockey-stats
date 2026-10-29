@@ -1,5 +1,7 @@
 # Account authentication
 
+Completed-match sharing management requires a current enabled owner session. Public visitors authorize access through the specific share token without creating an account. Disabling an owner temporarily hides their shared pages; re-enabling restores existing unrevoked links. Permanent account deletion removes Matches and their sharing permissions. See [Completed-match sharing](match-sharing.md).
+
 Better Auth handles username/password login, PostgreSQL sessions and admin-created users. There is no separate product account/workspace provisioning flow. Initial online sign-in establishes the local dataset owner; later session expiry affects synchronization rather than offline hockey workflows.
 
 ## Identity and authorization

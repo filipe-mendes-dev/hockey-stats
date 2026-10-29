@@ -23,6 +23,8 @@ Both catalogs are bundled with the offline asset graph. Switching language requi
 
 ## Message and formatting rules
 
+The `sharing` namespace covers the owner sharing dialog, access notice, create/copy/revoke feedback, synchronization/session errors and public unavailable/temporary-failure pages in both catalogs. Shared pages retain deterministic English SSR and browser locale restoration. The unauthenticated header retains language selection at narrow widths. No locale or translation data is stored in a sharing permission.
+
 - Translate labels, validation, errors, empty states and accessibility text in both catalogs.
 - Save actions use the concise Save / Guardar label; pending save actions use Saving… / A guardar…. Keep explicit Create, Start and destructive-action labels.
 - Omit optional suffixes from form labels. Required fields retain their existing indicators and validation.

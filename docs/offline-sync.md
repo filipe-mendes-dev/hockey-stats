@@ -94,6 +94,10 @@ Offline readiness requires verified cached files plus successful storage initial
 
 Worker registration runs only in production. Updates remain waiting until all application tabs/windows close, then activate on reopening. Do not force reload during tracking. Use HTTPS outside localhost/loopback, and match browser origin to BETTER_AUTH_URL. Separate origins have separate IndexedDB/caches, even when normal authentication cookies are shared.
 
+## Public completed-match sharing
+
+Sharing permissions are online server-only state, outside IndexedDB, the outbox and sync/download contracts. Creating/copying a link requires no pending or blocked Match commands and a matching completed server revision. Revocation remains online-only and can run despite pending local work. `/share/<token>` renders current accepted data directly on the server; it is outside the worker's offline-page allowlist and must not cache Match HTML/RSC responses. Match deletion revokes access through a server foreign-key cascade, so an offline deletion leaves a link accessible until that deletion synchronizes. See [Completed-match sharing](match-sharing.md).
+
 ## Current limits
 
 One active observer per Match is the product assumption. Same-origin transactions serialize local writes and Web Locks serialize uploads, but a second recorder tab is not automatically read-only. Concurrent remote writers can produce blocked revision conflicts; no merge/resolution UI exists yet.
