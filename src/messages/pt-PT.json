@@ -618,6 +618,10 @@
   },
   "footer": {
     "label": "Estado da aplicação",
+    "copyright": "© {year, number, ::group-off} Benchline Stats",
+    "beta": "Beta",
+    "version": "v{version}",
+    "contact": "Contacto",
     "details": "Detalhes",
     "detailsTitle": "Dispositivo e sincronização",
     "close": "Fechar",

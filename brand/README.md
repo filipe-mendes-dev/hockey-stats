@@ -22,6 +22,10 @@ The header is 61px tall with 8px block padding and a 34px compact symbol. Deskto
 
 The service worker precaches the shared SVG, installed-app icons and favicons with their asset revisions. Branding preserves the waiting-update policy and never forces a reload during recording.
 
+## Footer
+
+The implemented footer shows © 2026 Benchline Stats, Beta, the version from package.json and a mailto link to contact@filipemendes.dev. Clicking sync status opens the existing device/sync dialog with keyboard access and focus restoration. A separate Details button is no longer shown. Offline/pending/blocked/storage/update feedback remains visible. Healthy offline-file readiness is available inside the dialog. Phone layouts wrap without horizontal scrolling. The shared footer is hidden on sign-in while its worker hook stays mounted.
+
 ## Verification
 
 See [Development plan](../docs/development-plan.md) for production-browser evidence and remaining release checks. Source checks and production compilation are repeated for each staged branding snapshot. No package, recording or authentication workflow changes are part of this branding work.

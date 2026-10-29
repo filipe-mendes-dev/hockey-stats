@@ -38,6 +38,8 @@ The phone summary now retains 8px internal metric insets and a 4px value/detail 
 
 The approved Glass identity uses a shared mint/white two-line wordmark, symbol-only favicons/PWA icons and a 61px header with 44px control targets. Desktop navigation is independently centered, language selection is flag-only and the existing mobile drawer retains its behavior with optical glyph alignment. The refined Figma wordmark remains pending because the MCP tool-call limit blocked file edits.
 
+The production footer shows copyright, Beta, the current package version, Contact and clickable sync status. Its device dialog retains synchronization/storage/worker details and update actions. The standalone Details button is removed; status warnings remain visible and phone layouts wrap safely. Sign-in hides the shared footer while worker registration remains mounted.
+
 Each branding commit snapshot is checked independently for TypeScript, scoped source ESLint, formatting and production compilation. Earlier production-browser review covered desktop/phone layouts, language switching, keyboard/focus/touch tooltip access, restored dialog focus, reduced motion and worker-controlled offline reloads. The installed Next.js runtime reports an existing security advisory and may stop a build before an unchanged retry succeeds; dependencies are unchanged. No automated tests are read, added, changed or run. Review contexts preserve real account and Match data. Physical-device, deployed and other-browser checks remain outstanding.
 
 ## Current delivery

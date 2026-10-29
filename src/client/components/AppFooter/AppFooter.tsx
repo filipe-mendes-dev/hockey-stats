@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Modal, Title } from "@mantine/core";
-import { CircleAlert, HardDrive, Info } from "lucide-react";
+import { Modal, Title } from "@mantine/core";
+import { CircleAlert, HardDrive, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { isOfflinePagePath } from "../../../offline-pages";
@@ -13,7 +13,38 @@ import { PwaStatus } from "../../pwa/PwaStatus";
 import { useServiceWorker } from "../../pwa/use-service-worker";
 import { useDatabaseStatus } from "../../storage/useDatabaseStatus";
 import type { ApplicationStatusProps } from "./AppFooter.interfaces";
+import {
+  applicationContact,
+  applicationCopyrightYear,
+  applicationVersion,
+} from "./appMetadata";
 import st from "./AppFooter.module.css";
+
+function FooterIdentity() {
+  const t = useTranslations("footer");
+  return (
+    <div className={st.identity}>
+      <span>{t("copyright", { year: applicationCopyrightYear })}</span>
+      <span>
+        {t("beta")} · {t("version", { version: applicationVersion })}
+      </span>
+    </div>
+  );
+}
+
+function ContactLink() {
+  const t = useTranslations("footer");
+  return (
+    <a
+      className={st.contact}
+      href={`mailto:${applicationContact}`}
+      title={applicationContact}
+    >
+      <Mail size={14} aria-hidden="true" />
+      {t("contact")}
+    </a>
+  );
+}
 
 function ApplicationStatus({ worker }: ApplicationStatusProps) {
   const t = useTranslations("footer");
@@ -31,59 +62,62 @@ function ApplicationStatus({ worker }: ApplicationStatusProps) {
   return (
     <>
       <div className={st.row}>
+        <FooterIdentity />
         <div className={st.summary}>
-          <SyncStatusPanel />
-          {worker.updateAvailable && (
-            <span className={st.mobileUpdate} role="status">
-              {t("updateReady")}
-            </span>
-          )}
+          <SyncStatusPanel onOpenDetails={() => setDetailsOpen(true)} />
           {!sync.accountName && !storageIssue && (
-            <span className={st.hint} role="status">
-              <HardDrive size={15} aria-hidden="true" />
-              {t(storage.status === "ready" ? "localReady" : "preparing")}
-            </span>
-          )}
-          {storageIssue && (
-            <span className={st.issue} role="status">
-              <CircleAlert size={15} aria-hidden="true" />
-              {t("storageIssue")}
-            </span>
-          )}
-          {filesIssue && (
-            <span className={st.issue} role="status">
-              <CircleAlert size={15} aria-hidden="true" />
-              {t("filesIssue")}
-            </span>
-          )}
-        </div>
-        <div className={st.tools}>
-          {worker.updateAvailable ? (
-            <Button
-              className={st.updateAction}
-              size="sm"
-              variant="subtle"
+            <button
+              className={st.statusControl}
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={t(
+                storage.status === "ready" ? "localReady" : "preparing",
+              )}
               onClick={() => setDetailsOpen(true)}
             >
-              {t("updateReady")}
-            </Button>
-          ) : (
-            filesCached &&
-            storage.status === "ready" && (
-              <span className={`${st.hint} ${st.offlineReady}`}>
-                {t("offlineReady")}
+              <HardDrive size={15} aria-hidden="true" />
+              <span role="status">
+                {t(storage.status === "ready" ? "localReady" : "preparing")}
               </span>
-            )
+            </button>
           )}
-          <Button
-            variant="subtle"
-            size="sm"
-            leftSection={<Info size={15} aria-hidden="true" />}
-            onClick={() => setDetailsOpen(true)}
-          >
-            {t("details")}
-          </Button>
+          {storageIssue && (
+            <button
+              className={`${st.statusControl} ${st.issue}`}
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={t("storageIssue")}
+              onClick={() => setDetailsOpen(true)}
+            >
+              <CircleAlert size={15} aria-hidden="true" />
+              <span role="status">{t("storageIssue")}</span>
+            </button>
+          )}
+          {filesIssue && (
+            <button
+              className={`${st.statusControl} ${st.issue}`}
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={t("filesIssue")}
+              onClick={() => setDetailsOpen(true)}
+            >
+              <CircleAlert size={15} aria-hidden="true" />
+              <span role="status">{t("filesIssue")}</span>
+            </button>
+          )}
+          {worker.updateAvailable && (
+            <button
+              className={st.statusControl}
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={t("updateReady")}
+              onClick={() => setDetailsOpen(true)}
+            >
+              <span role="status">{t("updateReady")}</span>
+            </button>
+          )}
         </div>
+        <ContactLink />
       </div>
       <Modal
         opened={detailsOpen}
@@ -123,17 +157,18 @@ export function AppFooter() {
   const pathname = usePathname();
   const worker = useServiceWorker();
   const isApp = pathname === "/app" || pathname.startsWith("/app/");
+  if (pathname === "/sign-in") return null;
   return (
-    <footer
-      className={st.footer}
-      data-auth-page={pathname === "/sign-in"}
-      aria-label={t("label")}
-    >
+    <footer className={st.footer} aria-label={t("label")}>
       <div className={st.content}>
         {isApp ? (
           <ApplicationStatus worker={worker} />
         ) : (
-          <PwaStatus worker={worker} />
+          <div className={st.publicRow}>
+            <FooterIdentity />
+            <PwaStatus worker={worker} />
+            <ContactLink />
+          </div>
         )}
       </div>
     </footer>

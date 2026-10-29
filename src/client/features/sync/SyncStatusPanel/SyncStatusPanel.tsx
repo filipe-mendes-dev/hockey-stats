@@ -9,7 +9,10 @@ import { useSyncStatus } from "../useSyncStatus";
 import type { SyncStatusPanelProps } from "./SyncStatusPanel.interfaces";
 import st from "./SyncStatusPanel.module.css";
 
-export function SyncStatusPanel({ details = false }: SyncStatusPanelProps) {
+export function SyncStatusPanel({
+  details = false,
+  onOpenDetails,
+}: SyncStatusPanelProps) {
   const t = useTranslations("sync");
   const status = useSyncStatus();
   if (!status.accountName) return null;
@@ -67,28 +70,56 @@ export function SyncStatusPanel({ details = false }: SyncStatusPanelProps) {
     );
   }
 
+  const statusMessage = (
+    <span
+      className={needsAttention ? `${st.message} ${st.issue}` : st.message}
+      role="status"
+      aria-live="polite"
+    >
+      <Icon
+        size={16}
+        aria-hidden="true"
+        className={status.phase === "syncing" ? st.spinning : undefined}
+      />
+      <span>{t(`short.${message}`)}</span>
+      {status.pending > 0 && (
+        <span className={st.count}>
+          {t("pendingShort", { count: status.pending })}
+        </span>
+      )}
+      {status.blocked > 0 && (
+        <span>{t("blockedShort", { count: status.blocked })}</span>
+      )}
+    </span>
+  );
+
+  if (onOpenDetails) {
+    return (
+      <button
+        className={st.trigger}
+        type="button"
+        aria-haspopup="dialog"
+        aria-label={[
+          t(`short.${message}`),
+          status.pending > 0
+            ? t("pendingShort", { count: status.pending })
+            : null,
+          status.blocked > 0
+            ? t("blockedShort", { count: status.blocked })
+            : null,
+        ]
+          .filter(Boolean)
+          .join(". ")}
+        onClick={onOpenDetails}
+      >
+        {statusMessage}
+      </button>
+    );
+  }
+
   return (
     <div className={st.summary}>
-      <div
-        className={needsAttention ? `${st.message} ${st.issue}` : st.message}
-        role="status"
-        aria-live="polite"
-      >
-        <Icon
-          size={16}
-          aria-hidden="true"
-          className={status.phase === "syncing" ? st.spinning : undefined}
-        />
-        <span>{t(`short.${message}`)}</span>
-        {status.pending > 0 && (
-          <span className={st.count}>
-            {t("pendingShort", { count: status.pending })}
-          </span>
-        )}
-        {status.blocked > 0 && (
-          <span>{t("blockedShort", { count: status.blocked })}</span>
-        )}
-      </div>
+      {statusMessage}
       {status.phase === "signIn" && (
         <Button
           component={Link}

@@ -618,6 +618,10 @@
   },
   "footer": {
     "label": "Application status",
+    "copyright": "© {year, number, ::group-off} Benchline Stats",
+    "beta": "Beta",
+    "version": "v{version}",
+    "contact": "Contact",
     "details": "Details",
     "detailsTitle": "Device & sync",
     "close": "Close",

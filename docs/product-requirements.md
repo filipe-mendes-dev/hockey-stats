@@ -26,6 +26,8 @@ The canonical entity name is Match. Event attribution uses its MatchPlayer snaps
 
 Use the approved Glass Speedline symbol with a shared two-line wordmark, bold mint BENCHLINE above white STATS. Favicons and installed-app icons use the symbol alone. The application header is 61px tall, with 8px container padding and a 34px compact symbol. Desktop pills retain 44px control targets. Navigation stays centered independently of the side content and collapses at 73.75em. The language trigger shows only the flag; names and selection remain in its dropdown. Preserve the existing mobile hamburger and full-screen drawer. Their glyphs align optically with the safe inset, and drawer language/sign-out actions share one row.
 
+The footer shows © 2026 Benchline Stats, Beta and the package version, alongside clickable synchronization status and Contact. Status opens the existing device/sync dialog; there is no separate Details button. Contact opens an email to contact@filipemendes.dev. Prefer one row where space permits, with compact wrapping on phones. Pending, offline, blocked, storage failures and available updates remain visible. Healthy offline-file readiness belongs in the device dialog. The shared footer is omitted on sign-in while its service-worker hook remains mounted.
+
 ## Shot entry
 
 Set piece is available from Game event and the non-rink Shot flow without an extra mandatory tap for ordinary shots. Penalty and Direct free hit each remain one shot with a fixed restart-spot position. Rink-first entry retains the observer's selected point and hides Set piece. Import and sharing/export remain separate backlog work.
