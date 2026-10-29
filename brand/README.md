@@ -32,6 +32,12 @@ Sign-in owns its compact logo/language row, one white Welcome heading, localized
 
 [rink-hockey.webp](../public/brand/rink-hockey.webp) is the approved generated photograph, compressed to WebP. It depicts a generic rink-hockey scene rather than a real match. The logo, text and mint overlays stay separate HTML/CSS elements. Photo text uses matching bottom/side insets. The photograph is outside precaching because sign-in remains online. Username/password validation and authentication behavior are unchanged. Beta-access requests remain deferred.
 
+## Home cards
+
+Cards are borderless and use darker glass normally, with a lighter surface on hover that keeps text opacity unchanged. The featured tile has a restrained 14%–4% mint wash, a filled play triangle and the diagonal navigation arrow. Leading icons scale to 1.25 and arrows to 1.2 over 300ms; reduced-motion preferences disable movement. Cropped watermarks stay fixed at 8% opacity, or 10% on the featured tile.
+
+The redundant Quick access heading is removed. Reduced top spacing/card heights and an adaptive grid fit regular and administrator layouts with the footer at 1366×768. Phone introductions retain a 24px inset at the normal text scale, a neutral eyebrow and a 28–32px title. Long text and enlarged/narrow layouts may grow and scroll.
+
 ## Verification
 
 See [Development plan](../docs/development-plan.md) for production-browser evidence and remaining release checks. Source checks and production compilation are repeated for each staged branding snapshot. No package, recording or authentication workflow changes are part of this branding work.

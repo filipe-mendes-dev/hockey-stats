@@ -42,6 +42,8 @@ The production footer shows copyright, Beta, the current package version, Contac
 
 The responsive sign-in page uses the approved 40/60 form/photo composition, one white Welcome heading, localized placeholders, accessible connection tooltip and a visible quiet watermark. A minimal version/contact row balances the top controls. Production review measured a roughly 10–15px upward visual offset when space permits and matching 52px photo side/bottom insets at desktop width. Short/enlarged-text layouts retain scrolling. Beta-access requests remain deferred.
 
+Home tiles use darker default glass, lighter hover, borderless surfaces and static cropped watermarks. The play icon is filled, icon/arrow scales are 1.25/1.2 over 300ms and reduced motion disables movement. Quick access is removed. Prior production-browser checks fitted regular and administrator layouts, including the footer, within 1366×768 and found no horizontal overflow at 390px or 320px with enlarged text.
+
 Each branding commit snapshot is checked independently for TypeScript, scoped source ESLint, formatting and production compilation. Earlier production-browser review covered desktop/phone layouts, language switching, keyboard/focus/touch tooltip access, restored dialog focus, reduced motion and worker-controlled offline reloads. The installed Next.js runtime reports an existing security advisory and may stop a build before an unchanged retry succeeds; dependencies are unchanged. No automated tests are read, added, changed or run. Review contexts preserve real account and Match data. Physical-device, deployed and other-browser checks remain outstanding.
 
 ## Current delivery

@@ -4,6 +4,8 @@
   --color-surface: #1d1f23;
   --color-surface-elevated: #25282d;
   --color-surface-glass: rgb(29 31 35 / 72%);
+  --color-surface-navigation-glass: rgb(12 14 17 / 78%);
+  --color-surface-navigation-hover: rgb(29 31 35 / 58%);
   --color-surface-glass-elevated: rgb(37 40 45 / 90%);
   --color-surface-dialog: #181b1f;
   --color-surface-dialog-glass: rgb(20 23 26 / 76%);
@@ -35,6 +37,8 @@
   --color-selection-end: #96c5b5;
   --color-on-selection: var(--color-on-action);
   --color-surface-action: rgb(184 216 206 / 7%);
+  --color-surface-featured-start: rgb(184 216 206 / 14%);
+  --color-surface-featured-end: rgb(150 197 181 / 4%);
   --color-surface-selection: rgb(184 216 206 / 3.5%);
   --color-calendar-weekend: #75edbf;
   --color-progress-start: var(--color-selection-start);
