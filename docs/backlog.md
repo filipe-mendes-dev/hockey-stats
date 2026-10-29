@@ -40,7 +40,7 @@ This file contains deferred work, not instructions to implement it. Current beha
 - Background Sync, server push/WebSockets and separately deployed API infrastructure only when needed.
 - Monotonic/wall-clock reconciliation, drift diagnostics and clock handoff.
 - Physical-device installation/offline checks, a full browser-family pass, independent-user account switching and observer exercises.
-- Shareable read-only match-statistics links. Discuss access, revocation and live-versus-snapshot behavior later. A well-formatted PDF is a possible export format, not yet agreed. Keep sharing/export outside the current recorder branch.
+- Completed-match read-only sharing is authorized in [Completed-match sharing](match-sharing.md). Private JSON debugging export and possible PDF export remain separate deferred work.
 - General export/import, manual and automated backup, recovery tooling and restore exercises.
 - Retire legacy dynamic Player/Team URLs if no longer needed; current fixed query views already support offline delivery.
 - Dependency advisory triage before a release. Keep upgrades separate from this prototype cleanup; do not force unrelated dependency rewrites.

@@ -5,12 +5,7 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { Tooltip } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
-import { deriveTeamLineupTimeline } from "../../../../domain/matches/lineupTimeline";
-import { deriveChronologicalMatchState } from "../../../../domain/matches/derivedMatchState";
-import {
-  getMatchEventsThroughEvent,
-  sortMatchEvents,
-} from "../../../../domain/matches/matchEventOrder";
+import { sortMatchEvents } from "../../../../domain/matches/matchEventOrder";
 import {
   formatCountdown,
   formatMatchTime,
@@ -33,7 +28,6 @@ function position(left: number, width?: number): CSSProperties {
 
 export function PlayerLineupTimeline({
   snapshot,
-  events,
   visibleEvents,
   descriptions,
   period,
@@ -52,25 +46,10 @@ export function PlayerLineupTimeline({
   const [availableWidth, setAvailableWidth] = useState(560);
   const coarse = useMediaQuery("(pointer: coarse)");
   const targetSize = coarse ? 44 : 24;
-  const timelines = useMemo(
-    () => deriveTeamLineupTimeline(snapshot, events),
-    [snapshot, events],
-  );
+  const timelines = snapshot.timelines;
   const onRinkEvents = useMemo(
-    () =>
-      visibleEvents.filter((event) => {
-        if (event.kind !== "card") return true;
-        const preceding = getMatchEventsThroughEvent(events, event).slice(
-          0,
-          -1,
-        );
-        return deriveChronologicalMatchState(
-          snapshot,
-          preceding,
-          event,
-        ).activePlayerIds.has(event.matchPlayerId);
-      }),
-    [snapshot, events, visibleEvents],
+    () => visibleEvents.filter((event) => event.onRink),
+    [visibleEvents],
   );
   const layouts = useMemo(
     () =>

@@ -1,0 +1,12 @@
+.unavailable {
+  width: 100%;
+  max-width: 40rem;
+  margin: 3rem auto;
+  overflow-wrap: anywhere;
+}
+.unavailable h1 {
+  font-size: 1.5rem;
+}
+.unavailable p {
+  color: var(--color-text-muted);
+}

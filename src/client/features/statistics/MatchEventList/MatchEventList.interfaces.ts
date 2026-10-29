@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import type { MatchEventDescription } from "../MatchEventAnalysis/MatchEventAnalysis.interfaces";
 
 export interface MatchEventListProps {
-  events: readonly MatchEvent[];
+  events: readonly StatisticsEvent[];
   descriptions: ReadonlyMap<string, MatchEventDescription>;
   activeEventId: string | undefined;
   selectedEventId: string | undefined;

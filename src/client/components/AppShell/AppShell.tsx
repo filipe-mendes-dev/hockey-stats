@@ -20,6 +20,26 @@ import type { AppShellProps } from "./AppShell.interfaces";
 import st from "./AppShell.module.css";
 
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
+  const t = useTranslations();
+  if (pathname === "/share" || pathname.startsWith("/share/")) {
+    return (
+      <div className={st.shell}>
+        <a className={st.skipLink} href="#main-content">
+          {t("shell.skipToContent")}
+        </a>
+        <AppHeader homeHref="/sign-in" />
+        <main id="main-content" className={st.main} tabIndex={-1}>
+          {children}
+        </main>
+        <AppFooter />
+      </div>
+    );
+  }
+  return <AccountAppShell>{children}</AccountAppShell>;
+}
+
+function AccountAppShell({ children }: AppShellProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const { data: session } = authClient.useSession();

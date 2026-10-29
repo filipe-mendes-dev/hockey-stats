@@ -1,8 +1,6 @@
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
-import type {
-  TeamPlayerStint,
-  TeamPeriodLineupTimeline,
-} from "../../../../domain/matches/lineupTimeline";
+import type { StatisticsTimeline } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
+import type { TeamPlayerStint } from "../../../../domain/matches/lineupTimeline";
 import type {
   TimelineMarkerLayout,
   TimelinePeriodLayout,
@@ -13,8 +11,8 @@ export const timelinePeriodGap = 32;
 export function getStintEvents(
   stint: TeamPlayerStint,
   period: number,
-  events: readonly MatchEvent[],
-): MatchEvent[] {
+  events: readonly StatisticsEvent[],
+): StatisticsEvent[] {
   return events
     .filter(
       (event) =>
@@ -37,9 +35,9 @@ export function getStintEvents(
 }
 
 export function getConfirmedTimelineEvents(
-  period: TeamPeriodLineupTimeline,
-  events: readonly MatchEvent[],
-): MatchEvent[] {
+  period: StatisticsTimeline,
+  events: readonly StatisticsEvent[],
+): StatisticsEvent[] {
   return events.filter(
     (event) =>
       event.period === period.period &&
@@ -53,8 +51,8 @@ export function getConfirmedTimelineEvents(
 }
 
 export function getTimelineWidth(
-  period: TeamPeriodLineupTimeline,
-  events: readonly MatchEvent[],
+  period: StatisticsTimeline,
+  events: readonly StatisticsEvent[],
   targetSize = 24,
 ): number {
   return Math.ceil(
@@ -84,8 +82,8 @@ function timelineTicks(extent: number, scale: number): number[] {
 }
 
 export function layoutTimelinePeriods(
-  periods: readonly TeamPeriodLineupTimeline[],
-  events: readonly MatchEvent[],
+  periods: readonly StatisticsTimeline[],
+  events: readonly StatisticsEvent[],
   availableWidth: number,
   targetSize: number,
 ): TimelinePeriodLayout[] {
@@ -127,7 +125,7 @@ export function layoutTimelinePeriods(
 
 export function layoutStintMarkers(
   stint: TeamPlayerStint,
-  events: readonly MatchEvent[],
+  events: readonly StatisticsEvent[],
   width: number,
   nameWidth: number,
   targetSize = 24,

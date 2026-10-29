@@ -1,9 +1,9 @@
 import type { KeyboardEvent } from "react";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import type { MatchEventDescription } from "../MatchEventAnalysis/MatchEventAnalysis.interfaces";
 
 export interface TimelineEventMarkerProps {
-  event: MatchEvent;
+  event: StatisticsEvent;
   descriptions: ReadonlyMap<string, MatchEventDescription>;
   left: number;
   active: boolean;

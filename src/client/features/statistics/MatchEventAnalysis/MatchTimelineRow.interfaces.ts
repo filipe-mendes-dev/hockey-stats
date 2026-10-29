@@ -1,8 +1,8 @@
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import type { MatchEventDescription } from "./MatchEventAnalysis.interfaces";
 
 export interface MatchTimelineRowProps {
-  event: MatchEvent;
+  event: StatisticsEvent;
   description: MatchEventDescription;
   active: boolean;
   selected: boolean;

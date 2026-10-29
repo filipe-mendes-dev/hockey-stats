@@ -4,6 +4,8 @@ This document describes the current prototype. Executable contracts live in `src
 
 ## Entities and relationships
 
+Completed-match sharing adds one server-only Match permission with a unique random token and creation time. It references existing Match data rather than copying recordings or statistics, does not advance domain revisions and cascades on server Match deletion. The public presentation model is derived and contains no reusable Player/Team identities or delivery/debugging records. See [Completed-match sharing](match-sharing.md).
+
 | Entity            | Current meaning                                                                                                            |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Player            | Reusable identity with name, stable client UUID, revision and creation/update timestamps. Duplicate names are valid.       |
