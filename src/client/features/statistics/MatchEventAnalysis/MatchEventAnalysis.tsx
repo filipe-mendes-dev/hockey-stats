@@ -5,7 +5,7 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { Info, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { sortMatchEvents } from "../../../../domain/matches/matchEventOrder";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import { toViewPosition } from "../../../../domain/matches/rinkPosition";
 import { EventRink } from "../../../components/EventRink/EventRink";
 import { HockeyRinkLabels } from "../../../components/HockeyRink/HockeyRinkLabels";
@@ -24,7 +24,7 @@ import { getEventPresentation } from "../eventPresentation";
 import { PlayerLineupTimeline } from "../PlayerLineupTimeline/PlayerLineupTimeline";
 import { MatchAnalysisFilters } from "../MatchAnalysisFilters/MatchAnalysisFilters";
 
-function involvesPlayer(event: MatchEvent, id: string): boolean {
+function involvesPlayer(event: StatisticsEvent, id: string): boolean {
   if (event.kind === "substitution")
     return (
       event.incomingMatchPlayerId === id || event.outgoingMatchPlayerId === id
@@ -197,7 +197,6 @@ export function MatchEventAnalysis({
         </div>
         <PlayerLineupTimeline
           snapshot={snapshot}
-          events={events}
           visibleEvents={filtered}
           descriptions={descriptions}
           period={period}

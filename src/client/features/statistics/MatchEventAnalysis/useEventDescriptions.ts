@@ -1,10 +1,8 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import { getEventDetail } from "../../../../domain/matches/matchEvent.schema";
-import { deriveChronologicalMatchState } from "../../../../domain/matches/derivedMatchState";
-import { getMatchEventsThroughEvent } from "../../../../domain/matches/matchEventOrder";
 import {
   formatCountdown,
   formatMatchTime,
@@ -12,8 +10,8 @@ import {
 import type { MatchEventDescription } from "./MatchEventAnalysis.interfaces";
 
 export function useEventDescriptions(
-  snapshot: MatchSnapshot,
-  events: readonly MatchEvent[],
+  snapshot: MatchStatisticsView,
+  events: readonly StatisticsEvent[],
 ) {
   const t = useTranslations("statistics");
   const recorder = useTranslations("recorder");
@@ -26,7 +24,7 @@ export function useEventDescriptions(
         : recorder("playerUnavailable");
     }
 
-    function describe(event: MatchEvent): MatchEventDescription {
+    function describe(event: StatisticsEvent): MatchEventDescription {
       const participant =
         event.kind === "substitution"
           ? recorder("substitutionPlayers", {
@@ -79,15 +77,7 @@ export function useEventDescriptions(
               name: playerName(event.replacementMatchPlayerId),
             }),
           );
-        if (
-          event.colour === "blue" &&
-          event.startsPowerplay &&
-          (deriveChronologicalMatchState(
-            snapshot,
-            getMatchEventsThroughEvent(events, event),
-          ).blueCardCounts.get(event.matchPlayerId) ?? 0) >= 3
-        )
-          parts.push(recorder("thirdBlueRed"));
+        if (event.thirdBlueRed) parts.push(recorder("thirdBlueRed"));
       }
       const action = parts.join(" · ");
       const duration = snapshot.match.periods.find(

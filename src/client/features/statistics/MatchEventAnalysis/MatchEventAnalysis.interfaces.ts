@@ -1,5 +1,5 @@
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import type { StatisticsSegment } from "../../../components/StatisticsBreakdown/StatisticsBreakdown.interfaces";
 
 export interface EventBreakdown {
@@ -19,8 +19,8 @@ export type StatisticsCategory =
   | "timeout";
 
 export interface MatchEventAnalysisProps {
-  snapshot: MatchSnapshot;
-  events: readonly MatchEvent[];
+  snapshot: MatchStatisticsView;
+  events: readonly StatisticsEvent[];
   period: number | undefined;
   selectedPlayerId: string | undefined;
   onClearPlayer: () => void;

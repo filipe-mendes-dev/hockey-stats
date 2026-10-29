@@ -1,12 +1,11 @@
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import type { MatchEventDescription } from "../MatchEventAnalysis/MatchEventAnalysis.interfaces";
-import type { TeamPeriodLineupTimeline } from "../../../../domain/matches/lineupTimeline";
+import type { StatisticsTimeline } from "../../../../contracts/match-statistics-view.schema";
 
 export interface PlayerLineupTimelineProps {
-  snapshot: MatchSnapshot;
-  events: readonly MatchEvent[];
-  visibleEvents: readonly MatchEvent[];
+  snapshot: MatchStatisticsView;
+  visibleEvents: readonly StatisticsEvent[];
   descriptions: ReadonlyMap<string, MatchEventDescription>;
   period: number | undefined;
   activeEventId: string | undefined;
@@ -18,8 +17,8 @@ export interface PlayerLineupTimelineProps {
 }
 
 export interface TimelinePeriodLayout {
-  timeline: TeamPeriodLineupTimeline;
-  events: readonly MatchEvent[];
+  timeline: StatisticsTimeline;
+  events: readonly StatisticsEvent[];
   left: number;
   width: number;
   ticks: readonly number[];

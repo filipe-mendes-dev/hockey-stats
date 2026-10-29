@@ -1,11 +1,13 @@
-import type { MatchEvent } from "../../../domain/matches/matchEvent.schema";
+import type { StatisticsEvent } from "../../../contracts/match-statistics-view.schema";
 import type { StatisticsTone } from "../../components/StatisticsBreakdown/StatisticsBreakdown.interfaces";
 
 export interface EventPresentation {
   tone: StatisticsTone;
 }
 
-export function getEventPresentation(event: MatchEvent): EventPresentation {
+export function getEventPresentation(
+  event: StatisticsEvent,
+): EventPresentation {
   const presentation: EventPresentation = {
     tone: "muted",
   };

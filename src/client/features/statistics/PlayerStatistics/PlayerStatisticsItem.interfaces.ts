@@ -1,8 +1,8 @@
-import type { PlayerMatchStatistics } from "../../../../domain/matches/matchStatistics";
+import type { StatisticsPlayerValues } from "../../../../contracts/match-statistics-view.schema";
 import type { PlayerStatisticsColumn } from "./PlayerStatistics.interfaces";
 
 export interface PlayerStatisticsItemProps {
-  row: PlayerMatchStatistics;
+  row: StatisticsPlayerValues;
   expanded: boolean;
   selected: boolean;
   maxima: ReadonlyMap<Exclude<PlayerStatisticsColumn, "player">, number>;

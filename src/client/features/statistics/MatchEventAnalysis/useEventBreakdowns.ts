@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import { getActionStatistics } from "../../../../domain/matches/matchStatistics";
 import type {
   EventBreakdown,
@@ -9,9 +9,9 @@ import type {
 } from "./MatchEventAnalysis.interfaces";
 
 export function useEventBreakdowns(
-  filtered: readonly MatchEvent[],
+  filtered: readonly StatisticsEvent[],
   category: StatisticsCategory,
-  periods: MatchSnapshot["match"]["periods"],
+  periods: MatchStatisticsView["match"]["periods"],
   period: number | undefined,
 ) {
   const t = useTranslations("statistics");

@@ -11,7 +11,7 @@ import {
 import { useReducedMotion } from "@mantine/hooks";
 import { ArrowDown, ArrowUp, ChevronDown } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import type { PlayerMatchStatistics } from "../../../../domain/matches/matchStatistics";
+import type { StatisticsPlayerValues } from "../../../../contracts/match-statistics-view.schema";
 import { formatMatchTime } from "../../../../domain/matches/matchControl";
 import { useLanguage } from "../../../i18n/LanguageProvider";
 import { CardCounts } from "../CardCounts/CardCounts";
@@ -24,12 +24,12 @@ import { MatchPlayerIdentity } from "../MatchPlayerIdentity/MatchPlayerIdentity"
 import { PlayerStatisticsItem } from "./PlayerStatisticsItem";
 import { PlayerStatisticsMetrics } from "./PlayerStatisticsMetrics";
 
-function cardTotal(statistics: PlayerMatchStatistics): number {
+function cardTotal(statistics: StatisticsPlayerValues): number {
   return statistics.cards.yellow + statistics.cards.blue + statistics.cards.red;
 }
 
 function sortValue(
-  statistics: PlayerMatchStatistics,
+  statistics: StatisticsPlayerValues,
   column: Exclude<PlayerStatisticsColumn, "player">,
 ): number | undefined {
   return column === "cards" ? cardTotal(statistics) : statistics[column];
@@ -98,7 +98,7 @@ export function PlayerStatistics({
   }
 
   function metricAttributes(
-    row: PlayerMatchStatistics,
+    row: StatisticsPlayerValues,
     column: Exclude<PlayerStatisticsColumn, "player">,
   ) {
     const value = sortValue(row, column);
@@ -122,7 +122,7 @@ export function PlayerStatistics({
     return (sort.ascending ? a - b : b - a) || names;
   });
 
-  function identity(row: PlayerMatchStatistics) {
+  function identity(row: StatisticsPlayerValues) {
     return (
       <Tooltip
         label={t("selectPlayer", { name: row.player.playerNameAtMatch })}
@@ -141,7 +141,7 @@ export function PlayerStatistics({
     );
   }
 
-  function playingTime(row: PlayerMatchStatistics) {
+  function playingTime(row: StatisticsPlayerValues) {
     return row.playingTimeMs === undefined ? (
       <span className={st.zero} aria-label={t("playingTimeUnavailable")}>
         {t("unavailable")}

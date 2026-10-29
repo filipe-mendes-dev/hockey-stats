@@ -5,10 +5,16 @@ export interface MatchEventTime {
   gameTime?: MatchTime | undefined;
 }
 
-export function sortMatchEvents(
-  events: readonly MatchEvent[],
+interface OrderedMatchEvent extends MatchEventTime {
+  id: string;
+  order: number;
+  deletedAt?: number | undefined;
+}
+
+export function sortMatchEvents<Event extends OrderedMatchEvent>(
+  events: readonly Event[],
   newestFirst = false,
-): MatchEvent[] {
+): Event[] {
   const direction = newestFirst ? -1 : 1;
   return events
     .filter((event) => event.deletedAt === undefined)

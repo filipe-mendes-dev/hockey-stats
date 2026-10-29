@@ -345,6 +345,22 @@ const matchEventRuleInputSchema = z.discriminatedUnion("kind", [
 export type RinkHalf = z.infer<typeof rinkHalfSchema>;
 export type MatchEventRuleInput = z.infer<typeof matchEventRuleInputSchema>;
 export type MatchEvent = z.infer<typeof matchEventSchema>;
+type AnalysisFields<Event> = Event extends MatchEvent
+  ? Omit<
+      Event,
+      | "id"
+      | "matchId"
+      | "period"
+      | "capturedAt"
+      | "gameTime"
+      | "order"
+      | "revision"
+      | "createdAt"
+      | "updatedAt"
+      | "powerplayCardEventId"
+    >
+  : never;
+export type MatchEventAnalysisInput = AnalysisFields<MatchEvent>;
 export type PlayerEventKind = z.infer<typeof playerEventKindSchema>;
 export type CardLineupEffect = z.infer<typeof cardLineupEffectSchema>;
 export type MatchEventKind = z.infer<typeof matchEventKindSchema>;
@@ -383,7 +399,7 @@ export function eventMatchesInput(
     return false;
   }
 }
-export function getEventDetail(event: MatchEvent) {
+export function getEventDetail(event: MatchEventAnalysisInput) {
   switch (event.kind) {
     case "ball-recovery":
       return event.subtype;

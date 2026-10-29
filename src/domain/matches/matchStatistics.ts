@@ -1,4 +1,8 @@
-import type { MatchEvent, AttemptType } from "./matchEvent.schema";
+import type {
+  MatchEvent,
+  AttemptType,
+  MatchEventAnalysisInput,
+} from "./matchEvent.schema";
 import type { MatchPlayer, MatchSnapshot } from "./match.schema";
 import { derivePlayingTime } from "./playingTime";
 
@@ -52,7 +56,7 @@ export interface MatchStatistics {
 }
 
 export function getActionStatistics(
-  events: readonly MatchEvent[],
+  events: readonly MatchEventAnalysisInput[],
 ): ActionStatistics {
   const statistics: ActionStatistics = {
     shots: 0,

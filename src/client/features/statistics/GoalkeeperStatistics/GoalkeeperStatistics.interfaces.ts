@@ -1,7 +1,7 @@
-import type { PlayerMatchStatistics } from "../../../../domain/matches/matchStatistics";
+import type { StatisticsPlayerValues } from "../../../../contracts/match-statistics-view.schema";
 
 export interface GoalkeeperStatisticsProps {
-  statistics: readonly PlayerMatchStatistics[];
+  statistics: readonly StatisticsPlayerValues[];
   unattributedConcededGoals: number;
   periodLabel: string;
   selectedPlayerId: string | undefined;
