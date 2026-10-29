@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Group, Image, Menu, UnstyledButton } from "@mantine/core";
-import { Check, ChevronDown } from "lucide-react";
+import { Image, Menu, UnstyledButton } from "@mantine/core";
+import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLanguage } from "../../i18n/LanguageProvider";
 import st from "./LanguagePicker.module.css";
@@ -23,28 +23,26 @@ export function LanguagePicker() {
     <Menu
       opened={opened}
       onChange={setOpened}
-      width={136}
+      width={160}
       position="bottom-end"
       classNames={{ dropdown: st.dropdown, item: st.item }}
       withinPortal
     >
       <Menu.Target>
         <UnstyledButton
+          type="button"
           className={st.control}
           data-expanded={opened || undefined}
           aria-label={t("pickerLabel", { language: t(selected.label) })}
+          title={t("pickerLabel", { language: t(selected.label) })}
         >
-          <Group gap={6} wrap="nowrap" className={st.selection}>
-            <Image
-              src={selected.image}
-              w={16}
-              h={12}
-              alt=""
-              className={st.flag}
-            />
-            <span className={st.label}>{t(selected.label)}</span>
-          </Group>
-          <ChevronDown size={12} className={st.chevron} aria-hidden="true" />
+          <Image
+            src={selected.image}
+            w={20}
+            h={15}
+            alt=""
+            className={st.flag}
+          />
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>

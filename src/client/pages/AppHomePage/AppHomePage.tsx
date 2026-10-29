@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Title } from "@mantine/core";
 import { Play } from "lucide-react";
 import { AppMenu } from "../../components/AppMenu/AppMenu";
 import { NavigationCard } from "../../components/NavigationCard/NavigationCard";
@@ -34,21 +33,20 @@ export function AppHomePage() {
 
   return (
     <section className={st.page}>
-      <PageHeader
-        eyebrow={t("title")}
-        title={t("welcome")}
-        description={t("description")}
-      />
+      <div className={st.introduction}>
+        <PageHeader
+          eyebrow={t("title")}
+          title={t("welcome")}
+          description={t("description")}
+        />
+      </div>
       <NavigationCard
         featured
         title={t("recordMatch")}
         description={t("recordMatchDescription")}
         href="/app/matches/new"
-        icon={<Play size={29} strokeWidth={1.6} />}
+        icon={<Play size={29} strokeWidth={0} fill="currentColor" />}
       />
-      <Title order={2} className={st.sectionTitle}>
-        {t("quickAccess")}
-      </Title>
       <AppMenu label={t("navigationLabel")} items={items} />
     </section>
   );
