@@ -8,3 +8,4 @@ export * from "./matches_schema.ts";
 export * from "./match_events_schema.ts";
 
 export * from "./entity_deletions_schema.ts";
+export * from "./match_shares_schema.ts";
