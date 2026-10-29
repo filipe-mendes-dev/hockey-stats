@@ -11,6 +11,7 @@ import { useMatchEvents } from "../../../features/matches/queries/matchEvents.qu
 import { useTeam } from "../../../features/teams/queries/teams.queries";
 import { MatchResult } from "../../../features/matches/MatchResult/MatchResult";
 import { CompletedMatchStatistics } from "../../../features/statistics/CompletedMatchStatistics/CompletedMatchStatistics";
+import { MatchSharingDialog } from "../../../features/matches/MatchSharingDialog/MatchSharingDialog";
 import type { CompletedMatchDetailsProps } from "./CompletedMatchDetails.interfaces";
 import st from "./CompletedMatchDetails.module.css";
 
@@ -33,6 +34,7 @@ export function CompletedMatchDetails({
       <div className={st.navigation}>
         <BackLink href="/app/matches" label={t("back")} />
         <div className={st.deliveryActions}>
+          <MatchSharingDialog matchId={snapshot.match.id} />
           <DeleteEntityAction
             target={{
               feature: "matches",

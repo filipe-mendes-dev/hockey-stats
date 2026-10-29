@@ -890,10 +890,33 @@
     "failed": "Could not save the removal on this device. Try again."
   },
   "sharing": {
+    "share": "Share match",
+    "title": "Share match statistics",
+    "close": "Close",
+    "description": "Share this completed match with anyone who has the link.",
+    "accessNotice": "The link includes player names, statistics and recorded event details. Anyone with it can forward it. Stopping sharing prevents future access.",
+    "link": "Sharing link",
+    "create": "Create link",
+    "copy": "Copy link",
+    "stop": "Stop sharing",
     "retry": "Retry",
+    "copied": "Link copied.",
+    "copyFailed": "Select and copy the link above. Your browser could not copy it automatically.",
+    "stopped": "Sharing stopped. Previous links no longer work.",
     "unavailableTitle": "Match unavailable",
     "unavailableDescription": "This link is unavailable or sharing has stopped.",
     "failedTitle": "Statistics temporarily unavailable",
-    "failedDescription": "The statistics could not be loaded. Please try again."
+    "failedDescription": "The statistics could not be loaded. Please try again.",
+    "errors": {
+      "authentication_required": "Sign in again to manage sharing.",
+      "account_mismatch": "Sign in with the account that owns this local data.",
+      "forbidden": "Sharing could not be authorized. Reload and try again.",
+      "invalid_input": "The sharing request was invalid. Reload and try again.",
+      "match_unavailable": "This match is unavailable on the server. Synchronize and try again.",
+      "match_not_completed": "Only completed matches can be shared.",
+      "revision_conflict": "The saved server match differs from this device. Synchronize before sharing.",
+      "sync_required": "Synchronize this match before creating or copying its link. Resolve blocked operations first.",
+      "unavailable": "Sharing is temporarily unavailable. Check your connection and try again."
+    }
   }
 }

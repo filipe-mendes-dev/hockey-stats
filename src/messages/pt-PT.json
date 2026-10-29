@@ -890,10 +890,33 @@
     "failed": "Não foi possível guardar a remoção neste dispositivo. Tente novamente."
   },
   "sharing": {
+    "share": "Partilhar jogo",
+    "title": "Partilhar estatísticas do jogo",
+    "close": "Fechar",
+    "description": "Partilhe este jogo concluído com quem tiver a ligação.",
+    "accessNotice": "A ligação inclui nomes dos jogadores, estatísticas e detalhes dos eventos registados. Quem a receber pode reencaminhá-la. Deixar de partilhar impede novos acessos.",
+    "link": "Ligação de partilha",
+    "create": "Criar ligação",
+    "copy": "Copiar ligação",
+    "stop": "Deixar de partilhar",
     "retry": "Tentar novamente",
+    "copied": "Ligação copiada.",
+    "copyFailed": "Selecione e copie a ligação acima. O navegador não conseguiu copiá-la automaticamente.",
+    "stopped": "Partilha desativada. As ligações anteriores deixaram de funcionar.",
     "unavailableTitle": "Jogo indisponível",
     "unavailableDescription": "Esta ligação está indisponível ou a partilha foi desativada.",
     "failedTitle": "Estatísticas temporariamente indisponíveis",
-    "failedDescription": "Não foi possível carregar as estatísticas. Tente novamente."
+    "failedDescription": "Não foi possível carregar as estatísticas. Tente novamente.",
+    "errors": {
+      "authentication_required": "Inicie sessão novamente para gerir a partilha.",
+      "account_mismatch": "Inicie sessão com a conta proprietária destes dados locais.",
+      "forbidden": "Não foi possível autorizar a partilha. Recarregue e tente novamente.",
+      "invalid_input": "O pedido de partilha é inválido. Recarregue e tente novamente.",
+      "match_unavailable": "Este jogo está indisponível no servidor. Sincronize e tente novamente.",
+      "match_not_completed": "Só é possível partilhar jogos concluídos.",
+      "revision_conflict": "O jogo guardado no servidor difere do deste dispositivo. Sincronize antes de partilhar.",
+      "sync_required": "Sincronize este jogo antes de criar ou copiar a ligação. Resolva primeiro as operações bloqueadas.",
+      "unavailable": "A partilha está temporariamente indisponível. Verifique a ligação à Internet e tente novamente."
+    }
   }
 }
