@@ -1,9 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
 import {
-  recoverySubtypeSchema,
-  lossReasonSchema,
-  shotOutcomeSchema,
   cardColourSchema,
   playerEventKindSchema,
   rinkHalfSchema,
@@ -18,10 +15,19 @@ import {
 } from "../../../../domain/matches/matchRules";
 import { Button } from "@mantine/core";
 import { RecorderActionIcon } from "../RecorderBoard/RecorderActionIcon";
+import {
+  recorderActionOrder,
+  recorderPrimaryActions,
+} from "../RecorderBoard/recorderActionOrder";
 import { EventTimeForm } from "../EventTimeForm/EventTimeForm";
 import {
+  recoveryChoiceOrder,
+  lossChoiceOrder,
+  shotChoiceOrder,
+} from "../eventChoiceOrder";
+import {
   Shield,
-  Swords,
+  ArrowRight,
   Square,
   Trophy,
   Target,
@@ -29,11 +35,12 @@ import {
   ShieldCheck,
   Crosshair,
   Timer,
-  Hand,
-  ArrowLeftRight,
+  ArrowDownToDot,
   CircleDot,
   CircleEllipsis,
-  UserRoundX,
+  Split,
+  RouteOff,
+  CircleOff,
 } from "lucide-react";
 import { EventPlayerChoices } from "./EventPlayerChoices";
 import { getEventDraftSteps } from "./eventDraftSteps";
@@ -49,6 +56,12 @@ export function EventDraftFields({
   const t = useTranslations("recorder");
   const { snapshot, state } = context;
   const { activePlayerIds } = state;
+  const availableActions = getAvailableEventKinds(context, draft.matchPlayerId);
+  const selectableActions = recorderActionOrder.filter(
+    (kind) =>
+      availableActions.includes(kind) &&
+      (draft.entry !== "rink" || supportsRinkPosition(kind)),
+  );
   const step = getEventDraftSteps(draft)[0];
   const cardReplacements = draft.matchPlayerId
     ? getCardReplacementPlayers(context, draft.matchPlayerId)
@@ -61,6 +74,7 @@ export function EventDraftFields({
             <Button
               key={event}
               variant="default"
+              data-choice-tone="muted"
               leftSection={
                 event === "set-piece" ? (
                   <Crosshair size={20} aria-hidden="true" />
@@ -85,6 +99,7 @@ export function EventDraftFields({
             <Button
               key={attemptType}
               variant="default"
+              data-choice-tone="muted"
               leftSection={
                 attemptType === "penalty" ? (
                   <Target size={20} aria-hidden="true" />
@@ -107,6 +122,7 @@ export function EventDraftFields({
             <Button
               key={team}
               variant="default"
+              data-choice-tone={team === "own" ? "mint" : "muted"}
               leftSection={<Timer size={20} aria-hidden="true" />}
               onClick={() => onAction({ type: "selectTimeoutTeam", team })}
             >
@@ -122,6 +138,7 @@ export function EventDraftFields({
               <Button
                 key={difficulty}
                 variant="default"
+                data-choice-tone={difficulty === "simple" ? "mint" : "blue"}
                 leftSection={
                   difficulty === "simple" ? (
                     <ShieldCheck size={20} aria-hidden="true" />
@@ -140,35 +157,38 @@ export function EventDraftFields({
       {step === "chooseAction" && (
         <section>
           <h3>{t("chooseAction")}</h3>
-          <div className={st.choices}>
-            {getAvailableEventKinds(context, draft.matchPlayerId)
-              .filter(
-                (kind) => draft.entry !== "rink" || supportsRinkPosition(kind),
-              )
-              .map((kind) => (
-                <Button
-                  key={kind}
-                  variant="default"
-                  leftSection={<RecorderActionIcon kind={kind} />}
-                  onClick={() =>
-                    onAction({
-                      type: "selectKind",
-                      kind,
-                      selectedPlayerIsActive:
-                        draft.matchPlayerId !== undefined &&
-                        activePlayerIds.has(draft.matchPlayerId),
-                    })
-                  }
-                >
-                  {t(
-                    kind === "substitution" && draft.matchPlayerId
-                      ? activePlayerIds.has(draft.matchPlayerId)
-                        ? "player-out"
-                        : "substitution"
-                      : kind,
-                  )}
-                </Button>
-              ))}
+          <div
+            className={`${st.choices} ${st.actionChoices}`}
+            data-few={selectableActions.length <= 4 || undefined}
+          >
+            {selectableActions.map((kind) => (
+              <Button
+                key={kind}
+                variant="default"
+                data-kind={kind}
+                data-prominent={
+                  recorderPrimaryActions.includes(kind) || undefined
+                }
+                leftSection={<RecorderActionIcon kind={kind} />}
+                onClick={() =>
+                  onAction({
+                    type: "selectKind",
+                    kind,
+                    selectedPlayerIsActive:
+                      draft.matchPlayerId !== undefined &&
+                      activePlayerIds.has(draft.matchPlayerId),
+                  })
+                }
+              >
+                {t(
+                  kind === "substitution" && draft.matchPlayerId
+                    ? activePlayerIds.has(draft.matchPlayerId)
+                      ? "player-out"
+                      : "substitution"
+                    : kind,
+                )}
+              </Button>
+            ))}
           </div>
         </section>
       )}
@@ -200,11 +220,12 @@ export function EventDraftFields({
               <Button
                 key={rinkHalf}
                 variant="default"
+                data-choice-tone="muted"
                 leftSection={
                   rinkHalf === "defensive" ? (
                     <Shield size={18} />
                   ) : (
-                    <Swords size={18} />
+                    <ArrowRight size={18} />
                   )
                 }
                 onClick={() => onAction({ type: "selectHalf", rinkHalf })}
@@ -219,20 +240,16 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseSubtype")}</h3>
           <div className={st.choices}>
-            {[
-              ...recoverySubtypeSchema.options.filter(
-                (subtype) => subtype !== "other",
-              ),
-              "other" as const,
-            ].map((subtype) => (
+            {recoveryChoiceOrder.map((subtype) => (
               <Button
                 key={subtype}
                 variant="default"
+                data-recovery-subtype={subtype}
                 leftSection={
                   subtype === "interception" ? (
-                    <ArrowLeftRight size={20} aria-hidden="true" />
+                    <ArrowDownToDot size={20} aria-hidden="true" />
                   ) : subtype === "duel" ? (
-                    <Swords size={20} aria-hidden="true" />
+                    <ShieldCheck size={20} aria-hidden="true" />
                   ) : subtype === "loose-ball" ? (
                     <CircleDot size={20} aria-hidden="true" />
                   ) : subtype === "intercepted-shot" ? (
@@ -243,7 +260,12 @@ export function EventDraftFields({
                 }
                 onClick={() => onAction({ type: "selectSubtype", subtype })}
               >
-                {t(subtype)}
+                <span className={st.choiceCopy}>
+                  <span>{t(subtype)}</span>
+                  {subtype === "loose-ball" && (
+                    <small>{t("looseBallHint")}</small>
+                  )}
+                </span>
               </Button>
             ))}
           </div>
@@ -253,15 +275,18 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseReason")}</h3>
           <div className={st.choices}>
-            {lossReasonSchema.options.map((reason) => (
+            {lossChoiceOrder.map((reason) => (
               <Button
                 key={reason}
                 variant="default"
+                data-loss-reason={reason}
                 leftSection={
                   reason === "intercepted-pass" ? (
-                    <ArrowLeftRight size={20} aria-hidden="true" />
+                    <Split size={20} aria-hidden="true" />
                   ) : reason === "failed-individual-action" ? (
-                    <UserRoundX size={20} aria-hidden="true" />
+                    <RouteOff size={20} aria-hidden="true" />
+                  ) : reason === "poor-reception" ? (
+                    <CircleOff size={20} aria-hidden="true" />
                   ) : (
                     <CircleEllipsis size={20} aria-hidden="true" />
                   )
@@ -278,7 +303,7 @@ export function EventDraftFields({
         <section>
           <h3>{t("chooseOutcome")}</h3>
           <div className={st.choices}>
-            {shotOutcomeSchema.options.map((outcome) => (
+            {shotChoiceOrder.map((outcome) => (
               <Button
                 key={outcome}
                 variant="default"
@@ -292,7 +317,7 @@ export function EventDraftFields({
                   ) : outcome === "off-target" ? (
                     <MoveUpRight size={20} aria-hidden="true" />
                   ) : (
-                    <Hand size={20} aria-hidden="true" />
+                    <Shield size={20} aria-hidden="true" />
                   )
                 }
                 onClick={() => onAction({ type: "selectOutcome", outcome })}

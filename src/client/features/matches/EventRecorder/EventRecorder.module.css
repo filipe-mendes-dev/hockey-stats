@@ -5,6 +5,9 @@
   max-width: 80rem;
   margin-inline: auto;
 }
+.recorder button {
+  border: 0;
+}
 .board {
   display: contents;
 }
@@ -77,5 +80,11 @@
     flex: 1;
     padding: 0;
     border: 0;
+  }
+}
+@media (min-width: 64rem) and (pointer: fine) {
+  .capture {
+    gap: 0.5rem;
+    padding-block: 1rem 0;
   }
 }

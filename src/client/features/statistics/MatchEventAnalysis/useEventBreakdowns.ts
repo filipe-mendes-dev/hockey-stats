@@ -3,6 +3,10 @@ import { useTranslations } from "next-intl";
 import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
 import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
 import { getActionStatistics } from "../../../../domain/matches/matchStatistics";
+import {
+  recoveryChoiceOrder,
+  lossChoiceOrder,
+} from "../../matches/eventChoiceOrder";
 import type {
   EventBreakdown,
   StatisticsCategory,
@@ -59,15 +63,7 @@ export function useEventBreakdowns(
       if (chartCategory === "ball-recovery")
         return {
           title: t("recoveries"),
-          segments: (
-            [
-              "interception",
-              "duel",
-              "loose-ball",
-              "intercepted-shot",
-              "other",
-            ] as const
-          ).map((subtype, index) => ({
+          segments: recoveryChoiceOrder.map((subtype) => ({
             id: subtype,
             label: recorder(subtype),
             value: filtered.filter(
@@ -75,29 +71,32 @@ export function useEventBreakdowns(
                 event.kind === "ball-recovery" && event.subtype === subtype,
             ).length,
             tone:
-              index === 0
+              subtype === "loose-ball" || subtype === "interception"
                 ? "action"
-                : index === 1
+                : subtype === "duel"
                   ? "blue"
-                  : index === 2
-                    ? "muted"
-                    : index === 3
-                      ? "yellow"
-                      : "neutral",
+                  : subtype === "intercepted-shot"
+                    ? "yellow"
+                    : "neutral",
           })),
         };
       if (chartCategory === "ball-loss")
         return {
           title: t("losses"),
-          segments: (
-            ["intercepted-pass", "failed-individual-action", "other"] as const
-          ).map((reason, index) => ({
+          segments: lossChoiceOrder.map((reason) => ({
             id: reason,
             label: recorder(reason),
             value: filtered.filter(
               (event) => event.kind === "ball-loss" && event.reason === reason,
             ).length,
-            tone: index === 0 ? "red" : index === 1 ? "muted" : "blue",
+            tone:
+              reason === "intercepted-pass"
+                ? "red"
+                : reason === "failed-individual-action"
+                  ? "blue"
+                  : reason === "poor-reception"
+                    ? "yellow"
+                    : "neutral",
           })),
         };
       if (chartCategory === "team-foul" || chartCategory === "substitution")
