@@ -1,4 +1,6 @@
 .header {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0
+    env(safe-area-inset-left);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -121,6 +123,8 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0
+    env(safe-area-inset-left);
   background: var(--color-background);
 }
 .drawerHeader {

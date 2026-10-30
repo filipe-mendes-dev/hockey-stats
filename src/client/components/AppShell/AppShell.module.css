@@ -6,7 +6,11 @@
 }
 
 .main {
-  --app-page-padding-inline: 1rem;
+  --app-page-padding-inline: max(
+    1rem,
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
   flex: 1;
   width: 100%;
   min-width: 0;
