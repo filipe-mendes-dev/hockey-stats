@@ -44,6 +44,7 @@ export const timeoutTeamSchema = z.enum(["own", "opponent"]);
 export const lossReasonSchema = z.enum([
   "intercepted-pass",
   "failed-individual-action",
+  "poor-reception",
   "other",
 ]);
 export const shotOutcomeSchema = z.enum([
@@ -73,6 +74,9 @@ const loss = z.strictObject({
   kind: playerEventKindSchema.extract(["ball-loss"]),
   reason: lossReasonSchema,
   rinkHalf: rinkHalfSchema.optional(),
+});
+const legacyLoss = loss.extend({
+  reason: lossReasonSchema.exclude(["poor-reception"]),
 });
 const shot = z.strictObject({
   ...spatial,
@@ -204,7 +208,7 @@ export const versionThreeMatchEventInputSchema = z.discriminatedUnion("kind", [
     ...identity,
     subtype: recoverySubtypeSchema.exclude(["intercepted-shot"]),
   }),
-  loss.extend(identity),
+  legacyLoss.extend(identity),
   ...commonEventInputs,
   scoreAdjustment.safeExtend(identity),
 ]);
@@ -214,7 +218,7 @@ export const versionFourMatchEventInputSchema = z.discriminatedUnion("kind", [
     rinkHalf: rinkHalfSchema,
     subtype: recoverySubtypeSchema.exclude(["intercepted-shot"]),
   }),
-  loss.extend({ ...identity, rinkHalf: rinkHalfSchema }),
+  legacyLoss.extend({ ...identity, rinkHalf: rinkHalfSchema }),
   ...commonEventInputs,
   scoreAdjustment.safeExtend({ ...identity, ownDelta: z.literal(0) }),
 ]);
@@ -260,6 +264,9 @@ export const versionSixMatchEventInputSchema = z
     ...expandedEventInputs,
     goalkeeperSave.extend(identity),
   ])
+  .refine(
+    (event) => event.kind !== "ball-loss" || event.reason !== "poor-reception",
+  )
   .refine(
     (event) =>
       event.kind !== "card" ||

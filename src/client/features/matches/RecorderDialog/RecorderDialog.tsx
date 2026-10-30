@@ -10,6 +10,9 @@ import st from "./RecorderDialog.module.css";
 export function RecorderDialog({
   title,
   pending = false,
+  wide = false,
+  topAligned = false,
+  metadata,
   onClose,
   children,
   footer,
@@ -36,13 +39,19 @@ export function RecorderDialog({
     <Modal
       ref={content}
       opened
-      title={title}
+      title={
+        <span className={st.titleContent}>
+          <span className={st.titleText}>{title}</span>
+          {metadata}
+        </span>
+      }
       onClose={() => {
         if (!pending) onClose();
       }}
       fullScreen={phone}
-      centered={!phone}
-      size="md"
+      centered={!phone && !topAligned}
+      yOffset={topAligned ? "2rem" : undefined}
+      size={wide ? "52rem" : "md"}
       closeOnClickOutside={false}
       closeOnEscape={!pending}
       closeButtonProps={{

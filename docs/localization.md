@@ -38,7 +38,7 @@ Verification status and remaining physical-device/browser checks are in the [Dev
 
 Match duration presets, custom minute input, two-half summaries, starter role counters and setup recovery messages are translated in both catalogs. Category strings remain canonical; U-13 is added without rewriting existing category values.
 
-Recorder timestamps use the shared countdown formatter with event-specific half duration; localized labels do not change stored elapsed milliseconds. Counter increase/decrease labels, half choices, missing-location feedback and opponent-only score guidance are translated. RecorderContext truncates long identity/action text while retaining the accented timestamp on one line.
+Recorder timestamps use the shared countdown formatter with event-specific half duration; localized labels do not change stored elapsed milliseconds. Counter increase/decrease labels, half choices, missing-location feedback and opponent-only score guidance are translated. RecorderContext truncates long identity/action text and reuses the translated action name before player selection. Poor reception uses its concise translated label without helper text. Event-entry dialogs place the captured timestamp once in their header through shared RecorderTime formatting; other callers retain the timestamp beside their context. Entry-header metadata may wrap for enlarged text or unavailable-time labels without squeezing out the dialog title.
 
 Powerplay indicators, active/queued status, remaining-time correction and retry feedback are translated in both catalogs. Indicator accessibility labels include the outstanding count and total remaining time across all penalties. Automatic Player in uses the existing translated picker.
 

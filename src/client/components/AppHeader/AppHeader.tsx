@@ -48,7 +48,7 @@ export function AppHeader({
         )}
         <div className={st.actions}>
           <div className={st.language}>
-            <LanguagePicker />
+            <LanguagePicker compact={!compact} />
           </div>
           {accountAction && (
             <Button
@@ -56,7 +56,9 @@ export function AppHeader({
               classNames={{ label: st.accountLabel }}
               variant="subtle"
               size="sm"
-              leftSection={<LogOut size={16} aria-hidden="true" />}
+              leftSection={
+                <LogOut className={st.accountIcon} aria-hidden="true" />
+              }
               onClick={accountAction.onClick}
               disabled={accountAction.pending}
             >
@@ -107,7 +109,9 @@ export function AppHeader({
                 classNames={{ label: st.accountLabel }}
                 variant="subtle"
                 size="sm"
-                leftSection={<LogOut size={18} aria-hidden="true" />}
+                leftSection={
+                  <LogOut className={st.accountIcon} aria-hidden="true" />
+                }
                 disabled={accountAction.pending}
                 onClick={() => {
                   signOutAfterClose.current = true;

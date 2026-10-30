@@ -3,18 +3,14 @@ import { Button } from "@mantine/core";
 import { Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getAvailableEventKinds } from "../../../../domain/matches/matchRules";
-import type { PlayerEventKind } from "../../../../domain/matches/matchEvent.schema";
 import { RecorderActionIcon } from "./RecorderActionIcon";
+import {
+  recorderPrimaryActions,
+  recorderSecondaryActions,
+} from "./recorderActionOrder";
 import type { RecorderActionsProps } from "./RecorderBoard.interfaces";
 import st from "./RecorderActions.module.css";
-const primaryKinds: PlayerEventKind[] = [
-  "ball-recovery",
-  "ball-loss",
-  "shot",
-  "team-foul",
-  "card",
-  "substitution",
-];
+const boardActions = [...recorderPrimaryActions, ...recorderSecondaryActions];
 export function RecorderActions({
   context,
   disabled,
@@ -28,13 +24,15 @@ export function RecorderActions({
   return (
     <section aria-label={t("actions")} className={st.section}>
       <div className={st.grid}>
-        {primaryKinds.map((kind) => (
+        {boardActions.map((kind) => (
           <button
             key={kind}
             type="button"
             disabled={disabled || !available.includes(kind)}
             onClick={() => onPick({ kind })}
             className={st.action}
+            data-kind={kind}
+            data-prominent={recorderPrimaryActions.includes(kind) || undefined}
           >
             <RecorderActionIcon kind={kind} />
             <span>{t(kind)}</span>

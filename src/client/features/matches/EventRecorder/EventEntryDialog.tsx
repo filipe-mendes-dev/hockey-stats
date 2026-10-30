@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { MatchRuleError } from "../../../../domain/matches/matchRules";
 import { ScoreCorrectionForm } from "../ScoreCorrectionForm/ScoreCorrectionForm";
 import { RecorderContext } from "../RecorderContext/RecorderContext";
+import { RecorderTime } from "../RecorderContext/RecorderTime";
 import { MatchEventUnavailableError } from "../matchEvents.service";
 import { RecorderDialog } from "../RecorderDialog/RecorderDialog";
 import { EventDraftFields } from "./EventDraftFields";
@@ -54,12 +55,14 @@ export function EventEntryDialog({
     !draft.selectingSetPiece &&
     draft.entry !== "game" &&
     (!draft.kind || supportsRinkPosition(draft.kind));
+  const [initialWide] = useState(showRink);
   const outgoing = context.snapshot.players.find(
     (entry) => entry.id === draft.outgoingMatchPlayerId,
   );
   const incoming = context.snapshot.players.find(
     (entry) => entry.id === draft.incomingMatchPlayerId,
   );
+  const hasParticipant = Boolean(player || outgoing);
   const rinkHalf =
     draft.kind === "ball-recovery" || draft.kind === "ball-loss"
       ? getEventDraftHalf(draft)
@@ -74,6 +77,15 @@ export function EventEntryDialog({
     .join(" · ");
   return (
     <RecorderDialog
+      wide={initialWide}
+      topAligned
+      metadata={
+        <RecorderTime
+          match={context.snapshot.match}
+          period={draft.period}
+          elapsedMs={draft.gameTime?.elapsedMs}
+        />
+      }
       title={
         specialAttempt && draft.attemptType
           ? t(draft.attemptType)
@@ -111,107 +123,118 @@ export function EventEntryDialog({
         </>
       }
     >
-      <div className={st.content}>
-        <RecorderContext
-          match={context.snapshot.match}
-          period={draft.period}
-          elapsedMs={draft.gameTime?.elapsedMs}
-          primary={
-            player?.playerNameAtMatch ??
-            (outgoing
-              ? [outgoing.playerNameAtMatch, incoming?.playerNameAtMatch]
-                  .filter(Boolean)
-                  .join(" → ")
-              : specialAttempt && draft.attemptType
-                ? t(draft.attemptType)
-                : draft.entry === "game" && !draft.kind
-                  ? t("gameEvent")
+      <div className={st.content} data-split={initialWide}>
+        {(initialWide || hasParticipant) && (
+          <div className={st.context}>
+            <RecorderContext
+              match={context.snapshot.match}
+              period={draft.period}
+              elapsedMs={draft.gameTime?.elapsedMs}
+              primary={
+                player?.playerNameAtMatch ??
+                (hasParticipant
+                  ? [outgoing?.playerNameAtMatch, incoming?.playerNameAtMatch]
+                      .filter(Boolean)
+                      .join(" → ")
                   : draft.kind
                     ? t(draft.kind)
                     : t("newEvent"))
-          }
-          secondary={player || outgoing ? selectionDetails : undefined}
-          kind={draft.kind}
-        />
+              }
+              secondary={player || outgoing ? selectionDetails : undefined}
+              kind={draft.kind}
+              showTime={false}
+            />
+          </div>
+        )}
         {showRink && (
-          <RecorderRinkPicker
-            period={draft.period}
-            direction={rink.direction}
-            position={draft.position}
-            disabled={phase !== "collecting"}
-            controlsDisabled={locked || phase === "failed"}
-            onStart={rink.onStart}
-            onSelect={rink.onSelect}
-            onCancelGesture={rink.onCancelGesture}
-            onChangeDirection={rink.onChangeDirection}
-            onClear={
-              draft.position
-                ? () => onAction({ type: "clearPosition" })
-                : undefined
-            }
-          />
+          <div className={st.rink}>
+            <RecorderRinkPicker
+              period={draft.period}
+              direction={rink.direction}
+              position={draft.position}
+              disabled={phase !== "collecting"}
+              controlsDisabled={locked || phase === "failed"}
+              onStart={rink.onStart}
+              onSelect={rink.onSelect}
+              onCancelGesture={rink.onCancelGesture}
+              onChangeDirection={rink.onChangeDirection}
+              onClear={
+                draft.position
+                  ? () => onAction({ type: "clearPosition" })
+                  : undefined
+              }
+            />
+          </div>
         )}
-        {phase === "collecting" && !scoreCorrection && (
-          <>
-            <h2 ref={heading} className={st.heading} tabIndex={-1}>
-              {step === "eventTimeRequired" &&
-              context.snapshot.match.periods.find(
-                (period) => period.number === draft.period,
-              )?.durationMs === undefined
-                ? t("elapsedTime")
-                : step
-                  ? t(step)
-                  : t("saving")}
-            </h2>
-            <div inert={rink.gestureActive}>
-              <EventDraftFields
-                draft={draft}
-                context={context}
-                durationMs={
-                  context.snapshot.match.periods.find(
-                    (period) => period.number === draft.period,
-                  )?.durationMs
+        <div className={st.workflow}>
+          {phase === "collecting" && !scoreCorrection && (
+            <>
+              <h2
+                ref={heading}
+                className={
+                  step === "chooseGameEvent" ? st.hiddenHeading : st.heading
                 }
-                onAction={onAction}
-              />
-            </div>
-          </>
-        )}
-        {phase === "collecting" && scoreCorrection && (
-          <ScoreCorrectionForm
-            formId={scoreFormId}
-            ownName={context.snapshot.match.teamNameAtMatch}
-            opponentName={context.snapshot.match.opponentName}
-            ownScore={context.state.ownScore}
-            opponentScore={context.state.opponentScore}
-            value={opponentScore}
-            onChange={setOpponentScore}
-            onApply={() => {
-              if (validScore)
-                onAction({
-                  type: "setScoreAdjustment",
-                  ownDelta: 0,
-                  opponentDelta:
-                    Number(opponentScore) - context.state.opponentScore,
-                });
-            }}
-          />
-        )}
-        {phase === "saving" && <p role="status">{t("saving")}</p>}
-        {phase === "failed" && (
-          <>
-            <Alert color="red" role="alert">
-              {t(
-                error instanceof MatchRuleError
-                  ? `rules.${error.reason}`
-                  : error instanceof MatchEventUnavailableError
-                    ? "changed"
-                    : "saveFailed",
-              )}
-            </Alert>
-            <Button onClick={onRetry}>{t("retry")}</Button>
-          </>
-        )}
+                tabIndex={-1}
+              >
+                {step === "eventTimeRequired" &&
+                context.snapshot.match.periods.find(
+                  (period) => period.number === draft.period,
+                )?.durationMs === undefined
+                  ? t("elapsedTime")
+                  : step
+                    ? t(step)
+                    : t("saving")}
+              </h2>
+              <div inert={rink.gestureActive}>
+                <EventDraftFields
+                  draft={draft}
+                  context={context}
+                  durationMs={
+                    context.snapshot.match.periods.find(
+                      (period) => period.number === draft.period,
+                    )?.durationMs
+                  }
+                  onAction={onAction}
+                />
+              </div>
+            </>
+          )}
+          {phase === "collecting" && scoreCorrection && (
+            <ScoreCorrectionForm
+              formId={scoreFormId}
+              ownName={context.snapshot.match.teamNameAtMatch}
+              opponentName={context.snapshot.match.opponentName}
+              ownScore={context.state.ownScore}
+              opponentScore={context.state.opponentScore}
+              value={opponentScore}
+              onChange={setOpponentScore}
+              onApply={() => {
+                if (validScore)
+                  onAction({
+                    type: "setScoreAdjustment",
+                    ownDelta: 0,
+                    opponentDelta:
+                      Number(opponentScore) - context.state.opponentScore,
+                  });
+              }}
+            />
+          )}
+          {phase === "saving" && <p role="status">{t("saving")}</p>}
+          {phase === "failed" && (
+            <>
+              <Alert color="red" role="alert">
+                {t(
+                  error instanceof MatchRuleError
+                    ? `rules.${error.reason}`
+                    : error instanceof MatchEventUnavailableError
+                      ? "changed"
+                      : "saveFailed",
+                )}
+              </Alert>
+              <Button onClick={onRetry}>{t("retry")}</Button>
+            </>
+          )}
+        </div>
       </div>
     </RecorderDialog>
   );

@@ -28,7 +28,8 @@
   --app-header-control-height: 2.75rem;
   --app-header-padding-block: 0.5rem;
   --app-header-height: calc(
-    var(--app-header-control-height) + 2 * var(--app-header-padding-block) + 1px
+    var(--app-header-control-height) + 2 * var(--app-header-padding-block) +
+      1px + env(safe-area-inset-top)
   );
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;

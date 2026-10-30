@@ -1,3 +1,10 @@
+.root {
+  --modal-x-offset: max(
+    5vw,
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
+}
 .root .content {
   display: flex;
   flex-direction: column;
@@ -14,9 +21,28 @@
   border-bottom: 1px solid var(--color-border-subtle);
 }
 .root .title {
+  flex: 1;
+  min-width: 0;
+  margin-inline-end: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.4;
+}
+.titleContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.125rem 0.75rem;
+}
+.titleContent > :not(.titleText) {
+  max-width: 100%;
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.titleText {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 .root .close {
   min-width: 2.75rem;
@@ -38,15 +64,24 @@
   padding: 1.25rem;
   overflow-y: auto;
   min-height: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+.root .content button {
+  border: 0;
 }
 .footer {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  min-height: 3rem;
+  padding: 0.125rem 1.25rem;
   border-top: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
+}
+.footer button {
+  min-height: 2.75rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 @supports (backdrop-filter: blur(1px)) {
   .root .content {
@@ -58,18 +93,14 @@
   .root .content {
     height: var(--recorder-dialog-height, 100dvh);
     max-height: var(--recorder-dialog-height, 100dvh);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
     border: 0;
     border-radius: 0;
     background: var(--color-background);
     backdrop-filter: none;
   }
-  .root .header {
-    padding-top: max(0.25rem, env(safe-area-inset-top));
-  }
   .scroll {
     flex: 1;
-  }
-  .footer {
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 }

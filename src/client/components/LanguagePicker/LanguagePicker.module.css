@@ -42,3 +42,24 @@
   padding-inline: 0.5rem;
   font-size: 0.75rem;
 }
+.control[data-compact] {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  background: transparent;
+}
+.control[data-compact]::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0.375rem;
+  border-radius: var(--radius-control);
+  content: "";
+}
+.control[data-compact][data-expanded]::before {
+  background: var(--color-surface-hover);
+}
+@media (hover: hover) {
+  .control[data-compact]:hover::before {
+    background: var(--color-surface-hover);
+  }
+}
