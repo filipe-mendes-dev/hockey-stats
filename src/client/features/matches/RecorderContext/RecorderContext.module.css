@@ -36,23 +36,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.time {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-  font-size: 0.6875rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.time strong {
-  color: var(--color-action);
-  font-weight: 600;
-}
-.time svg {
-  flex-shrink: 0;
-}
 @media (max-width: 36rem) {
   .context {
     gap: 0.5rem;

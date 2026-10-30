@@ -14,6 +14,9 @@ export function EventPlayerChoices({
   const t = useTranslations("recorder");
   const roles = useTranslations("teamPlayers");
   const id = useId();
+  const hasBenchPlayers = players.some(
+    (player) => !activePlayerIds.has(player.id),
+  );
   return (
     <div className={st.groups}>
       {(["onField", "bench"] as const).map((group) => {
@@ -27,10 +30,20 @@ export function EventPlayerChoices({
             className={st.group}
             aria-labelledby={`${id}-${group}`}
           >
-            <h3 id={`${id}-${group}`} className={st.heading}>
+            <h3
+              id={`${id}-${group}`}
+              className={
+                group === "onField" && !hasBenchPlayers
+                  ? st.hiddenHeading
+                  : st.heading
+              }
+            >
               {t(group)}
             </h3>
-            <ul className={st.players}>
+            <ul
+              className={st.players}
+              data-few={options.length <= 4 || undefined}
+            >
               {[
                 ...options.filter((player) => player.role !== "goalkeeper"),
                 ...options.filter((player) => player.role === "goalkeeper"),

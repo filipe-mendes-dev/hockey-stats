@@ -7,4 +7,5 @@ export interface RecorderContextProps {
   primary: string;
   secondary?: string | undefined;
   kind?: MatchEventKind | undefined;
+  showTime?: boolean;
 }
