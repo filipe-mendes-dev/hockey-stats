@@ -66,9 +66,42 @@
 .desktopAccountAction {
   flex-shrink: 0;
 }
+.header .desktopAccountAction {
+  position: relative;
+  isolation: isolate;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  background: transparent;
+}
+.header .desktopAccountAction::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0.375rem 0;
+  border-radius: var(--radius-control);
+  content: "";
+}
+.desktopAccountAction :global(.mantine-Button-section) {
+  margin-inline-end: 0.375rem;
+}
+@media (hover: hover) {
+  .header .desktopAccountAction:not(:disabled):hover {
+    background: transparent;
+  }
+  .header .desktopAccountAction:not(:disabled):hover::after {
+    background: var(--color-surface-hover);
+  }
+}
 
 .accountLabel {
   white-space: nowrap;
+}
+.accountIcon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
 }
 
 .burger {

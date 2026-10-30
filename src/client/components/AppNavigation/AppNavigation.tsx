@@ -38,7 +38,7 @@ export function AppNavigation({
             aria-current={active ? "page" : undefined}
             onClick={() => onNavigate?.()}
           >
-            <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+            <Icon className={st.icon} strokeWidth={1.7} aria-hidden="true" />
             <span>{t(id)}</span>
           </Link>
         );

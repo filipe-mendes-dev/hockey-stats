@@ -5,6 +5,7 @@ import { Image, Menu, UnstyledButton } from "@mantine/core";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLanguage } from "../../i18n/LanguageProvider";
+import type { LanguagePickerProps } from "./LanguagePicker.interfaces";
 import st from "./LanguagePicker.module.css";
 
 const languages = [
@@ -12,7 +13,7 @@ const languages = [
   { locale: "pt-PT", label: "portugueseNative", image: "/flags/pt.svg" },
 ] as const;
 
-export function LanguagePicker() {
+export function LanguagePicker({ compact = false }: LanguagePickerProps) {
   const t = useTranslations("language");
   const { locale, select } = useLanguage();
   const [opened, setOpened] = useState(false);
@@ -33,13 +34,14 @@ export function LanguagePicker() {
           type="button"
           className={st.control}
           data-expanded={opened || undefined}
+          data-compact={compact || undefined}
           aria-label={t("pickerLabel", { language: t(selected.label) })}
           title={t("pickerLabel", { language: t(selected.label) })}
         >
           <Image
             src={selected.image}
-            w={20}
-            h={15}
+            w={compact ? 14 : 20}
+            h={compact ? 10.5 : 15}
             alt=""
             className={st.flag}
           />
