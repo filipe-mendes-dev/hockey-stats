@@ -127,20 +127,20 @@ function ApplicationStatus({ worker }: ApplicationStatusProps) {
       >
         <div className={st.details}>
           {sync.accountName && (
-            <div>
+            <div className={st.detailSection}>
               <Title order={3} className={st.sectionTitle}>
                 {t("sync")}
               </Title>
               <SyncStatusPanel details />
             </div>
           )}
-          <div>
+          <div className={st.detailSection}>
             <Title order={3} className={st.sectionTitle}>
               {t("storage")}
             </Title>
             <LocalStorageStatus filesCached={filesCached} storage={storage} />
           </div>
-          <div>
+          <div className={st.detailSection}>
             <Title order={3} className={st.sectionTitle}>
               {t("installation")}
             </Title>

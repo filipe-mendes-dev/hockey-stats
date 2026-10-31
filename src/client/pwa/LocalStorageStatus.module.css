@@ -1,0 +1,18 @@
+.status {
+  display: grid;
+  gap: 0.625rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.status p {
+  margin: 0;
+}
+.status > button {
+  justify-self: start;
+}
+.notice {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}

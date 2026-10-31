@@ -66,7 +66,7 @@ Apply acknowledgement data and remove only its outbox operation in one IndexedDB
 
 Downloads merge complete records without inferring deletion from absence. Explicit deletion markers remove records independently of collection absence. Pending and blocked entities are protected. A pending Match protects its entire snapshot/event history. Replace accepted Match snapshot and events together only when its revision is not older and no local Match commands remain. The local Undo journal stays local.
 
-The shared footer shows compact sync state and pending/blocked counts. Full account, retry, storage and installation explanations remain available through Details. These display components subscribe to existing state; the single SyncLifecycle still owns startup, invalidation and teardown beneath initialized account setup.
+The shared footer shows compact sync state and pending/blocked counts. Its Sync and offline access dialog leads with the sync result and account, followed by data storage on this device and app files for offline access. Retention and blocked-change loss warnings stay visible beside the existing retry actions. These display components subscribe to existing state; the single SyncLifecycle still owns startup, invalidation and teardown beneath initialized account setup.
 
 The shared localDataEvents module sends a DOM notification to this tab and BroadcastChannel invalidation to other tabs. SyncLifecycle refreshes entity/outbox queries. Notifications do not replace transaction checks and contain no records or credentials.
 

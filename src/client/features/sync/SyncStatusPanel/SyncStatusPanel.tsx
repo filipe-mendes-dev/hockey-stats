@@ -38,10 +38,12 @@ export function SyncStatusPanel({
   if (details) {
     return (
       <section className={st.details} aria-label={t("title")}>
+        <p className={st.result} role="status">
+          {t(message)}
+        </p>
         <p className={st.account}>
           {t("account", { name: status.accountName })}
         </p>
-        <p role="status">{t(message)}</p>
         {status.pending > 0 && <p>{t("pending", { count: status.pending })}</p>}
         {status.blocked > 0 && (
           <p className={st.issue}>
