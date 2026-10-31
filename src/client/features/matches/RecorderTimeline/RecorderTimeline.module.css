@@ -90,6 +90,14 @@
   max-width: calc(100vw - 2rem);
   overflow-wrap: anywhere;
 }
+.tooltipContent {
+  display: grid;
+  gap: 0.25rem;
+}
+.tooltipTime {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
 .empty {
   color: var(--color-text-muted);
   font-size: 0.8125rem;

@@ -128,6 +128,7 @@ export function NewUserPage() {
         />
         <TextInput
           label={t("username")}
+          description={t("usernameHint")}
           name="username"
           required
           minLength={3}

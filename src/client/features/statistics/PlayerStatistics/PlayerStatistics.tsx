@@ -14,6 +14,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { StatisticsPlayerValues } from "../../../../contracts/match-statistics-view.schema";
 import { formatMatchTime } from "../../../../domain/matches/matchControl";
 import { useLanguage } from "../../../i18n/LanguageProvider";
+import { HelpPopover } from "../../../components/HelpPopover/HelpPopover";
 import { CardCounts } from "../CardCounts/CardCounts";
 import type {
   PlayerStatisticsColumn,
@@ -361,8 +362,11 @@ export function PlayerStatistics({
         </div>
       </div>
       <div className={st.notes}>
-        <p>{t("shotNote")}</p>
-        <p>{t("playingTimeNote")}</p>
+        <p>{t("recordingNote")}</p>
+        <HelpPopover label={t("calculationHelp")}>
+          <span className={st.helpParagraph}>{t("shotNote")}</span>
+          <span className={st.helpParagraph}>{t("playingTimeNote")}</span>
+        </HelpPopover>
       </div>
     </section>
   );

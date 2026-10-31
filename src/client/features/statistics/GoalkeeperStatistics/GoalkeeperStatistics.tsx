@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { useFormatter, useTranslations } from "next-intl";
+import { HelpPopover } from "../../../components/HelpPopover/HelpPopover";
 import { formatMatchTime } from "../../../../domain/matches/matchControl";
 import { CardCounts } from "../CardCounts/CardCounts";
 import type { GoalkeeperStatisticsProps } from "./GoalkeeperStatistics.interfaces";
@@ -84,7 +85,12 @@ export function GoalkeeperStatistics({
           </article>
         ))}
       </div>
-      <p>{t("goalkeeperRecordingNote")}</p>
+      <div className={st.notes}>
+        <p>{t("goalkeeperRecordingNote")}</p>
+        <HelpPopover label={t("goalkeeperHistoryHelp")}>
+          {t("goalkeeperHistoryNote")}
+        </HelpPopover>
+      </div>
       {unattributedConcededGoals > 0 && (
         <p>
           {t("unattributedGoals", {

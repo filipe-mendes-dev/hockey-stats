@@ -23,6 +23,19 @@ Both catalogs are bundled with the offline asset graph. Switching language requi
 
 ## Message and formatting rules
 
+### Voice and wording
+
+- Write short, direct sentences in both languages. Give one instruction at a time and remove descriptions that only repeat a heading or action.
+- Address the user as **tu** in European Portuguese. Use forms such as Escolhe, Seleciona, Introduz and Tenta novamente. Do not use você, formal imperatives or formal possessives such as o seu when addressing the user. Possessives referring to a player or another person remain valid.
+- Keep Portuguese action labels in the infinitive, such as Guardar, Criar jogo and Terminar sessão. Use teu/tua only when ownership needs to be explicit.
+- Write each language naturally around the same meaning rather than translating English sentence structure word for word. Keep the tone friendly and practical, without slang or promotional filler.
+- Describe what the user can do. Keep implementation terms out of routine guidance. Errors explain what happened and the next action; mention retained input or data when relevant.
+- Use short tooltips to identify icon actions. Use the shared click-to-open HelpPopover for longer explanations. Keep field requirements beside their inputs and action consequences visible in confirmation dialogs.
+- Preserve limits, data-loss warnings, sharing access, offline requirements and the distinction between recorded data and actual match activity.
+- Use consistent visible terms. In Portuguese, use ação for a recorded event, cronómetro for the match clock and sentido de ataque for attack direction. Use parte for the two standard halves and período for generic or historical periods. Canonical event keys and values stay unchanged.
+
+### Catalogs and formatting
+
 The `sharing` namespace covers the owner sharing dialog, access notice, create/copy/revoke feedback, synchronization/session errors and public unavailable/temporary-failure pages in both catalogs. Shared pages retain deterministic English SSR and browser locale restoration. The unauthenticated header retains language selection at narrow widths. No locale or translation data is stored in a sharing permission.
 
 - Translate labels, validation, errors, empty states and accessibility text in both catalogs.
@@ -54,6 +67,8 @@ The flag-only language trigger retains its translated accessible name; language 
 
 The footer namespace supplies copyright, Beta, version and Contact in both catalogs. The copyright year uses ungrouped numeric formatting; the version comes from package metadata and the contact address remains canonical.
 
-Sign-in uses auth.welcome, brandEyebrow, brandHeadline and brandDescription in both catalogs. auth.connectionHelp labels the hover/focus/touch information trigger; auth.offlineHint remains its existing guidance. auth.usernamePlaceholder and auth.passwordPlaceholder supplement visible labels. Sign-in reuses footer version/contact messages. Language switching preserves entered credentials.
+Sign-in uses auth.welcome, brandEyebrow, brandHeadline and brandDescription in both catalogs. auth.connectionHelp labels the click-to-open HelpPopover; auth.offlineHint explains initial online setup and later offline recording. auth.usernamePlaceholder and auth.passwordPlaceholder repeat the concise field names without possessives. Sign-in reuses footer version/contact messages. Language switching preserves entered credentials. Sign-out copy states that this device's app data is removed, synced data stays in the account and unsynced changes are permanently lost. Existing pending-change checks and confirmation behavior remain unchanged.
+
+Admin username requirements appear beside the input and specify A–Z letters without accents, matching validation. Admin dialogs use one action heading; account descriptions and password-change and account-access consequences remain visible. Statistics keep the recorded-data limitation visible, with calculation and historical-record details in labeled HelpPopovers. The map tooltip explains that the recorded team's attack is always shown to the right without assuming the viewer owns the team. Live timeline tooltips separate participant, action details and period/time into readable lines while preserving the complete accessible description.
 
 The unused appHome.quickAccess message is removed from both catalogs with its redundant heading. Navigation labels, destinations and domain values remain unchanged.

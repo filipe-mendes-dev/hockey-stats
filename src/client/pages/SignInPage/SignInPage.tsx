@@ -5,15 +5,13 @@ import type { SubmitEvent } from "react";
 import Link from "next/link";
 import {
   Alert,
-  ActionIcon,
   Button,
   PasswordInput,
   Text,
   TextInput,
   Title,
-  Tooltip,
 } from "@mantine/core";
-import { AlertCircle, ArrowRight, Info, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import {
@@ -21,6 +19,7 @@ import {
   applicationVersion,
 } from "../../components/AppFooter/appMetadata";
 import { LanguagePicker } from "../../components/LanguagePicker/LanguagePicker";
+import { HelpPopover } from "../../components/HelpPopover/HelpPopover";
 import { authClient } from "../../features/auth/auth-client";
 import st from "./SignInPage.module.css";
 
@@ -84,20 +83,9 @@ export function SignInPage() {
               <Title order={1} id="login-title" className={st.title}>
                 {t("welcome")}
               </Title>
-              <Tooltip
-                label={t("offlineHint")}
-                position="bottom-end"
-                events={{ hover: true, focus: true, touch: true }}
-                multiline
-              >
-                <ActionIcon
-                  type="button"
-                  variant="subtle"
-                  aria-label={t("connectionHelp")}
-                >
-                  <Info size={17} strokeWidth={1.7} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
+              <HelpPopover label={t("connectionHelp")}>
+                {t("offlineHint")}
+              </HelpPopover>
             </div>
             <Text className={st.description}>{t("signInDescription")}</Text>
           </header>
