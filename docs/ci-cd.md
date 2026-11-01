@@ -10,14 +10,17 @@ Increment 3A adds PR validation and GHCR publishing before the first VPS deploym
 4. Use **Create a merge commit** for the release PR. Keep `staging` for subsequent work.
 5. The push to `master` publishes its commit-specific image. Publishing does not deploy it.
 
-CI filters on the PR's target branch. Source branch names and merge-method selection are repository policy; the workflow does not enforce them. After a release, incorporate the new `master` merge commit into `staging` through the normal review process when needed to keep the next promotion current. Do not squash or rebase the long-lived staging-to-master promotion.
+CI filters on the PR's target branch. A separate PR target guard rejects PRs into `master` unless their source is `staging` in this repository. Making its check required in branch protection enforces that restriction. Development PRs into `staging` remain unaffected. Merge-method selection remains repository policy. After a release, incorporate the new `master` merge commit into `staging` through the normal review process when needed to keep the next promotion current. Do not squash or rebase the long-lived staging-to-master promotion.
 
 ## Workflows
 
-| Workflow                              | Trigger                                                      | Work                                                                 |
-| ------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `.github/workflows/ci.yml`            | PR opened, reopened or updated against `staging` or `master` | Validate GitHub's PR merge result on a GitHub-hosted Ubuntu runner.  |
-| `.github/workflows/publish-image.yml` | Push to `master`, including a merged release PR              | Build the existing Dockerfile for `linux/amd64` and publish to GHCR. |
+| Workflow                              | Trigger                                                               | Work                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`            | PR opened, reopened or updated against `staging` or `master`          | Validate GitHub's PR merge result on a GitHub-hosted Ubuntu runner.  |
+| `.github/workflows/pr-target.yml`     | PR opened, updated, reopened, edited or marked ready against `master` | Require `staging` from this repository as the source.                |
+| `.github/workflows/publish-image.yml` | Push to `master`, including a merged release PR                       | Build the existing Dockerfile for `linux/amd64` and publish to GHCR. |
+
+The **Validate master PR source** check runs on `pull_request_target` using the trusted workflow from the repository's default branch. It reads only the PR source branch and repository metadata, grants no token permissions and does not check out or execute PR code. The `edited` trigger covers changes to a PR's target branch. There are no path filters or job-level conditions that could skip the check for an invalid source. See [GitHub's pull request target event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target).
 
 CI uses Node.js 24, npm download caching and the existing scripts:
 
@@ -49,7 +52,7 @@ A successful run records the versioned tag and `image@sha256:...` reference in i
 
 ## Manual GitHub configuration
 
-1. Create `staging` from the intended integration baseline. Ensure both workflows reach `staging` and `master` through reviewed PRs. Use the existing development branch for the bootstrap PR; use `feature/*` or `fix/*` for new work. Setting `staging` as the default branch makes it the default PR target, if desired.
+1. Create `staging` from the intended integration baseline. Ensure the workflows reach `staging` and `master` through reviewed PRs. Use `feature/*` or `fix/*` for new work. Keep `master` as the default branch so the repository opens on released code. Create development PRs with `gh pr create --base staging` or select `staging` explicitly on GitHub.
 2. In **Settings → Actions → General**, enable Actions and allow the pinned `actions/*` and `docker/*` actions. Keep the default token permissions read-only. The publishing job requests package write access explicitly; any organization policy must permit it. Approve first-time fork workflows when required.
 3. Protect both `staging` and `master` with PR requirements and the **Validate** status check from the CI workflow. Run CI once so the check is selectable. Require the branch to be up to date, block force pushes/deletion and apply the rules to maintainers who could otherwise bypass them. If the repository is private, check that the account plan supports the chosen protection/ruleset features.
 4. In **Settings → General → Pull Requests**, allow squash merging and merge commits. Rebase merging can be disabled. Do not require linear history on `master`, because promotions need merge commits. Choose squash for development PRs and a merge commit for promotions; rulesets can enforce branch-specific merge methods where available. Keep the protected `staging` branch after promotion. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
@@ -57,6 +60,15 @@ A successful run records the versioned tag and `image@sha256:...` reference in i
 6. Choose package visibility explicitly. Public GHCR packages allow anonymous pulls and expose the packaged source. Keeping it private requires registry authentication for local/VPS pulls. For those pulls, use a PAT classic limited to `read:packages` and an account with package access; do not store it in the app environment file. The workflow continues using `GITHUB_TOKEN`. See [package access and visibility](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 
 Branch protection is what prevents a direct push from bypassing PR validation. The publishing trigger intentionally covers every push to `master`; it does not implement a second PR approval system.
+
+### Activate the master PR source guard
+
+1. Merge the guard through a development PR into `staging`, then promote `staging` into `master`. The first promotion installs the workflow; do not require its status check before it is available on the default branch.
+2. On a subsequent PR into `master`, let **PR target guard** run successfully with `staging` as the source. An existing open release PR can trigger it through an edit or new commit after the workflow is installed.
+3. In **Settings → Branches**, edit the protection rule for `master`. Keep **Require a pull request before merging** enabled. Under **Require status checks to pass before merging**, add **Validate master PR source** alongside **Validate**. Select GitHub Actions as the expected check source where offered. Do not add the source guard to `staging`, where it does not run.
+4. Enable **Do not allow bypassing the above settings** so the rule applies to administrators too. If using a ruleset instead, target `master`, require PRs and both checks, set enforcement to **Active** and leave its bypass list empty. See [GitHub's branch protection settings](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+After activation, `feature/* → master`, `fix/* → master` and PRs from a fork's `staging` branch fail the source check. Only `staging → master` from this repository passes. The workflow checks the source; the GitHub protection rule makes a failing check block merging. Local validation does not activate that rule or verify a GitHub-hosted run.
 
 ## Verify the first published image
 
