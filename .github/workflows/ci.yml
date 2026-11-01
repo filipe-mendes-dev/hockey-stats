@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [staging, master]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
 
 permissions:
   contents: read
@@ -19,6 +20,28 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
+      - name: Validate PR source
+        shell: bash
+        env:
+          SOURCE_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [[ "$GITHUB_BASE_REF" == "master" &&
+                ( "$GITHUB_HEAD_REF" != "staging" ||
+                  "$SOURCE_REPOSITORY" != "$GITHUB_REPOSITORY" ) ]]; then
+            echo "::error title=PR source blocked::Only staging from this repository can merge into master. For a development PR, change the base branch to staging."
+            {
+              printf '### PR blocked: invalid source branch\n\n'
+              printf 'Only staging from this repository can target master.\n\n'
+              printf '**Current route:** `%s:%s` → `%s:%s`\n\n' \
+                "$SOURCE_REPOSITORY" "$GITHUB_HEAD_REF" "$GITHUB_REPOSITORY" "$GITHUB_BASE_REF"
+              printf '**Allowed release route:** `%s:staging` → `%s:master`\n\n' \
+                "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY"
+              printf '**How to fix:** For a development PR, edit the PR and change its base branch to `staging`. For a release, open `staging` → `master` within this repository.\n\n'
+              printf 'CI stopped before checkout. Dependency installation, formatting, lint, tests and build were skipped.\n'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
       - name: Check out the PR merge result
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
