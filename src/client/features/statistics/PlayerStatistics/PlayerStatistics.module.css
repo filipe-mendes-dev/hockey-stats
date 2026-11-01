@@ -140,9 +140,8 @@
 }
 .notes {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 0.875rem;
   color: var(--color-text-muted);
   font-size: 0.75rem;
@@ -150,6 +149,13 @@
 .notes p {
   margin: 0;
   max-width: 30rem;
+  overflow-wrap: anywhere;
+}
+.helpParagraph {
+  display: block;
+}
+.helpParagraph + .helpParagraph {
+  margin-top: 0.75rem;
 }
 .mobile {
   display: none;

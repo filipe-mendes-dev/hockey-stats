@@ -152,7 +152,17 @@ export function RecorderTimeline({
                   <RecorderActionIcon kind={event.kind} size={15} />
                 </span>
                 <Tooltip
-                  label={fullDescription}
+                  label={
+                    <span className={st.tooltipContent}>
+                      <strong>{participant}</strong>
+                      {details.map((entry, index) => (
+                        <span key={index}>{entry}</span>
+                      ))}
+                      <span className={st.tooltipTime}>
+                        {t("eventTime", { period: event.period, time })}
+                      </span>
+                    </span>
+                  }
                   multiline
                   events={{ hover: true, focus: true, touch: true }}
                   classNames={{ tooltip: st.detailsTooltip }}
