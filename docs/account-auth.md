@@ -34,7 +34,7 @@ Explicit sign-out requires confirmation. The dialog reads all pending and blocke
 
 ## Account creation and setup
 
-The [README](../README.md#authentication-and-migrations) documents environment, migrations and the interactive terminal commands:
+The [local development guide](local-development.md#authentication-and-migrations) documents environment, migrations and the interactive terminal commands:
 
 - `auth:bootstrap-admin` creates the first admin and refuses to promote/replace an existing user or create another admin.
 - `auth:create-user` prompts for admin credentials and the new user's details, delegates to Better Auth and revokes its temporary helper session.

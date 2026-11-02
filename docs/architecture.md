@@ -44,7 +44,7 @@ AppShell selects public chrome for share routes before mounting account-aware ho
 | Offline delivery                | Serwist production worker with explicit generic HTML/RSC precaching.                      |
 | Localization                    | next-intl with bundled English/pt-PT catalogs.                                            |
 
-Installed versions belong in `package.json` and the lockfile. Setup and commands are in the [README](../README.md).
+Installed versions belong in `package.json` and the lockfile. Setup and commands are in [Local development](local-development.md); the [README](../README.md) introduces the application.
 
 ## Source layout
 

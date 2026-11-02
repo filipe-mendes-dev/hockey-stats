@@ -12,6 +12,21 @@ Increment 3A adds PR validation and GHCR publishing before the first VPS deploym
 
 CI filters on the PR's target branch. Its first step rejects PRs into `master` unless their source is `staging` in this repository. Making the existing **Validate** check required enforces both this restriction and the remaining CI checks. Development PRs into `staging` continue through normal CI. Merge-method selection remains repository policy. After a release, incorporate the new `master` merge commit into `staging` through the normal review process when needed to keep the next promotion current. Do not squash or rebase the long-lived staging-to-master promotion.
 
+## First beta tag and GitHub Release
+
+The agreed first version is `0.1.0`, with Git tag `v0.1.0`. Keep the product's Beta label and select GitHub's pre-release flag. Version zero communicates initial development; the pre-release flag identifies the distribution status. No `-beta.1` suffix is required for this agreed naming policy.
+
+1. Complete the chosen launch scope in [Release readiness](release-readiness.md). On 2026-11-02 the user deferred the previously proposed P0 work, including residual tooling findings, to the [Backlog](backlog.md). Prepare release notes with capabilities, known limits, migration/update guidance and the exact image digest. Do not publish deferred acceptance as completed.
+2. In the reviewed preparation branch, run `npm version 0.1.0 --no-git-tag-version` to update package.json and the lockfile without creating a tag or commit. Verify the UI version and commit that change with a Conventional Commit, such as `chore(release): prepare 0.1.0 beta`.
+3. Squash the preparation PR into `staging`, then promote `staging` to `master` using a merge commit after required CI passes.
+4. Wait for Publish image on that exact `master` merge commit. Verify the AMD64 image and record the published digest from the run summary. Confirm deployment/migrations and current beta acceptance where applicable.
+5. Create the annotated `v0.1.0` tag on that exact verified `master` commit. Tagging the staging tip or temporary PR merge result would identify different source. Push the tag only when the release is ready for review.
+6. Create a draft GitHub Release from the existing tag, attach the reviewed notes, select **This is a pre-release** and review before publishing. Do not mark it as a stable latest release.
+
+The current workflow publishes on pushes to `master`. A Git tag or GitHub Release does not create another image or deploy the app. Human version `0.1.0`, Git tag, source commit and immutable image digest are related identities, not interchangeable values. Do not retag different source under the same released version.
+
+This is a procedure, not evidence that a release or deployment has run. See [GitHub release management](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) and [Semantic Versioning](https://semver.org/).
+
 ## Workflows
 
 | Workflow                              | Trigger                                                                            | Work                                                                                       |

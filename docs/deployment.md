@@ -4,7 +4,9 @@
 
 Deploy Benchline Stats to `https://benchline.filipemendes.dev` on the existing Netcup VPS: Debian 13, AMD64, four CPUs, 8 GB RAM and 160 GB disk. SSH key access, a non-root sudo user, the Netcup firewall, Docker Engine, Docker Compose, host Nginx and DNS are already configured. The portfolio remains on Vercel.
 
-Increments 1 and 2 are accepted, including the Next.js 16.4.2 patch and final local checks. VPS deployment, Nginx/HTTPS and backups are pending. Increment 3A adds [CI and GHCR publishing](ci-cd.md) before deployment. Use the [first VPS deployment guide](vps-first-deployment.md) for commands and checkpoints, and [Dependency advisories](security-advisories.md) for the remaining development-tool findings. No VPS commands have been executed.
+Status update, 2026-11-02: the user reports the app is already partly live and has deferred broader deployment/recovery acceptance while finalizing the beta presentation. Backups and restore lead the [post-launch backlog](backlog.md#first-follow-ups-after-launch). This pass did not inspect or change deployed infrastructure.
+
+The earlier local verification accepted increments 1 and 2, including the Next.js 16.4.2 patch. Rollout, Nginx/HTTPS and backups were unverified in that exercise; those notes do not establish today's deployment state. Later dependency preparation is recorded in [Dependency advisories](security-advisories.md). Use [CI and GHCR publishing](ci-cd.md) and the [first VPS deployment guide](vps-first-deployment.md) for operational procedures.
 
 ## One image for CI and manual builds
 
@@ -80,7 +82,7 @@ Keep the Compose project and volume names stable across releases. Do not derive 
 2. Add production Compose, external configuration and database-role initialization. Complete, including the Next.js patch and final local checks.
 3. Add PR CI and GHCR publishing before first deployment. Implemented for local review; GitHub execution and the first publish remain pending.
 4. Implement the separate manually triggered production deployment, then configure Nginx/HTTPS and verify public PWA behavior.
-5. Before important data or invited users, verify dump/restore and establish daily off-server backups with basic failure diagnostics.
+5. As the first deferred reliability increment, verify dump/restore and establish daily off-server backups with basic failure diagnostics. The user moved this work beyond the current beta launch on 2026-11-02; it remains open.
 6. Rehearse an update with queued offline work, document recovery and verify older-client compatibility. Preserve the existing safe worker activation policy, local records, receipts and deletion markers.
 
 Keep existing images until recovery compatibility is understood. Starting an older image does not undo SQL migrations and may not understand newer sync data. Backups cannot recover browser work that has never synchronized. Never clear IndexedDB or force sign-out as a deployment step.
