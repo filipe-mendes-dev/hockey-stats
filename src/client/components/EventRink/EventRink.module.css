@@ -30,6 +30,7 @@
     display: grid;
     place-items: center;
     width: 100%;
+    aspect-ratio: 1016 / 516;
     height: 100%;
   }
   .frame[data-fit="true"] .rink {

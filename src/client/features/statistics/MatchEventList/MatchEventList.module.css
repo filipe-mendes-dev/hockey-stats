@@ -35,6 +35,8 @@
   list-style: none;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-control) var(--color-surface);
 }
 .period {
   padding: 0.5rem 0.375rem;

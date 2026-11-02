@@ -34,6 +34,7 @@
 }
 
 .main:has([data-completed-match]) {
+  max-width: 96rem;
   padding-top: 0.5rem;
 }
 
