@@ -7,7 +7,7 @@ Version 0.1.0 retains the existing Beta label and GitHub's pre-release flag. Pac
 ## Current focus
 
 1. Review focused recorder improvements: automatic attack-direction switching at halftime with manual override, and confirmation/selection of each new half's starting lineup. Agree their exact behavior before implementation.
-2. Polish the Match summary using the specific UI observations the user will supply, prioritizing frequently used pages and controls.
+2. Review the implemented root redirect and Match-summary polish in the current app, then capture marketing screenshots. The simplified shared layout uses a 96rem header cap, one 84rem content/footer cap and a 1.5rem minimum gutter. Page-specific caps and the separate summary cap are removed; stable scrollbar space prevents header movement between routes. The full-column rink and rounded scrollbars remain. The layout, spacing and sharing-copy changes are implemented; final product review and marketing screenshots remain.
 3. Keep the README project-facing, capture current marketing screenshots and finalize version/release presentation. Use [CI and publishing](ci-cd.md#first-beta-tag-and-github-release) for the existing branch, image and tag procedure.
 
 Competition selection and later editing of competition, venue and date are optional proposals to discuss. They are not part of the current launch requirement.
@@ -26,4 +26,6 @@ The 2026-11-01 dependency increment aligned Next.js/eslint-config-next at 16.4.3
 
 The README banner and eight badges loaded in a local desktop/phone preview with no page overflow. Documentation formatting and local links passed. Earlier product verification remains in [Verification history](verification-history.md).
 
-No new feature implementation, data repair, backup, deployment, tag, publication or wider acceptance check is implied by this documentation update.
+The 2026-11-02 polish passed source lint, TypeScript, formatting, catalog parity and a production build. Isolated Chromium checks covered wide, laptop, short-window and phone layouts, enlarged Portuguese sharing copy, coarse-pointer sizing and a completed-summary offline reload. See [Current verification](development-plan.md#current-verification) for exact scenarios and limits.
+
+This work did not repair real data, configure backups, deploy, create a tag or publish a release. Authenticated root behavior and public sharing still require live-account acceptance.
