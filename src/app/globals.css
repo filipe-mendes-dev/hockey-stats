@@ -25,6 +25,14 @@
     0 16px 48px rgb(0 0 0 / 18%), inset 0 1px 0 var(--color-surface-highlight);
   --shadow-floating: 0 8px 24px rgb(0 0 0 / 24%);
   --surface-blur: 20px;
+  --app-header-max-width: 96rem;
+  --app-content-max-width: 84rem;
+  --app-page-gutter: 1.5rem;
+  --app-page-padding-inline: max(
+    var(--app-page-gutter),
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
   --app-header-control-height: 2.75rem;
   --app-header-padding-block: 0.5rem;
   --app-header-height: calc(
@@ -76,6 +84,15 @@
   font-family: system-ui, sans-serif;
   color: var(--color-text);
   background: var(--color-background);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Dialog scroll locking already reserves the scrollbar gap. */
+html:has(body[data-scroll-locked]) {
+  scrollbar-gutter: auto;
 }
 
 [data-event-tone] {

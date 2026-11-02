@@ -2,8 +2,6 @@
   --recorder-section-gap: 1.25rem;
   min-width: 0;
   width: 100%;
-  max-width: 80rem;
-  margin-inline: auto;
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 .recorder button {
@@ -51,8 +49,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
     column-gap: 1.5rem;
-    padding: 0 max(1.5rem, env(safe-area-inset-right)) 0
-      max(1.5rem, env(safe-area-inset-left));
+    padding: 0;
   }
   .board {
     display: block;
@@ -63,9 +60,11 @@
     border-bottom: 0;
     top: var(--app-header-height);
     padding-bottom: 0.5rem;
+    padding-inline: 0;
   }
   .capture {
     padding-block: var(--recorder-section-gap);
+    padding-inline: 0;
   }
   .recorder[data-live-recorder="true"] .review {
     display: flex;

@@ -143,18 +143,6 @@
   min-width: 0;
   margin-top: 1.25rem;
 }
-@media (min-width: 64rem) and (min-height: 46rem) {
-  .workspace {
-    block-size: calc(100svh - var(--app-header-height) - 1.5rem);
-    grid-template-rows: auto auto minmax(0, 1fr);
-  }
-  .rinkSurface {
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-  }
-}
 @media (max-width: 50rem) {
   .analysis {
     grid-template-columns: 1fr;

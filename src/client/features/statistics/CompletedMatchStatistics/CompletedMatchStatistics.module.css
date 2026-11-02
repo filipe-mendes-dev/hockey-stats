@@ -3,9 +3,7 @@
   --statistics-panel-size: 1rem;
   --statistics-label-size: 0.8125rem;
   width: 100%;
-  max-width: 64rem;
   min-width: 0;
-  margin-inline: auto;
   padding-block: 0 1rem;
   overflow-wrap: anywhere;
 }

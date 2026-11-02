@@ -1,6 +1,5 @@
 .footer {
-  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
+  padding-bottom: env(safe-area-inset-bottom);
   flex-shrink: 0;
   width: 100%;
   border-top: 1px solid var(--color-border-subtle);
@@ -8,9 +7,10 @@
   color: var(--color-text-muted);
 }
 .content {
-  max-width: 68rem;
+  width: 100%;
+  max-width: var(--app-content-max-width);
   margin-inline: auto;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem var(--app-page-padding-inline);
 }
 .row {
   display: grid;

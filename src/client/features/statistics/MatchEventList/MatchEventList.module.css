@@ -6,7 +6,6 @@
   contain: size;
   border-inline-start: 1px solid var(--color-border-subtle);
   padding-inline-start: 1rem;
-  max-block-size: calc(100svh - var(--app-header-height) - 1.5rem);
 }
 .heading {
   display: flex;
@@ -35,6 +34,8 @@
   list-style: none;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-control) transparent;
 }
 .period {
   padding: 0.5rem 0.375rem;
@@ -94,11 +95,6 @@
   padding-inline: 0.625rem;
   overscroll-behavior-y: contain;
 }
-@media (min-width: 64rem) and (min-height: 46rem) {
-  .section {
-    max-block-size: none;
-  }
-}
 @media (max-width: 50rem) {
   .section {
     contain: none;
@@ -113,5 +109,27 @@
     max-block-size: calc(4 * (3.25rem + 1px));
     overflow-y: auto;
     overscroll-behavior-y: auto;
+  }
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .events {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  .events::-webkit-scrollbar {
+    width: 0.625rem;
+  }
+  .events::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .events::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: var(--radius-pill);
+    background: var(--color-border-control);
+    background-clip: padding-box;
+  }
+  .events::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-muted);
   }
 }
