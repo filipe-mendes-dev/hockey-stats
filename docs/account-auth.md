@@ -22,7 +22,7 @@ The username plugin requires Better Auth's core email field internally. Creation
 ## Routes and local ownership
 
 - `/sign-in` renders the login form; an existing authenticated session redirects to `/app`.
-- `/` is the server-protected home and redirects unauthenticated visitors to sign-in.
+- `/` redirects authenticated visitors to `/app` and unauthenticated visitors to `/sign-in`.
 - `/app` hockey pages are generic static shells. LocalAccountSetup first checks established local ownership. Without a local identity and with a confirmed missing session, replace the current route with `/sign-in`. With a valid session, finish initialization automatically or show the existing-data import decision. Storage, network and initialization errors remain visible with retry; they do not trigger an authentication redirect. An established local identity permits local use after session expiry or network loss. While that browser check is pending, render only a neutral loading indicator, without setup headings or actions. The sign-in page header logo links back to sign-in, avoiding a needless trip through `/app`. The server cannot inspect the IndexedDB identity; keep `/app` prerendered and cacheable rather than adding a server session requirement that would block initialized offline use.
 - `/api/auth/[...all]` delegates to Better Auth. Sync handlers authorize the current user and expected local owner.
 
