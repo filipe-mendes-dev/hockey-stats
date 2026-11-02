@@ -899,10 +899,10 @@
   },
   "sharing": {
     "share": "Partilhar jogo",
-    "title": "Partilhar estatísticas do jogo",
+    "title": "Partilhar estatísticas",
     "close": "Fechar",
-    "description": "Quem tiver a ligação pode consultar este jogo terminado.",
-    "accessNotice": "A página partilhada mostra nomes dos jogadores, estatísticas e ações registadas. Quem tiver a ligação pode reencaminhá-la. Deixa de partilhar para impedir novos acessos.",
+    "description": "Quem tiver a ligação pode ver nomes dos jogadores, estatísticas e ações.",
+    "accessNotice": "A ligação pode ser reencaminhada. Deixa de partilhar para impedir o acesso.",
     "link": "Ligação de partilha",
     "create": "Criar ligação",
     "copy": "Copiar ligação",

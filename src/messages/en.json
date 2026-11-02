@@ -899,10 +899,10 @@
   },
   "sharing": {
     "share": "Share match",
-    "title": "Share match statistics",
+    "title": "Share statistics",
     "close": "Close",
-    "description": "Anyone with the link can view this completed match.",
-    "accessNotice": "The shared page shows player names, statistics and recorded events. Anyone with the link can forward it. Stop sharing to block future access.",
+    "description": "Anyone with the link can view player names, statistics and events.",
+    "accessNotice": "Links can be forwarded. Stop sharing to disable access.",
     "link": "Sharing link",
     "create": "Create link",
     "copy": "Copy link",
