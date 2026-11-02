@@ -17,18 +17,14 @@ export function BrandLogo({
       aria-label={t("title")}
     >
       <Image
-        className={st.symbol}
-        src="/brand/symbol-glass.svg"
-        width={208}
-        height={168}
+        className={st.image}
+        src="/brand/horizontal-glass.svg"
+        width={322}
+        height={97}
         alt=""
         priority={priority}
         unoptimized
       />
-      <span className={st.wordmark} aria-hidden="true">
-        <span className={st.name}>BENCHLINE</span>
-        <span className={st.descriptor}>STATS</span>
-      </span>
     </span>
   );
 }

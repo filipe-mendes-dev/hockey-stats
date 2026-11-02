@@ -1,55 +1,17 @@
 .logo {
   display: inline-flex;
-  flex-shrink: 0;
+  min-width: 0;
   align-items: center;
-  gap: 0.5rem;
   max-width: 100%;
-  color: var(--color-action);
 }
 
-.symbol {
+.image {
   display: block;
-  flex-shrink: 0;
-  width: 2.125rem;
+  width: calc(2.125rem * 322 / 97);
+  max-width: 100%;
   height: auto;
 }
 
-.wordmark {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3125rem;
-  font-weight: 500;
-  line-height: 1;
-}
-
-.name {
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.descriptor {
-  color: var(--color-text);
-  font-size: 0.5625rem;
-  letter-spacing: 0.23em;
-}
-
-.logo[data-prominent] {
-  gap: 1rem;
-}
-
-.logo[data-prominent] .symbol {
-  width: 3.625rem;
-}
-
-.logo[data-prominent] .wordmark {
-  gap: 0.5rem;
-}
-
-.logo[data-prominent] .name {
-  font-size: 0.875rem;
-}
-
-.logo[data-prominent] .descriptor {
-  font-size: 0.6875rem;
+.logo[data-prominent] .image {
+  width: calc(3.625rem * 322 / 97);
 }
