@@ -1,12 +1,10 @@
 "use client";
 import { useState } from "react";
-import { SegmentedControl } from "@mantine/core";
 import { useTranslations } from "next-intl";
-import st from "./RecorderDirectionDialog.module.css";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
-import { RecorderContext } from "../RecorderContext/RecorderContext";
-import { RecorderRinkDirection } from "../RecorderRink/RecorderRinkDirection";
+import { RecorderTime } from "../RecorderContext/RecorderTime";
+import { RecorderDirectionPicker } from "../RecorderRink/RecorderDirectionPicker";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RecorderDirectionDialogProps } from "./RecorderDirectionDialog.interfaces";
 export function RecorderDirectionDialog({
@@ -26,6 +24,13 @@ export function RecorderDirectionDialog({
     <ResponsiveFormDialog
       opened
       title={t("attackDirection")}
+      metadata={
+        <RecorderTime
+          match={match}
+          period={match.currentPeriod}
+          elapsedMs={capturedElapsed}
+        />
+      }
       closeLabel={t("cancel")}
       cancelLabel={t("cancel")}
       submitLabel={t("applyDirection")}
@@ -44,28 +49,10 @@ export function RecorderDirectionDialog({
         );
       }}
     >
-      <RecorderContext
-        match={match}
-        period={match.currentPeriod}
-        elapsedMs={capturedElapsed}
-        primary={t("attackDirection")}
-      />
-      <RecorderRinkDirection direction={direction} />
-      <SegmentedControl
-        fullWidth
-        radius="xl"
-        value={direction}
-        onChange={(value) => {
-          if (value === "toward-x0" || value === "toward-x1")
-            setDirection(value);
-        }}
+      <RecorderDirectionPicker
+        direction={direction}
+        onChange={setDirection}
         disabled={mutation.isPending}
-        classNames={{ label: st.label }}
-        data={[
-          { value: "toward-x0", label: t("attackLeft") },
-          { value: "toward-x1", label: t("attackRight") },
-        ]}
-        aria-label={t("attackDirection")}
       />
     </ResponsiveFormDialog>
   );

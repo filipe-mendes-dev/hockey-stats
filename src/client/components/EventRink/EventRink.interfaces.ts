@@ -9,7 +9,6 @@ export interface EventRinkMarker extends RinkMarker {
 
 export interface EventRinkProps {
   label: string;
-  fit?: boolean;
   markers: readonly EventRinkMarker[];
   activeId: string | undefined;
   selectedId: string | undefined;

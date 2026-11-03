@@ -217,7 +217,6 @@ export function MatchEventAnalysis({
               />
               <EventRink
                 label={t("mapLabel")}
-                fit
                 markers={markers}
                 activeId={activeEvent?.id}
                 selectedId={pinnedEvent?.id}

@@ -1,143 +1,77 @@
+![Benchline Stats](docs/assets/github-banner.png)
+
 # Benchline Stats
 
-An offline-capable rink-hockey prototype for Players, Teams and live Matches. Require one successful online sign-in, then use the same IndexedDB write path online and offline. One durable outbox synchronizes accepted data with user-scoped PostgreSQL records.
+Benchline Stats is a web app for recording rink-hockey matches and analysing team and player performance. Manage squads, capture live events and review each game through statistics, rink maps and connected timelines.
 
-## Current state
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Mantine 9](https://img.shields.io/badge/Mantine-9-339AF0?logo=mantine&logoColor=white)](https://mantine.dev/)
+[![TanStack Query 5](https://img.shields.io/badge/TanStack_Query-5-EF4444?logo=reactquery&logoColor=white)](https://tanstack.com/query/)
+[![Dexie 4](https://img.shields.io/badge/Dexie-4-59666F)](https://dexie.org/)
+[![Drizzle 0.45](https://img.shields.io/badge/Drizzle-0.45-40542E?logo=drizzle&logoColor=white)](https://orm.drizzle.team/)
+[![Zustand 5](https://img.shields.io/badge/Zustand-5-665544)](https://zustand.docs.pmnd.rs/)
 
-Players support create/search/list/details. Teams add editing and multi-select Player assignments with optional jersey numbers and roles. Matches support incomplete setup, pre-start editing, starter/period configuration, clock controls, recovery/loss/shot/foul/cards, paired substitutions, clock-linked powerplay expiry/correction and fifth-player entry, score, timeline, latest-event Undo and completed read-only summaries. Completed summaries include period-filtered team/player statistics, recorded playing time and linked rink/timeline exploration.
+## Features
 
-English and European Portuguese are bundled. Fixed query-based detail/Start/live routes work offline for locally available data. The responsive recorder and completed-match analysis are implemented for review. Historical event editing, individual temporary suspension rules, cross-match analytics and conflict-resolution UI remain deferred. See [Product requirements](docs/product-requirements.md) and [Backlog](docs/backlog.md).
+- **Players and teams.** Manage squads, player roles, jersey numbers and match call-ups.
+- **Live recording.** Capture recoveries, ball losses, shots, saves, fouls, cards, substitutions and timeouts.
+- **Match controls.** Track the score, clock and team powerplay, confirm each half's lineup and attack direction, and use corrections or latest-event Undo.
+- **Post-match analysis.** Review team and player statistics, recorded playing time and event breakdowns by period.
+- **Interactive match history.** Explore events through linked rink positions, player timelines and event lists.
+- **Public sharing.** Share completed-match statistics through read-only links that can be revoked.
+- **Offline recording.** Save events on the device and synchronize with the server when connected.
+- **Responsive and bilingual.** Record and review on phones, tablets and desktops in English or European Portuguese.
 
-## Production offline preview
+## Technology
 
-```sh
-npm run build
-BETTER_AUTH_URL=http://127.0.0.1:3001 npm run start -- --hostname 127.0.0.1 --port 3001
-```
+| Area                          | Technologies                                      |
+| ----------------------------- | ------------------------------------------------- |
+| Application                   | TypeScript, Next.js App Router and React.         |
+| Interface                     | Mantine, CSS Modules and Lucide icons.            |
+| Client data and state         | Dexie with IndexedDB, TanStack Query and Zustand. |
+| Server persistence            | PostgreSQL, Drizzle ORM and node-postgres.        |
+| Authentication and validation | Better Auth and Zod.                              |
+| Offline app and localization  | Serwist and next-intl.                            |
 
-Open `http://127.0.0.1:3001/app`. The browser URL and BETTER_AUTH_URL must match hostname and port. Use HTTPS outside loopback. Use a separate origin from development so an installed worker does not serve an older production document during `npm run dev`.
+Local records and queued changes are saved together in IndexedDB. Authenticated APIs synchronize accepted changes to PostgreSQL, while the service worker caches application files for offline access. The [architecture guide](docs/architecture.md) explains the data flow and transaction boundaries.
 
-Wait for offline readiness before disconnecting. It requires verified generic app files and successful IndexedDB initialization. First-time ownership setup still requires online sign-in. Installation alone does not download Team/Player data or guarantee permanent storage.
+See the [changelog](CHANGELOG.md) for release history and changes being prepared for the first beta.
 
-Updates wait until all tabs/app windows for that origin close. Reopen to activate the new build; do not force reload during tracking. Worker registration is disabled in development. See [Offline and sync](docs/offline-sync.md).
+## Run locally
 
-Explicit sign-out removes the complete application IndexedDB, including unsynced records, after server sign-out succeeds. Generic cached files remain. Browser storage loss/device failure can also lose local work; export/backup is not implemented.
+Requires Node.js 24, npm 11 and Docker with Compose.
 
-## Setup
+1. Install dependencies and create the local environment file:
 
-Use Node.js 24 and npm 11. The `.nvmrc` selects the supported Node major.
+   ```sh
+   npm ci
+   [ -f .env ] || cp .env.example .env
+   ```
 
-```sh
-npm ci
-```
+2. Configure `DATABASE_URL` and `BETTER_AUTH_URL` in `.env`. Set `BETTER_AUTH_SECRET` to a random value of at least 32 characters. Generate one with:
 
-Configure the environment, start PostgreSQL and apply migrations as described below before running `npm run dev`.
+   ```sh
+   openssl rand -hex 48
+   ```
 
-Open [localhost:3000](http://localhost:3000). Language selection uses `localStorage` under `benchline.locale`; URLs stay unprefixed. Initial server rendering and hydration use English, then the browser restores the saved language and updates the document language. Both catalogs ship with the client. Storage restrictions allow switching for the mounted session but prevent saving across reloads.
+3. Start PostgreSQL, apply migrations and create the first administrator:
 
-```sh
-npm run check
-npm run start
-```
+   ```sh
+   npm run db:up
+   npm run db:migrate
+   npm run auth:bootstrap-admin
+   ```
 
-`check` runs formatting verification, lint, typecheck and a production build. It does not run tests. `start` serves that build. Individual commands are `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm run build`. CLI arguments pass through, for example `npm run dev -- --port 3001`.
+4. Start the application:
 
-`npm run test:match-chronology` typechecks and runs the authorized chronology, event-validation and playing-time tests under `tests/domain/matches`. It uses Node's built-in test runner and the installed esbuild package, bundles into a temporary directory and removes those generated files afterward. It does not access a database or change recorded games. Broader tests remain outside this scope.
+   ```sh
+   npm run dev
+   ```
 
-## VPS deployment
+Open [localhost:3000](http://localhost:3000) and sign in with the administrator account.
 
-Production uses one application image and PostgreSQL 18. Compose selects a versioned image through `BENCHLINE_IMAGE`, loads external credentials and retains database storage across releases. Local deployment checks are complete. GitHub Actions validates PRs and publishes release images to GHCR; VPS deployment is pending.
+For a production build, use `npm run build` followed by `npm run start`. The [local development guide](docs/local-development.md) covers environment configuration, account commands and production offline previews. Production hosting is documented in the [deployment guide](docs/deployment.md).
 
-- [Deployment reference](docs/deployment.md): architecture, configuration, maintenance and verification.
-- [CI and container publishing](docs/ci-cd.md): branch flow, workflow triggers, GHCR setup and image verification.
-- [First VPS deployment](docs/vps-first-deployment.md): Mac/VPS commands and checkpoints for Netcup.
-- [Dependency advisories](docs/security-advisories.md): resolved Next.js findings and remaining tooling advisories.
-
-## Local PostgreSQL
-
-Install and start Docker with the Compose plugin, then run from the repository root:
-
-```sh
-cp .env.example .env
-npm run db:up
-```
-
-Copy the example only when `.env` does not already exist. Compose and Next.js read the root `.env`; Git ignores it. The example credentials are for local development. Keep `DATABASE_URL` aligned with `POSTGRES_*`. URL-encode special characters in the connection URL. If port 5432 is occupied, change `POSTGRES_PORT` and the URL's port together. A Next.js `.env.local` value overrides `.env`; the auth/migration commands load both files with the same precedence. Shell environment variables take priority.
-
-Replace the example `BETTER_AUTH_SECRET` with a random secret of at least 32 characters. To generate one:
-
-```sh
-node --input-type=module -e "import { randomBytes } from 'node:crypto'; console.log(randomBytes(48).toString('hex'))"
-```
-
-Set `BETTER_AUTH_URL` to the application's origin, initially `http://localhost:3000`. It must match the hostname and port used in the browser. Use HTTPS for a deployed application. Environment validation rejects missing values and the example secret.
-
-`compose.yaml` uses the official `postgres:18-trixie` image. PostgreSQL has no separate LTS edition; each major receives five years of support, and version 18 is supported through November 14, 2030. The tag stays on major 18 and Debian Trixie while allowing minor fixes. See the [PostgreSQL versioning policy](https://www.postgresql.org/support/versioning/) and [official image documentation](https://hub.docker.com/_/postgres).
-
-The database listens on `127.0.0.1:5432` by default. `db:up` waits for the health check. Compose stores data in the `postgres_data` named volume mounted at `/var/lib/postgresql`, as required by the version 18 image. The app continues to run on the host with `npm run dev`.
-
-```sh
-npm run db:psql
-npm run db:logs
-npm run db:down
-```
-
-In `psql`, `SELECT current_database(), current_user, version();` checks the connection; `\q` exits. `db:down` stops and removes the containers but retains the data volume. Starting again reuses that database. Changing `POSTGRES_DB`, `POSTGRES_USER` or `POSTGRES_PASSWORD` after initialization does not change the existing database or role; apply those changes through SQL and update the connection URL. Removing the volume deletes local data. Do not use `docker compose down --volumes` unless that deletion is intended.
-
-To fetch minor image updates, run `docker compose pull postgres`, then `npm run db:up`. Major upgrades require a separate database migration; changing the image major alone does not upgrade stored data. This Compose file is a local development setup. Production hosting and credentials remain a separate decision.
-
-## Authentication and migrations
-
-```sh
-npm run db:migrate
-npm run auth:bootstrap-admin
-npm run dev
-```
-
-Bootstrap prompts for your admin username, display name and initial password. Password input is masked. It refuses to create another admin when one exists and never modifies or promotes an existing user. Open `/sign-in` to log in. `/` requires a valid session and contains the sign-out button.
-
-Sign in as an admin and open Users in the navigation to create normal accounts, edit display names, replace passwords and disable/enable access. Permanent deletion requires a disabled normal account and username confirmation, and removes its server hockey data. Admin accounts are protected. Create user opens a dedicated page; creation and password replacement require matching password confirmation. User management requires an internet connection; public signup and email workflows remain disabled.
-
-The terminal helper remains available:
-
-```sh
-npm run auth:create-user
-```
-
-The command prompts for your admin credentials, then the new user's username, display name and initial password. It authenticates the administrator, delegates creation to Better Auth and revokes its temporary admin session afterward. A normal user cannot manage accounts or assign roles. Share initial/replacement passwords outside the application; self-service password changes remain in the backlog.
-
-Usernames contain 3 to 30 letters, numbers, underscores or dots and are normalized to lowercase. New and replacement passwords contain 12 to 128 characters and cannot be blank-only. Existing passwords remain valid for sign-in. Better Auth generates a hidden internal email value for compatibility; users never provide an email and no messages are sent. Authentication tables and password hashes remain server-only. All sync endpoints authorize every request against the session and expected local owner.
-
-For schema changes:
-
-```sh
-npm run auth:schema
-npm run db:generate -- --name describe_change
-npm run db:migrate
-```
-
-Regenerate the auth schema only when its configuration/plugins change. The generator writes to `src/server/db/auth_schema.ts`; `src/server/db/schema.ts` re-exports schema modules for Drizzle and existing consumers. Add future schema modules to that central file. Review the generated schema, SQL and metadata and commit them together. Keep applied migrations intact. Run migrations explicitly before serving dependent code. The migration journal currently runs through `0011_powerplay_events.sql`. Apply the complete checked-in history.
-
-## Project structure
-
-One package at the repository root contains the app and terminal helpers. Named client pages/components, feature-owned queries/mutations/services, shared domain/contracts and server repositories/services are described in [Architecture](docs/architecture.md).
-
-Client components use PascalCase files with adjacent ComponentName.module.css imported as st and interfaces where needed. Current local storage is Dexie schema version 9. SQL migrations, wire versions and worker caches are versioned separately.
-
-## Documentation
-
-Read [AGENTS.md](AGENTS.md) before changing the repository. The docs folder contains current reference material; superseded proposals, file inventories and historical handoffs have been consolidated here.
-
-| Document                                             | Purpose                                                                |
-| ---------------------------------------------------- | ---------------------------------------------------------------------- |
-| [Product requirements](docs/product-requirements.md) | Current prototype scope and acceptance scenarios.                      |
-| [Architecture](docs/architecture.md)                 | Source organization, shared state and transaction boundaries.          |
-| [Domain model](docs/domain-model.md)                 | Entities, events, eligibility, powerplay, clock and Undo.              |
-| [Recorder UX](docs/recorder-ux.md)                   | Entry flow, draft lifetime, feedback and completed summaries.          |
-| [Offline and sync](docs/offline-sync.md)             | Ownership, storage, command delivery, routing and failure policy.      |
-| [Account authentication](docs/account-auth.md)       | Sessions, permissions, account setup and sign-out.                     |
-| [Localization](docs/localization.md)                 | Catalogs, language preference, formatting and offline behavior.        |
-| [Development plan](docs/development-plan.md)         | Implemented scope, verification evidence and remaining release checks. |
-| [Backlog](docs/backlog.md)                           | Deferred work and decisions for later increments.                      |
-
-Automated tests require explicit authorization under AGENTS.md. Current non-test checks do not establish physical-device or full browser-family readiness.
+Contact: [contact@filipemendes.dev](mailto:contact@filipemendes.dev).

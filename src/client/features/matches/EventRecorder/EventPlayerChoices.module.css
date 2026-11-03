@@ -96,6 +96,10 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
 }
+.player:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 @media (min-width: 52rem) and (pointer: fine) {
   .player {
     min-height: 44px;
@@ -107,7 +111,7 @@
   }
 }
 @media (hover: hover) {
-  .player:hover {
+  .player:not(:disabled):hover {
     background: var(--color-surface-hover);
   }
 }

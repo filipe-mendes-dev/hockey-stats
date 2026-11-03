@@ -22,6 +22,8 @@ Unknown, malformed, revoked, deleted and ineligible links show the same unavaila
 
 Revocation prevents subsequent requests; it cannot retract an already rendered page, screenshot or saved copy. Anyone holding the link may forward it.
 
+The owner dialog separates its actions from the sharing details with a subtle divider. Desktop keeps Stop sharing on the left and Copy/Create link on the right, using compact buttons with at least 44px targets. On phones, actions stack in the same order and each button fills the available width. Long translations wrap without clipping. Link creation, copying, revocation and dismissal retain their existing behavior.
+
 ## Database setup
 
 Apply migration `0016_match_sharing` with `npm run db:migrate` against the intended database before using sharing. It adds the `match_share` table and its cascading Match foreign key without changing existing Matches or events. Starting the application does not apply migrations automatically. Follow the explicit migration command in [Deployment](deployment.md) for the VPS.

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ActionIcon, Menu } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { ArrowLeft, Ellipsis, Globe, Info, Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DeliveryStatus } from "../../sync/DeliveryStatus/DeliveryStatus";
@@ -16,6 +17,7 @@ export function RecorderHeader({
   scoreDisabled,
   onScoreAdjust,
 }: RecorderHeaderProps) {
+  const desktop = useMediaQuery("(min-width: 64rem)");
   const t = useTranslations("recorder");
   const matches = useTranslations("matches");
   const [panel, setPanel] = useState<"sync" | "language" | null>(null);
@@ -57,12 +59,14 @@ export function RecorderHeader({
           >
             {t("syncDetails")}
           </Menu.Item>
-          <Menu.Item
-            leftSection={<Globe size={16} />}
-            onClick={() => setPanel("language")}
-          >
-            {t("language")}
-          </Menu.Item>
+          {!desktop && (
+            <Menu.Item
+              leftSection={<Globe size={16} />}
+              onClick={() => setPanel("language")}
+            >
+              {t("language")}
+            </Menu.Item>
+          )}
         </Menu.Dropdown>
       </Menu>
       {panel && (

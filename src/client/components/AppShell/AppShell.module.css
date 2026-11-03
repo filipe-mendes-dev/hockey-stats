@@ -6,15 +6,10 @@
 }
 
 .main {
-  --app-page-padding-inline: max(
-    1rem,
-    env(safe-area-inset-left),
-    env(safe-area-inset-right)
-  );
   flex: 1;
   width: 100%;
   min-width: 0;
-  max-width: 68rem;
+  max-width: var(--app-content-max-width);
   margin-inline: auto;
   padding: 1.25rem var(--app-page-padding-inline) 2rem;
   scroll-margin-top: 5rem;
@@ -31,10 +26,6 @@
     flex-direction: column;
     padding-bottom: 0;
   }
-}
-
-.main:has([data-completed-match]) {
-  padding-top: 0.5rem;
 }
 
 .main[data-auth-page="true"] {
@@ -67,17 +58,19 @@
 }
 
 .error {
-  width: min(100% - 2rem, 66rem);
+  width: 100%;
+  max-width: var(--app-content-max-width);
   margin: 1rem auto 0;
+  padding-inline: var(--app-page-padding-inline);
   color: var(--color-error);
   line-height: 1.5;
 }
 
-.shell[data-recorder="true"]:has([data-live-recorder="true"]) .main {
-  max-width: none;
-  padding: 0;
-}
 @media (max-width: 63.999rem) {
+  .shell[data-recorder="true"]:has([data-live-recorder="true"]) .main {
+    max-width: none;
+    padding: 0;
+  }
   .shell[data-recorder="true"]:has([data-live-recorder="true"]) > header,
   .shell[data-recorder="true"]:has([data-live-recorder="true"]) > footer {
     display: none;

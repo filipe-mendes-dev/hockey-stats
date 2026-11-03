@@ -42,13 +42,3 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.submit {
-  margin-inline-start: auto;
-}
-@media (max-width: 36rem) {
-  .submit {
-    flex: 1;
-    min-width: 0;
-    margin-inline-start: 0;
-  }
-}

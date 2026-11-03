@@ -115,7 +115,6 @@ export function EventEntryDialog({
               form={scoreFormId}
               size="md"
               disabled={!validScore}
-              className={st.submit}
             >
               {t("saveScore")}
             </Button>

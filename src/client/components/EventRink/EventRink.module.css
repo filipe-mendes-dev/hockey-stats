@@ -24,18 +24,6 @@
   z-index: 1;
   transition: opacity 150ms;
 }
-@media (min-width: 64rem) and (min-height: 46rem) {
-  .frame[data-fit="true"] {
-    container-type: size;
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-  }
-  .frame[data-fit="true"] .rink {
-    width: min(100cqw, calc(100cqh * 1016 / 516));
-  }
-}
 .rink[data-highlighting="true"] .marker:not([data-active="true"]) {
   opacity: 0.2;
 }

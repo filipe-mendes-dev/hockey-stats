@@ -1,6 +1,6 @@
 {
   "name": "benchline-stats",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -37,7 +37,7 @@
     "dexie": "4.4.6",
     "drizzle-orm": "0.45.4",
     "lucide-react": "1.59.0",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "next-intl": "4.14.9",
     "pg": "8.23.1",
     "react": "19.3.1",
@@ -45,6 +45,14 @@
     "server-only": "0.0.1",
     "zod": "4.6.7",
     "zustand": "5.0.15"
+  },
+  "overrides": {
+    "@serwist/build@9.5.13": {
+      "zod": "$zod"
+    },
+    "@serwist/turbopack@9.5.13": {
+      "zod": "$zod"
+    }
   },
   "devDependencies": {
     "@clack/prompts": "1.6.0",
@@ -57,7 +65,7 @@
     "drizzle-kit": "0.31.11",
     "esbuild": "0.28.2",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.3",
     "prettier": "^3.0.0",
     "serwist": "9.5.13",
     "typescript": "~5.9.3"

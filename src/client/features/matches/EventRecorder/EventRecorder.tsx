@@ -360,7 +360,8 @@ export function EventRecorder({ snapshot }: EventRecorderProps) {
           />
         </div>
         <MatchControls
-          match={snapshot.match}
+          snapshot={snapshot}
+          events={events.isError ? undefined : events.data}
           now={now}
           disabled={
             directionOpen ||

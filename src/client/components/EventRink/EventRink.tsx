@@ -20,7 +20,6 @@ function markerPosition(position: RinkPoint): CSSProperties {
 
 export function EventRink({
   label,
-  fit = false,
   markers,
   activeId,
   selectedId,
@@ -28,7 +27,7 @@ export function EventRink({
   onSelect,
 }: EventRinkProps) {
   return (
-    <div className={st.frame} data-fit={fit}>
+    <div className={st.frame}>
       <div
         className={st.rink}
         role="group"
