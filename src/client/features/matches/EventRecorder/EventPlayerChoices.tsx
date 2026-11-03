@@ -9,6 +9,8 @@ import st from "./EventPlayerChoices.module.css";
 export function EventPlayerChoices({
   players,
   activePlayerIds,
+  disabled = false,
+  disabledPlayerIds,
   onSelect,
 }: EventPlayerChoicesProps) {
   const t = useTranslations("recorder");
@@ -57,6 +59,7 @@ export function EventPlayerChoices({
                     className={st.player}
                     data-role={player.role}
                     data-bench={group === "bench"}
+                    disabled={disabled || disabledPlayerIds?.has(player.id)}
                     onClick={() => onSelect(player.id)}
                     aria-label={`${player.jerseyNumber === undefined ? "" : `#${player.jerseyNumber} `}${player.playerNameAtMatch} · ${roles(player.role)}`}
                     title={player.playerNameAtMatch}

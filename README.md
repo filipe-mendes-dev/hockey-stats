@@ -17,7 +17,7 @@ Benchline Stats is a web app for recording rink-hockey matches and analysing tea
 
 - **Players and teams.** Manage squads, player roles, jersey numbers and match call-ups.
 - **Live recording.** Capture recoveries, ball losses, shots, saves, fouls, cards, substitutions and timeouts.
-- **Match controls.** Track the score, clock, lineup and team powerplay, with corrections and latest-event Undo.
+- **Match controls.** Track the score, clock and team powerplay, confirm each half's lineup and attack direction, and use corrections or latest-event Undo.
 - **Post-match analysis.** Review team and player statistics, recorded playing time and event breakdowns by period.
 - **Interactive match history.** Explore events through linked rink positions, player timelines and event lists.
 - **Public sharing.** Share completed-match statistics through read-only links that can be revoked.

@@ -28,6 +28,14 @@ One server-only match_share row contains a unique 256-bit random token, Match pr
 
 AppShell selects public chrome for share routes before mounting account-aware hooks or sign-out listeners. The public page has initial SSR content and hydration for existing filters/language selection, without a public JSON endpoint or IndexedDB access. It disables shared caching and supplies noindex/no-referrer directives. See [Completed-match sharing](match-sharing.md).
 
+## Halftime transition
+
+NextPeriodDialog uses the existing RecorderDialog frame with its natural desktop height and fullscreen phone layout. It confirms the carried-over lineup and an opposite-direction suggestion before advancing the half. RecorderDirectionPicker shares the same rink preview and Left/Right controls with RecorderDirectionDialog. EventPlayerChoices shares the ordinary substitution buttons for the draft roster and eligible incoming players. Replacements update only React state until final confirmation. The service compares the final roster with the carried-over lineup, so repeated or reversed draft changes produce no extra events.
+
+MatchControls captures the opening snapshot and events for NextPeriodDialog. Background event-read failures and recovery leave the dialog mounted and retain its draft lineup; cancellation remains available. Confirmation still revalidates the current stored recording in the service transaction.
+
+The nextMatchPeriod service owns one IndexedDB transaction across the existing control and event services' transaction helpers, Match history and outbox. It saves the period end, any direction change and zero-time substitutions through the existing version-2 controls and version-9 events. Goalkeeper replacements run first to preserve the one-goalkeeper constraint at every replay step. Notifications occur only after commit. The ordinary control/event entry points retain their own transactions. No separate per-half lineup state, migration or replay algorithm is introduced.
+
 ## Stack and responsibilities
 
 | Area                            | Implementation                                                                            |

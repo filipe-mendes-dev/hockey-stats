@@ -44,78 +44,76 @@ const eventStores = [
   "matchHistory",
   "outbox",
 ];
-export async function addMatchEvent(
+export async function addMatchEventInTransaction(
   input: AddMatchEventInput,
 ): Promise<MatchEvent> {
   const fields = addMatchEventInputSchema.parse(input);
-  const database = await getDatabase();
-  const result = await database.transaction("rw", eventStores, async () => {
-    if (!(await getLocalIdentity())) throw new LocalAccountRequiredError();
-    const existing = await getMatchEvent(fields.id);
-    if (existing) {
-      const history = await getMatchHistoryEntry(existing.id);
-      if (
-        !eventMatchesInput(existing, fields) ||
-        history?.operationId !== fields.operationId
-      )
-        throw new MatchEventUnavailableError();
-      return existing;
-    }
-    const snapshot = await getMatchSnapshot(fields.matchId);
+  if (!(await getLocalIdentity())) throw new LocalAccountRequiredError();
+  const existing = await getMatchEvent(fields.id);
+  if (existing) {
+    const history = await getMatchHistoryEntry(existing.id);
     if (
-      !snapshot ||
-      snapshot.match.status !== "live" ||
-      snapshot.match.currentPeriod !== fields.period ||
-      !snapshot.match.periods.some((period) => period.number === fields.period)
+      !eventMatchesInput(existing, fields) ||
+      history?.operationId !== fields.operationId
     )
       throw new MatchEventUnavailableError();
-    const events = await listMatchEvents(fields.matchId);
-    const now = Math.max(
-      Date.now(),
-      fields.capturedAt,
-      snapshot.match.updatedAt,
-    );
-    const { operationId, ...eventFields } = fields;
-    const event = matchEventSchema.parse({
-      ...eventFields,
-      order: (events.at(-1)?.order ?? 0) + 1,
-      revision: 1,
-      createdAt: now,
-      updatedAt: now,
-    });
-    if (!isValidEventForMatch(snapshot, event))
-      throw new MatchEventUnavailableError();
-    const decision = validateChronologicalEventAddition(
-      snapshot,
-      events,
-      event,
-    );
-    if (!decision.allowed) throw new MatchRuleError(decision.reason);
-    await insertMatchEvent(event);
-    await updateMatch({
-      ...snapshot.match,
-      revision: snapshot.match.revision + 1,
-      updatedAt: now,
-    });
-    await saveMatchHistoryEntry({
-      id: event.id,
-      matchId: event.matchId,
-      operationId,
-    });
-    await insertOutboxOperation({
-      operationId,
-      entityId: event.matchId,
-      status: "pending",
-      command: {
-        version: 9,
-        operationId,
-        kind: "matchEvent.create",
-        expectedRevision: snapshot.match.revision,
-        event,
-      },
-    });
-    return event;
+    return existing;
+  }
+  const snapshot = await getMatchSnapshot(fields.matchId);
+  if (
+    !snapshot ||
+    snapshot.match.status !== "live" ||
+    snapshot.match.currentPeriod !== fields.period ||
+    !snapshot.match.periods.some((period) => period.number === fields.period)
+  )
+    throw new MatchEventUnavailableError();
+  const events = await listMatchEvents(fields.matchId);
+  const now = Math.max(Date.now(), fields.capturedAt, snapshot.match.updatedAt);
+  const { operationId, ...eventFields } = fields;
+  const event = matchEventSchema.parse({
+    ...eventFields,
+    order: (events.at(-1)?.order ?? 0) + 1,
+    revision: 1,
+    createdAt: now,
+    updatedAt: now,
   });
+  if (!isValidEventForMatch(snapshot, event))
+    throw new MatchEventUnavailableError();
+  const decision = validateChronologicalEventAddition(snapshot, events, event);
+  if (!decision.allowed) throw new MatchRuleError(decision.reason);
+  await insertMatchEvent(event);
+  await updateMatch({
+    ...snapshot.match,
+    revision: snapshot.match.revision + 1,
+    updatedAt: now,
+  });
+  await saveMatchHistoryEntry({
+    id: event.id,
+    matchId: event.matchId,
+    operationId,
+  });
+  await insertOutboxOperation({
+    operationId,
+    entityId: event.matchId,
+    status: "pending",
+    command: {
+      version: 9,
+      operationId,
+      kind: "matchEvent.create",
+      expectedRevision: snapshot.match.revision,
+      event,
+    },
+  });
+  return event;
+}
+
+export async function addMatchEvent(
+  input: AddMatchEventInput,
+): Promise<MatchEvent> {
+  const database = await getDatabase();
+  const result = await database.transaction("rw", eventStores, () =>
+    addMatchEventInTransaction(input),
+  );
   notifyLocalDataChanged("write", "matches");
   return result;
 }
