@@ -163,6 +163,7 @@ function SharingControls({ matchId, onClose }: SharingControlsProps) {
         <div className={st.actions}>
           {status?.url && (
             <Button
+              size="sm"
               variant="subtle"
               color="red"
               disabled={pending}
@@ -175,6 +176,7 @@ function SharingControls({ matchId, onClose }: SharingControlsProps) {
           )}
           {!status ? (
             <Button
+              size="sm"
               loading={pending}
               onClick={() => {
                 void manage("GET");
@@ -184,6 +186,7 @@ function SharingControls({ matchId, onClose }: SharingControlsProps) {
             </Button>
           ) : (
             <Button
+              size="sm"
               disabled={pending || Boolean(unsynced) || syncUnavailable}
               loading={pending}
               onClick={() => {

@@ -14,7 +14,7 @@ import {
   getDurationFields,
   parseDurationFields,
 } from "../../../components/DurationCounter/durationFields";
-import { RecorderContext } from "../RecorderContext/RecorderContext";
+import { RecorderTime } from "../RecorderContext/RecorderTime";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { MatchControlsProps } from "./MatchControls.interfaces";
 import { FinishFlag } from "./FinishFlag";
@@ -162,6 +162,13 @@ export function MatchControls({
       <ResponsiveFormDialog
         opened={panel !== null}
         title={panel === "adjust" ? t("adjustClock") : finishLabel}
+        metadata={
+          <RecorderTime
+            match={match}
+            period={match.currentPeriod}
+            elapsedMs={capturedElapsed}
+          />
+        }
         closeLabel={t("cancel")}
         cancelLabel={t("cancel")}
         submitLabel={panel === "adjust" ? t("saveClock") : finishLabel}
@@ -183,12 +190,6 @@ export function MatchControls({
           });
         }}
       >
-        <RecorderContext
-          match={match}
-          period={match.currentPeriod}
-          elapsedMs={capturedElapsed}
-          primary={panel === "adjust" ? t("adjustClock") : finishLabel}
-        />
         {panel === "adjust" ? (
           <>
             {duration === undefined && (

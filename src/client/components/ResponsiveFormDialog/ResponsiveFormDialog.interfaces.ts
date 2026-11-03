@@ -8,6 +8,7 @@ export interface DialogSecondaryAction {
 export interface ResponsiveFormDialogProps {
   opened: boolean;
   title: string;
+  metadata?: ReactNode;
   closeLabel: string;
   submitLabel: string;
   cancelLabel: string;

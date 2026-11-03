@@ -13,7 +13,7 @@ The `statistics` catalog namespace covers the completed summary, metric definiti
 
 URLs are independent of locale. Server rendering and initial hydration use deterministic English. After hydration, useSyncExternalStore restores the browser preference from localStorage key benchline.locale. Unsupported/absent values fall back to English. Storage restrictions allow session-only switching but may prevent preference persistence.
 
-LanguagePicker lives in the wider header and near the bottom of the compact navigation drawer. Phone sign-in keeps it in the header because no drawer is available. The footer has no language control.
+LanguagePicker lives in the wider header and near the bottom of the compact navigation drawer. The live recorder overflow menu includes it only below 64rem, where the application header is hidden. Phone sign-in keeps it in the header because no drawer is available. The footer has no language control.
 
 The New match DatePickerInput maps en/pt-PT to the dates library locale, uses localized display formatting and calendar navigation/clear labels, and stores the existing ISO date string. Wizard steps, selection feedback and Match-only editing are translated in both catalogs.
 
@@ -51,7 +51,7 @@ Verification status and remaining physical-device/browser checks are in the [Dev
 
 Match duration presets, custom minute input, two-half summaries, starter role counters and setup recovery messages are translated in both catalogs. Category strings remain canonical; U-13 is added without rewriting existing category values.
 
-Recorder timestamps use the shared countdown formatter with event-specific half duration; localized labels do not change stored elapsed milliseconds. Counter increase/decrease labels, half choices, missing-location feedback and opponent-only score guidance are translated. RecorderContext truncates long identity/action text and reuses the translated action name before player selection. Poor reception uses its concise translated label without helper text. Event-entry dialogs place the captured timestamp once in their header through shared RecorderTime formatting; other callers retain the timestamp beside their context. Entry-header metadata may wrap for enlarged text or unavailable-time labels without squeezing out the dialog title.
+Recorder timestamps use the shared countdown formatter with event-specific half duration; localized labels do not change stored elapsed milliseconds. Counter increase/decrease labels, half choices, missing-location feedback and opponent-only score guidance are translated. RecorderContext truncates long identity/action text and reuses the translated action name before player selection. Poor reception uses its concise translated label without helper text. Event-entry, direction and clock dialogs place the captured timestamp once in their header through shared RecorderTime formatting; other callers retain the timestamp beside their context. Entry-header metadata may wrap for enlarged text or unavailable-time labels without squeezing out the dialog title.
 
 Powerplay indicators, active/queued status, remaining-time correction and retry feedback are translated in both catalogs. Indicator accessibility labels include the outstanding count and total remaining time across all penalties. Automatic Player in uses the existing translated picker.
 

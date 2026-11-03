@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import st from "./RecorderDirectionDialog.module.css";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { getClockElapsed } from "../../../../domain/matches/matchControl";
-import { RecorderContext } from "../RecorderContext/RecorderContext";
+import { RecorderTime } from "../RecorderContext/RecorderTime";
 import { RecorderRinkDirection } from "../RecorderRink/RecorderRinkDirection";
 import { useControlMatch } from "../mutations/matchControl.mutations";
 import type { RecorderDirectionDialogProps } from "./RecorderDirectionDialog.interfaces";
@@ -26,6 +26,13 @@ export function RecorderDirectionDialog({
     <ResponsiveFormDialog
       opened
       title={t("attackDirection")}
+      metadata={
+        <RecorderTime
+          match={match}
+          period={match.currentPeriod}
+          elapsedMs={capturedElapsed}
+        />
+      }
       closeLabel={t("cancel")}
       cancelLabel={t("cancel")}
       submitLabel={t("applyDirection")}
@@ -44,12 +51,6 @@ export function RecorderDirectionDialog({
         );
       }}
     >
-      <RecorderContext
-        match={match}
-        period={match.currentPeriod}
-        elapsedMs={capturedElapsed}
-        primary={t("attackDirection")}
-      />
       <RecorderRinkDirection direction={direction} />
       <SegmentedControl
         fullWidth
