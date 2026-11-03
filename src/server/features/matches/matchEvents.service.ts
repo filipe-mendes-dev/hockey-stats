@@ -5,6 +5,10 @@ import {
 } from "../../../domain/matches/matchRules";
 import "server-only";
 import { deriveMatchState } from "../../../domain/matches/derivedMatchState";
+import {
+  validateChronologicalEventAddition,
+  validateChronologicalEventHistory,
+} from "../../../domain/matches/matchChronology";
 import type { DatabaseTransaction } from "../../db/client.ts";
 import { db } from "../../db/client.ts";
 import type { MatchEventCommand } from "../../../contracts/match-events-sync.schema";
@@ -71,7 +75,10 @@ export async function applyMatchEventCommand(
   if (command.version < 5 && events.some(usesTimedPowerplayProtocol))
     throw new SyncConflictError("event_conflict");
   if (command.kind === "matchEvent.create") {
-    if (command.version >= 3) {
+    if (command.version >= 8) {
+      if (!validateChronologicalEventAddition(snapshot, events, event).allowed)
+        throw new SyncConflictError("event_conflict");
+    } else if (command.version >= 3) {
       const decision = validateMatchEvent(
         { snapshot, state: deriveMatchState(snapshot, events, event) },
         toMatchEventInput(event, command.operationId),
@@ -80,7 +87,8 @@ export async function applyMatchEventCommand(
     }
     if (
       event.period !== match.currentPeriod ||
-      !deriveMatchState(snapshot, [...events, event]).valid
+      (command.version < 8 &&
+        !deriveMatchState(snapshot, [...events, event]).valid)
     )
       throw new SyncConflictError("event_conflict");
     if (
@@ -94,15 +102,22 @@ export async function applyMatchEventCommand(
       .at(-1);
     if (
       !current ||
+      (command.version >= 8 &&
+        !validateChronologicalEventHistory(
+          snapshot,
+          events.map((entry) => (entry.id === event.id ? event : entry)),
+        ).allowed) ||
       (command.version >= 3 &&
+        command.version < 8 &&
         !validateEventHistory(
           snapshot,
           events.map((entry) => (entry.id === event.id ? event : entry)),
         ).allowed) ||
-      !deriveMatchState(
-        snapshot,
-        events.map((entry) => (entry.id === event.id ? event : entry)),
-      ).valid ||
+      (command.version < 8 &&
+        !deriveMatchState(
+          snapshot,
+          events.map((entry) => (entry.id === event.id ? event : entry)),
+        ).valid) ||
       current.id !== event.id ||
       event.updatedAt < current.updatedAt ||
       JSON.stringify(

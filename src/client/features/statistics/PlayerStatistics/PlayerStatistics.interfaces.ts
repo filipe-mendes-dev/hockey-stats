@@ -1,7 +1,5 @@
-import type {
-  ActionStatistics,
-  PlayerMatchStatistics,
-} from "../../../../domain/matches/matchStatistics";
+import type { StatisticsPlayerValues } from "../../../../contracts/match-statistics-view.schema";
+import type { ActionStatistics } from "../../../../domain/matches/matchStatistics";
 
 export type PlayerStatisticsColumn =
   | "player"
@@ -17,10 +15,11 @@ export type PlayerStatisticsColumn =
   | "cards";
 
 export interface PlayerStatisticsProps {
-  statistics: readonly PlayerMatchStatistics[];
+  statistics: readonly StatisticsPlayerValues[];
   team: ActionStatistics;
   periodLabel: string;
   selectedPlayerId: string | undefined;
   onSelectPlayer: (id: string) => void;
+  onViewPlayer: (id: string) => void;
   analysisId: string;
 }

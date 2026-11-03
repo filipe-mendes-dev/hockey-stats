@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { CardCounts } from "../CardCounts/CardCounts";
+import { MatchEventIcon } from "../../../components/MatchEventIcon/MatchEventIcon";
 import type { TeamStatisticsProps } from "./TeamStatistics.interfaces";
 import st from "./TeamStatistics.module.css";
 
@@ -20,7 +21,9 @@ export function TeamStatistics({ statistics }: TeamStatisticsProps) {
     {
       label: t("shots"),
       value: statistics.shots,
-      note: t("conversion", {
+      kind: "shot",
+      tone: "blue",
+      detail: t("shotSummary", {
         goals: statistics.goals,
         rate: percentage(statistics.goals),
       }),
@@ -28,46 +31,67 @@ export function TeamStatistics({ statistics }: TeamStatisticsProps) {
     {
       label: t("onTarget"),
       value: statistics.goals + statistics.onTarget,
-      note: t("shotShare", {
+      kind: "shot",
+      tone: "blue",
+      detail: t("onTargetSummary", {
         rate: percentage(statistics.goals + statistics.onTarget),
       }),
     },
     {
       label: t("recoveries"),
       value: statistics.recoveries,
-      note: t("recordedRecoveries"),
+      kind: "ball-recovery",
+      tone: "action",
+      detail: undefined,
     },
-    { label: t("losses"), value: statistics.losses, note: t("recordedLosses") },
-    { label: t("fouls"), value: statistics.fouls, note: t("committed") },
-  ];
+    {
+      label: t("losses"),
+      value: statistics.losses,
+      kind: "ball-loss",
+      tone: "red",
+      detail: undefined,
+    },
+    {
+      label: t("fouls"),
+      value: statistics.fouls,
+      kind: "team-foul",
+      tone: "yellow",
+      detail: undefined,
+    },
+  ] as const;
   return (
-    <>
+    <div className={st.summary}>
       <dl className={st.metrics}>
         {metrics.map((metric) => (
-          <div key={metric.label} className={st.metric}>
-            <dt>{metric.label}</dt>
+          <div
+            key={metric.label}
+            className={st.metric}
+            data-event-tone={metric.tone}
+          >
+            <dt>
+              <MatchEventIcon kind={metric.kind} size={14} />
+              {metric.label}
+            </dt>
             <dd>
               <strong>{format.number(metric.value)}</strong>
-              <span>{metric.note}</span>
+              {metric.detail && (
+                <span className={st.detail}>{metric.detail}</span>
+              )}
             </dd>
           </div>
         ))}
-        <div className={st.metric}>
-          <dt>{t("cards")}</dt>
+        <div className={st.metric} data-event-tone="muted">
+          <dt>
+            <MatchEventIcon kind="card" size={14} />
+            {t("cards")}
+          </dt>
           <dd>
             <div className={st.cards}>
               <CardCounts cards={statistics.cards} showZeros />
             </div>
-            <span>{t("cardOrder")}</span>
           </dd>
         </div>
       </dl>
-      <p className={st.timeouts}>
-        {t("timeoutsSummary", {
-          own: format.number(statistics.timeouts.own),
-          opponent: format.number(statistics.timeouts.opponent),
-        })}
-      </p>
-    </>
+    </div>
   );
 }

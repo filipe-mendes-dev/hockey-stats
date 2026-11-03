@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Alert, Button, Modal } from "@mantine/core";
-import { useMediaQuery, useReducedMotion } from "@mantine/hooks";
-import { X } from "lucide-react";
+import { useId } from "react";
+import { Alert, Button } from "@mantine/core";
+import { DialogFrame } from "../DialogFrame/DialogFrame";
 import type { ResponsiveFormDialogProps } from "./ResponsiveFormDialog.interfaces";
 import st from "./ResponsiveFormDialog.module.css";
 
 export function ResponsiveFormDialog({
   opened,
   title,
+  metadata,
   closeLabel,
   submitLabel,
   cancelLabel,
@@ -23,79 +23,23 @@ export function ResponsiveFormDialog({
   onSubmit,
   onClose,
 }: ResponsiveFormDialogProps) {
-  const phone = useMediaQuery("(max-width: 36rem)");
-  const reducedMotion = useReducedMotion();
-  const content = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!opened || !phone || !viewport) return;
-    const dialogContent = content.current;
-    function resize(): void {
-      const height = window.visualViewport?.height;
-      if (height !== undefined) {
-        dialogContent?.style.setProperty("--form-dialog-height", `${height}px`);
-      }
-    }
-    resize();
-    viewport.addEventListener("resize", resize);
-    return () => {
-      viewport.removeEventListener("resize", resize);
-      dialogContent?.style.removeProperty("--form-dialog-height");
-    };
-  }, [opened, phone]);
+  const formId = useId();
 
   function close(): void {
     if (!pending) onClose();
   }
 
   return (
-    <Modal
-      ref={content}
+    <DialogFrame
       opened={opened}
-      onClose={close}
       title={title}
-      size={layout === "flow" ? "lg" : "sm"}
-      data-layout={layout}
-      fullScreen={phone}
-      centered={!phone}
-      closeOnClickOutside={false}
-      closeOnEscape={!pending}
-      closeButtonProps={{
-        "aria-label": closeLabel,
-        disabled: pending,
-        icon: <X size={16} strokeWidth={1.6} />,
-      }}
-      transitionProps={{
-        transition: "fade",
-        duration: reducedMotion ? 0 : 150,
-      }}
-      classNames={{
-        root: st.root,
-        content: st.content,
-        body: st.body,
-        header: st.header,
-        title: st.title,
-        close: st.close,
-        overlay: st.overlay,
-      }}
-    >
-      <form
-        className={st.form}
-        aria-label={title}
-        aria-busy={pending}
-        noValidate
-        onSubmit={onSubmit}
-      >
-        <div className={st.fields}>
-          {children}
-          {error && (
-            <Alert color="red" role="alert">
-              {error}
-            </Alert>
-          )}
-        </div>
-        <div className={st.actions}>
+      metadata={metadata}
+      closeLabel={closeLabel}
+      pending={pending}
+      wide={layout === "flow"}
+      onClose={close}
+      footer={
+        <>
           <Button
             type="button"
             size="sm"
@@ -107,12 +51,12 @@ export function ResponsiveFormDialog({
                 else close();
               }
             }}
-            className={st.cancel}
           >
             {secondaryAction?.label ?? cancelLabel}
           </Button>
           <Button
             type="submit"
+            form={formId}
             {...(destructive ? { color: "red" } : {})}
             data-destructive={destructive || undefined}
             size="sm"
@@ -121,8 +65,24 @@ export function ResponsiveFormDialog({
           >
             {submitLabel}
           </Button>
-        </div>
+        </>
+      }
+    >
+      <form
+        id={formId}
+        className={st.form}
+        aria-label={title}
+        aria-busy={pending}
+        noValidate
+        onSubmit={onSubmit}
+      >
+        {children}
+        {error && (
+          <Alert color="red" role="alert">
+            {error}
+          </Alert>
+        )}
       </form>
-    </Modal>
+    </DialogFrame>
   );
 }

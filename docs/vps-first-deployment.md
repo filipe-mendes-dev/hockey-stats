@@ -104,21 +104,30 @@ server {
     listen 80;
     server_name benchline.filipemendes.dev;
 
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Connection "";
+    proxy_buffering off;
+    proxy_cache off;
+
     location / {
         proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_cache off;
+    }
+
+    location ^~ /share/ {
+        access_log off;
+        error_log /dev/null;
+        proxy_pass http://127.0.0.1:3000;
     }
 }
 ```
 
 Nginx overwrites forwarded client addresses at the single public proxy. The configuration preserves application cache headers, worker scope and streamed responses. Proxy buffering and shared caching are disabled.
+
+Share URLs contain access credentials. The dedicated location suppresses request-bearing access/error logs for those paths; retain ordinary application logs elsewhere. Apply the same policy to the HTTPS site after Certbot and avoid recording token-bearing HTTP redirects or forwarding full share URLs to monitoring tools. Use only credential-free status/error information for sharing diagnostics. This documentation does not modify an already deployed proxy. See [Completed-match sharing](match-sharing.md), [Nginx request logging](https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log) and [error logging](https://nginx.org/en/docs/ngx_core_module.html#error_log).
 
 ```sh
 sudo ln -s /etc/nginx/sites-available/benchline /etc/nginx/sites-enabled/benchline

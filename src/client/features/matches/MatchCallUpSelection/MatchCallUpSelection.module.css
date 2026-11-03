@@ -16,6 +16,6 @@
 
 @media (max-width: 36rem) {
   .list {
-    margin-inline: -1rem;
+    margin-inline: calc(-1 * var(--app-page-padding-inline));
   }
 }

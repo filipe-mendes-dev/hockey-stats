@@ -1,7 +1,5 @@
 .page {
   width: 100%;
-  max-width: 60rem;
-  margin-inline: auto;
   padding-block: 0.5rem 2.5rem;
 }
 .loading {

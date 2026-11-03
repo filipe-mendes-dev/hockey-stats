@@ -4,6 +4,8 @@
   --color-surface: #1d1f23;
   --color-surface-elevated: #25282d;
   --color-surface-glass: rgb(29 31 35 / 72%);
+  --color-surface-navigation-glass: rgb(12 14 17 / 78%);
+  --color-surface-navigation-hover: rgb(29 31 35 / 58%);
   --color-surface-glass-elevated: rgb(37 40 45 / 90%);
   --color-surface-dialog: #181b1f;
   --color-surface-dialog-glass: rgb(20 23 26 / 76%);
@@ -23,10 +25,19 @@
     0 16px 48px rgb(0 0 0 / 18%), inset 0 1px 0 var(--color-surface-highlight);
   --shadow-floating: 0 8px 24px rgb(0 0 0 / 24%);
   --surface-blur: 20px;
+  --app-header-max-width: 96rem;
+  --app-content-max-width: 84rem;
+  --app-page-gutter: 1.5rem;
+  --app-page-padding-inline: max(
+    var(--app-page-gutter),
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
   --app-header-control-height: 2.75rem;
-  --app-header-padding-block: 0.625rem;
+  --app-header-padding-block: 0.5rem;
   --app-header-height: calc(
-    var(--app-header-control-height) + 2 * var(--app-header-padding-block) + 1px
+    var(--app-header-control-height) + 2 * var(--app-header-padding-block) +
+      1px + env(safe-area-inset-top)
   );
   --color-action: #b8d8ce;
   --color-action-hover: #cce5dd;
@@ -35,6 +46,8 @@
   --color-selection-end: #96c5b5;
   --color-on-selection: var(--color-on-action);
   --color-surface-action: rgb(184 216 206 / 7%);
+  --color-surface-featured-start: rgb(184 216 206 / 14%);
+  --color-surface-featured-end: rgb(150 197 181 / 4%);
   --color-surface-selection: rgb(184 216 206 / 3.5%);
   --color-calendar-weekend: #75edbf;
   --color-progress-start: var(--color-selection-start);
@@ -55,6 +68,13 @@
   --color-card-red: var(--color-error);
   --color-card-red-surface: rgb(255 170 165 / 8%);
   --color-card-red-border: rgb(255 170 165 / 40%);
+  --color-event-positive: var(--color-action);
+  --color-event-shot: var(--color-card-blue);
+  --color-event-negative: var(--color-card-red);
+  --color-event-caution: var(--color-card-yellow);
+  --color-event-neutral: var(--color-text-muted);
+  --color-lineup-player: var(--color-action);
+  --color-lineup-goalkeeper: var(--color-card-blue);
   --radius-control: 0.875rem;
   --radius-input: 1.25rem;
   --radius-button: 1.25rem;
@@ -64,6 +84,31 @@
   font-family: system-ui, sans-serif;
   color: var(--color-text);
   background: var(--color-background);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Dialog scroll locking already reserves the scrollbar gap. */
+html:has(body[data-scroll-locked]) {
+  scrollbar-gutter: auto;
+}
+
+[data-event-tone] {
+  --event-color: var(--color-event-positive);
+}
+[data-event-tone="blue"] {
+  --event-color: var(--color-event-shot);
+}
+[data-event-tone="red"] {
+  --event-color: var(--color-event-negative);
+}
+[data-event-tone="yellow"] {
+  --event-color: var(--color-event-caution);
+}
+[data-event-tone="muted"] {
+  --event-color: var(--color-event-neutral);
 }
 
 *,
@@ -79,10 +124,4 @@ body {
 :where(a, button, select, [tabindex]):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
-}
-
-@media (max-width: 36rem) {
-  :root {
-    --app-header-padding-block: 0.5rem;
-  }
 }

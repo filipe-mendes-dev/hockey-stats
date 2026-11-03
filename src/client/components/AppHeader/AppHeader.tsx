@@ -4,10 +4,11 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Burger, Button, Drawer } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Activity, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LanguagePicker } from "../LanguagePicker/LanguagePicker";
 import { AppNavigation } from "../AppNavigation/AppNavigation";
+import { BrandLogo } from "../BrandLogo/BrandLogo";
 import type { AppHeaderProps } from "./AppHeader.interfaces";
 import st from "./AppHeader.module.css";
 
@@ -17,7 +18,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const t = useTranslations();
   const [opened, setOpened] = useState(false);
-  const compact = useMediaQuery("(max-width: 68em)");
+  const compact = useMediaQuery("(max-width: 73.75em)");
   const signOutAfterClose = useRef(false);
   const showNavigation = homeHref !== "/sign-in";
 
@@ -38,13 +39,7 @@ export function AppHeader({
     <header className={st.header} data-auth-page={homeHref === "/sign-in"}>
       <div className={st.content}>
         <Link className={st.brand} href={homeHref} prefetch={false}>
-          <span className={st.mark} aria-hidden="true">
-            <Activity size={21} strokeWidth={2} />
-          </span>
-          <span className={st.brandText}>
-            <span className={st.name}>{t("shell.title")}</span>
-            <span className={st.description}>{t("shell.description")}</span>
-          </span>
+          <BrandLogo priority />
         </Link>
         {showNavigation && (
           <div className={st.desktopNavigation}>
@@ -53,14 +48,17 @@ export function AppHeader({
         )}
         <div className={st.actions}>
           <div className={st.language}>
-            <LanguagePicker />
+            <LanguagePicker compact={!compact} />
           </div>
           {accountAction && (
             <Button
               className={st.desktopAccountAction}
+              classNames={{ label: st.accountLabel }}
               variant="subtle"
               size="sm"
-              leftSection={<LogOut size={16} aria-hidden="true" />}
+              leftSection={
+                <LogOut className={st.accountIcon} aria-hidden="true" />
+              }
               onClick={accountAction.onClick}
               disabled={accountAction.pending}
             >
@@ -70,6 +68,7 @@ export function AppHeader({
           {showNavigation && (
             <Burger
               className={st.burger}
+              color="var(--color-action)"
               opened={opened}
               onClick={() => setOpened(!opened)}
               size="sm"
@@ -106,9 +105,13 @@ export function AppHeader({
             </div>
             {accountAction && (
               <Button
+                className={st.drawerAccountAction}
+                classNames={{ label: st.accountLabel }}
                 variant="subtle"
-                fullWidth
-                leftSection={<LogOut size={18} aria-hidden="true" />}
+                size="sm"
+                leftSection={
+                  <LogOut className={st.accountIcon} aria-hidden="true" />
+                }
                 disabled={accountAction.pending}
                 onClick={() => {
                   signOutAfterClose.current = true;

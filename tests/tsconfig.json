@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["domain/matches/**/*.ts"],
+  "exclude": ["../node_modules"]
+}

@@ -1,0 +1,129 @@
+.root {
+  --dialog-standard-width: clamp(28rem, 55vw, 44rem);
+  --dialog-wide-width: clamp(36rem, 75vw, 64rem);
+  --modal-x-offset: max(
+    1.5rem,
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
+}
+.root .content {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  max-height: calc(100dvh - 2 * var(--modal-y-offset));
+  overflow: hidden;
+  background: var(--color-surface-dialog);
+  box-shadow: var(--shadow-surface);
+}
+.root .header {
+  flex-shrink: 0;
+  min-height: 3.25rem;
+  padding: 0.25rem 1.25rem;
+  background: var(--color-surface-dialog-chrome);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.root .title {
+  flex: 1;
+  min-width: 0;
+  margin-inline-end: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.titleContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.125rem 0.75rem;
+}
+.titleContent > :not(.titleText) {
+  max-width: 100%;
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.titleText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.root .close {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-icon);
+  margin-inline-end: -0.75rem;
+}
+.root .body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  min-height: 0;
+  flex: 1;
+}
+.root .overlay {
+  background: var(--color-overlay-dialog);
+}
+.scroll {
+  padding: 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-dialog-chrome);
+}
+.footer > button {
+  min-width: 0;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  border-radius: var(--radius-button);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.footer > button:last-child:not(:first-child) {
+  margin-inline-start: auto;
+}
+@media (min-width: 64rem) and (pointer: fine) {
+  .footer {
+    padding-block: 0.25rem;
+  }
+}
+@supports (backdrop-filter: blur(1px)) {
+  .root .content {
+    background: var(--color-surface-dialog-glass);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+}
+@media (max-width: 36rem) {
+  .root .content {
+    height: var(--dialog-height, 100dvh);
+    max-height: var(--dialog-height, 100dvh);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
+    border: 0;
+    border-radius: 0;
+    background: var(--color-background);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .scroll {
+    flex: 1;
+  }
+  .footer > button:first-child:not(:last-child) {
+    flex-shrink: 0;
+  }
+  .footer > button:last-child:not(:first-child) {
+    flex: 1;
+    margin-inline-start: 0;
+  }
+}

@@ -23,7 +23,7 @@ export function NavigationCard({
         <span className={st.icon}>{icon}</span>
         <ArrowUpRight size={21} className={st.arrow} />
       </div>
-      <div>
+      <div className={st.copy}>
         <Title order={featured ? 2 : 3} className={st.title}>
           {title}
         </Title>

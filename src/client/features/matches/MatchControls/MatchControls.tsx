@@ -14,22 +14,29 @@ import {
   getDurationFields,
   parseDurationFields,
 } from "../../../components/DurationCounter/durationFields";
-import { RecorderContext } from "../RecorderContext/RecorderContext";
+import { RecorderTime } from "../RecorderContext/RecorderTime";
 import { useControlMatch } from "../mutations/matchControl.mutations";
-import type { MatchControlsProps } from "./MatchControls.interfaces";
+import type {
+  MatchControlsProps,
+  NextPeriodContext,
+} from "./MatchControls.interfaces";
 import { FinishFlag } from "./FinishFlag";
+import { NextPeriodDialog } from "../NextPeriodDialog/NextPeriodDialog";
 import st from "./MatchControls.module.css";
 export function MatchControls({
-  match,
+  snapshot,
+  events,
   now,
   disabled,
   onBusyChange,
 }: MatchControlsProps) {
+  const { match } = snapshot;
   const t = useTranslations("recorder");
   const mutation = useControlMatch();
   const [panel, setPanel] = useState<"adjust" | "finish" | "period" | null>(
     null,
   );
+  const [nextPeriod, setNextPeriod] = useState<NextPeriodContext>();
   const [clockFields, setClockFields] = useState(() => getDurationFields(0));
   const [capturedElapsed, setCapturedElapsed] = useState<number | undefined>(
     undefined,
@@ -86,6 +93,10 @@ export function MatchControls({
   const atZero = remaining === 0;
   const finalPeriod = match.currentPeriod === match.periods.length;
   function openFinish(): void {
+    if (!finalPeriod) {
+      if (events === undefined) return;
+      setNextPeriod({ snapshot, events });
+    }
     open(finalPeriod ? "finish" : "period");
   }
   const primaryFinishLabel = t(finalPeriod ? "endMatch" : "nextPeriod");
@@ -112,7 +123,10 @@ export function MatchControls({
           className={st.primary}
           size="sm"
           disabled={
-            disabled || busy || (!atZero && !running && duration === undefined)
+            disabled ||
+            busy ||
+            (atZero && !finalPeriod && events === undefined) ||
+            (!atZero && !running && duration === undefined)
           }
           onClick={() =>
             atZero
@@ -144,7 +158,9 @@ export function MatchControls({
               <ActionIcon
                 variant="subtle"
                 aria-label={finishLabel}
-                disabled={disabled || busy}
+                disabled={
+                  disabled || busy || (!finalPeriod && events === undefined)
+                }
                 onClick={openFinish}
               >
                 <FinishFlag />
@@ -160,8 +176,15 @@ export function MatchControls({
         </p>
       )}
       <ResponsiveFormDialog
-        opened={panel !== null}
+        opened={panel === "adjust" || panel === "finish"}
         title={panel === "adjust" ? t("adjustClock") : finishLabel}
+        metadata={
+          <RecorderTime
+            match={match}
+            period={match.currentPeriod}
+            elapsedMs={capturedElapsed}
+          />
+        }
         closeLabel={t("cancel")}
         cancelLabel={t("cancel")}
         submitLabel={panel === "adjust" ? t("saveClock") : finishLabel}
@@ -171,11 +194,11 @@ export function MatchControls({
         onClose={() => setPanel(null)}
         onSubmit={(event) => {
           event.preventDefault();
-          if (panel !== "adjust") {
-            control({ type: panel === "finish" ? "match.end" : "period.end" });
+          if (panel === "finish") {
+            control({ type: "match.end" });
             return;
           }
-          if (enteredTime === null) return;
+          if (panel !== "adjust" || enteredTime === null) return;
           control({
             type: "clock.adjust",
             elapsedMs:
@@ -183,12 +206,6 @@ export function MatchControls({
           });
         }}
       >
-        <RecorderContext
-          match={match}
-          period={match.currentPeriod}
-          elapsedMs={capturedElapsed}
-          primary={panel === "adjust" ? t("adjustClock") : finishLabel}
-        />
         {panel === "adjust" ? (
           <>
             {duration === undefined && (
@@ -204,13 +221,19 @@ export function MatchControls({
             />
           </>
         ) : (
-          <p className={st.help}>
-            {t(
-              panel === "finish" ? "finishConfirmation" : "periodConfirmation",
-            )}
-          </p>
+          <p className={st.help}>{t("finishConfirmation")}</p>
         )}
       </ResponsiveFormDialog>
+      {panel === "period" && nextPeriod && (
+        <NextPeriodDialog
+          snapshot={nextPeriod.snapshot}
+          events={nextPeriod.events}
+          onClose={() => {
+            setNextPeriod(undefined);
+            setPanel(null);
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -31,6 +31,7 @@ export interface HockeyRinkProps {
   backgroundColor?: string;
   position?: RinkPoint | undefined;
   orientation?: RinkOrientation | undefined;
+  lineGradient?: "left" | "right";
   selectionSize?: "normal" | "compact";
   markers?: readonly RinkMarker[];
   viewport?: RinkViewport | undefined;

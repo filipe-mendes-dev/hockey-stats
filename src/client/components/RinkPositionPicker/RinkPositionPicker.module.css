@@ -25,7 +25,7 @@
 }
 .lens {
   display: none;
-  position: absolute;
+  position: fixed;
   left: var(--lens-left, 0px);
   top: var(--lens-top, 0px);
   width: 112px;
@@ -36,7 +36,7 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-floating);
   pointer-events: none;
-  z-index: 1;
+  z-index: calc(var(--mantine-z-index-modal, 200) + 1);
 }
 .lens[data-visible="true"] {
   display: block;

@@ -1,5 +1,11 @@
-import type { MatchSnapshot } from "../../../../domain/matches/match.schema";
-import type { MatchEvent } from "../../../../domain/matches/matchEvent.schema";
+import type { MatchStatisticsView } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsEvent } from "../../../../contracts/match-statistics-view.schema";
+import type { StatisticsSegment } from "../../../components/StatisticsBreakdown/StatisticsBreakdown.interfaces";
+
+export interface EventBreakdown {
+  title: string;
+  segments: readonly StatisticsSegment[];
+}
 
 export type StatisticsCategory =
   | "all"
@@ -8,15 +14,17 @@ export type StatisticsCategory =
   | "ball-loss"
   | "team-foul"
   | "card"
+  | "substitution"
   | "goalkeeper-save"
   | "timeout";
 
 export interface MatchEventAnalysisProps {
-  snapshot: MatchSnapshot;
-  events: readonly MatchEvent[];
+  snapshot: MatchStatisticsView;
+  events: readonly StatisticsEvent[];
   period: number | undefined;
   selectedPlayerId: string | undefined;
   onClearPlayer: () => void;
+  onSelectPlayer: (id: string) => void;
   id: string;
 }
 

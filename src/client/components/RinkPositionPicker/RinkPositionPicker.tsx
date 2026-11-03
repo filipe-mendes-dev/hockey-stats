@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
+import { Portal } from "@mantine/core";
 import { HockeyRinkLabels } from "../HockeyRink/HockeyRinkLabels";
 import { HockeyRink } from "../HockeyRink/HockeyRink";
 import type {
@@ -52,7 +53,6 @@ export function RinkPositionPicker({
   const hintId = useId();
   const svg = useRef<SVGSVGElement>(null);
   const target = useRef<HTMLDivElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
   const lens = useRef<HTMLDivElement>(null);
   const activePointer = useRef<number | null>(null);
   const pointerOrigin = useRef({ x: 0, y: 0 });
@@ -108,14 +108,7 @@ export function RinkPositionPicker({
   function move(event: PointerEvent<HTMLDivElement>, point: RinkPoint): void {
     setPosition(point);
     setInvalid(false);
-    if (
-      event.pointerType === "mouse" ||
-      !stage.current ||
-      !lens.current ||
-      !svg.current
-    )
-      return;
-    const bounds = stage.current.getBoundingClientRect();
+    if (event.pointerType === "mouse" || !lens.current || !svg.current) return;
     const scale = svg.current.getScreenCTM();
     if (!scale) return;
     const span = 112 / (Math.hypot(scale.a, scale.b) * 1.5);
@@ -125,12 +118,24 @@ export function RinkPositionPicker({
       width: span,
       height: span,
     });
+    const visualViewport = window.visualViewport;
+    const viewportLeft = visualViewport?.offsetLeft ?? 0;
+    const viewportTop = visualViewport?.offsetTop ?? 0;
+    const viewportRight =
+      viewportLeft + (visualViewport?.width ?? window.innerWidth);
+    const minimumLeft = viewportLeft + 8;
+    const maximumLeft = Math.max(minimumLeft, viewportRight - 112 - 8);
+    const lensTop = Math.max(viewportTop + 8, event.clientY - 112 - 28);
+    const preferredLeft =
+      lensTop + 112 > event.clientY - 28
+        ? event.clientX + 28 + 112 <= viewportRight - 8
+          ? event.clientX + 28
+          : event.clientX - 28 - 112
+        : event.clientX - 56;
     lens.current.style.setProperty(
       "--lens-left",
-      `${Math.max(0, Math.min(bounds.width - 112, event.clientX - bounds.left - 56))}px`,
+      `${Math.max(minimumLeft, Math.min(maximumLeft, preferredLeft))}px`,
     );
-    const fingerY = event.clientY - bounds.top;
-    const lensTop = fingerY >= 140 ? fingerY - 140 : fingerY + 28;
     lens.current.style.setProperty("--lens-top", `${lensTop}px`);
     setMagnifying(true);
   }
@@ -225,7 +230,7 @@ export function RinkPositionPicker({
   return (
     <div className={st.picker}>
       {orientation && <HockeyRinkLabels {...orientation} />}
-      <div ref={stage} className={st.stage}>
+      <div className={st.stage}>
         <div
           ref={target}
           data-autofocus={autoFocus || undefined}
@@ -267,23 +272,25 @@ export function RinkPositionPicker({
             orientation={orientation}
           />
         </div>
-        <div
-          ref={lens}
-          className={st.lens}
-          data-visible={magnifying}
-          aria-hidden="true"
-        >
-          <HockeyRink
-            label={label}
-            viewport={viewport}
-            orientation={
-              orientation
-                ? { attackingEnd: orientation.attackingEnd }
-                : undefined
-            }
-          />
-          <span className={st.crosshair} />
-        </div>
+        <Portal>
+          <div
+            ref={lens}
+            className={st.lens}
+            data-visible={magnifying}
+            aria-hidden="true"
+          >
+            <HockeyRink
+              label={label}
+              viewport={viewport}
+              orientation={
+                orientation
+                  ? { attackingEnd: orientation.attackingEnd }
+                  : undefined
+              }
+            />
+            <span className={st.crosshair} />
+          </div>
+        </Portal>
       </div>
       <div className={st.hintRow}>
         <p id={hintId} className={hideHint ? st.announcement : st.hint}>

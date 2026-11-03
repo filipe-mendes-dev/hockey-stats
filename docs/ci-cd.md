@@ -10,14 +10,33 @@ Increment 3A adds PR validation and GHCR publishing before the first VPS deploym
 4. Use **Create a merge commit** for the release PR. Keep `staging` for subsequent work.
 5. The push to `master` publishes its commit-specific image. Publishing does not deploy it.
 
-CI filters on the PR's target branch. Source branch names and merge-method selection are repository policy; the workflow does not enforce them. After a release, incorporate the new `master` merge commit into `staging` through the normal review process when needed to keep the next promotion current. Do not squash or rebase the long-lived staging-to-master promotion.
+CI filters on the PR's target branch. Its first step rejects PRs into `master` unless their source is `staging` in this repository. Making the existing **Validate** check required enforces both this restriction and the remaining CI checks. Development PRs into `staging` continue through normal CI. Merge-method selection remains repository policy. After a release, incorporate the new `master` merge commit into `staging` through the normal review process when needed to keep the next promotion current. Do not squash or rebase the long-lived staging-to-master promotion.
+
+## First beta tag and GitHub Release
+
+The agreed first version is `0.1.0`, with Git tag `v0.1.0`. Keep the product's Beta label and select GitHub's pre-release flag. Version zero communicates initial development; the pre-release flag identifies the distribution status. No `-beta.1` suffix is required for this agreed naming policy.
+
+The current preparation branch already has package and lockfile metadata set to 0.1.0 and an [Unreleased changelog](../CHANGELOG.md). Review that version diff instead of rerunning the same npm version command. The user has explicitly deferred tag and GitHub Release creation; steps 5–6 below remain a later procedure, not authorization to publish.
+
+1. Complete the chosen launch scope in [Release readiness](release-readiness.md). On 2026-11-02 the user deferred the previously proposed P0 work, including residual tooling findings, to the [Backlog](backlog.md). Prepare release notes with capabilities, known limits, migration/update guidance and the exact image digest. Do not publish deferred acceptance as completed.
+2. In the reviewed preparation branch, run `npm version 0.1.0 --no-git-tag-version` to update package.json and the lockfile without creating a tag or commit. Verify the UI version and commit that change with a Conventional Commit, such as `chore(release): prepare 0.1.0 beta`.
+3. Squash the preparation PR into `staging`, then promote `staging` to `master` using a merge commit after required CI passes.
+4. Wait for Publish image on that exact `master` merge commit. Verify the AMD64 image and record the published digest from the run summary. Confirm deployment/migrations and current beta acceptance where applicable.
+5. Create the annotated `v0.1.0` tag on that exact verified `master` commit. Tagging the staging tip or temporary PR merge result would identify different source. Push the tag only when the release is ready for review.
+6. Create a draft GitHub Release from the existing tag, attach the reviewed notes, select **This is a pre-release** and review before publishing. Do not mark it as a stable latest release.
+
+The current workflow publishes on pushes to `master`. A Git tag or GitHub Release does not create another image or deploy the app. Human version `0.1.0`, Git tag, source commit and immutable image digest are related identities, not interchangeable values. Do not retag different source under the same released version.
+
+This is a procedure, not evidence that a release or deployment has run. See [GitHub release management](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) and [Semantic Versioning](https://semver.org/).
 
 ## Workflows
 
-| Workflow                              | Trigger                                                      | Work                                                                 |
-| ------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `.github/workflows/ci.yml`            | PR opened, reopened or updated against `staging` or `master` | Validate GitHub's PR merge result on a GitHub-hosted Ubuntu runner.  |
-| `.github/workflows/publish-image.yml` | Push to `master`, including a merged release PR              | Build the existing Dockerfile for `linux/amd64` and publish to GHCR. |
+| Workflow                              | Trigger                                                                            | Work                                                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.github/workflows/ci.yml`            | PR opened, updated, reopened, edited or marked ready against `staging` or `master` | Check the source branch, then validate GitHub's PR merge result on the same Ubuntu runner. |
+| `.github/workflows/publish-image.yml` | Push to `master`, including a merged release PR                                    | Build the existing Dockerfile for `linux/amd64` and publish to GHCR.                       |
+
+The source check is the first step of the existing **Validate** job. It reads PR metadata from environment variables and fails before checkout, dependency installation or build for an invalid source. On failure, an actionable error annotation and job summary show the current repository/branch route, the allowed release route and how to fix the PR. The summary also explains that the remaining CI steps were skipped. Open the CI run's summary page to see it; the PR merge panel keeps GitHub's generic failure heading. It adds no job or runner. The `edited` trigger reruns CI when a PR's target changes. Like the rest of PR CI, this check uses the workflow in the PR merge result and prevents accidental merges; it is not an independent policy against PRs that deliberately change the workflow. See [GitHub's pull request event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request) and [job summaries](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#adding-a-job-summary).
 
 CI uses Node.js 24, npm download caching and the existing scripts:
 
@@ -25,10 +44,11 @@ CI uses Node.js 24, npm download caching and the existing scripts:
 npm ci --include=dev
 npm run format:check
 npm run lint
+npm run test:match-chronology
 npm run build
 ```
 
-`next build` checks TypeScript and generates the production service worker. A separate `npm run typecheck` would repeat type checking; the aggregate `npm run check` includes that extra pass and is therefore not used. CI builds once and does not also build a Docker image. Formatting follows the existing `.prettierignore`, which excludes docs. CI uses disposable build-time configuration, requires no production secrets or database and runs no tests.
+`next build` checks TypeScript and generates the production service worker. A separate `npm run typecheck` would repeat type checking; the aggregate `npm run check` includes that extra pass and is therefore not used. CI builds once and does not also build a Docker image. Formatting follows the existing `.prettierignore`, which excludes docs. CI uses disposable build-time configuration and requires no production secrets or database. The scoped chronology command typechecks and runs only the authorized match ordering, chronological-validation and playing-time tests using synthetic data. Broader automated testing remains deferred.
 
 The publishing workflow builds once inside Docker. It does not repeat npm installation/build on the runner. Buildx caches intermediate layers with `type=gha`, scope `benchline-amd64` and `mode=max`. The same Dockerfile, Compose services, database volume and external runtime configuration remain in use. Only official GitHub and Docker actions are used, pinned to verified commit SHAs with version comments.
 
@@ -48,7 +68,7 @@ A successful run records the versioned tag and `image@sha256:...` reference in i
 
 ## Manual GitHub configuration
 
-1. Create `staging` from the intended integration baseline. Ensure both workflows reach `staging` and `master` through reviewed PRs. Use the existing development branch for the bootstrap PR; use `feature/*` or `fix/*` for new work. Setting `staging` as the default branch makes it the default PR target, if desired.
+1. Create `staging` from the intended integration baseline. Ensure the workflows reach `staging` and `master` through reviewed PRs. Use `feature/*` or `fix/*` for new work. Keep `master` as the default branch so the repository opens on released code. Create development PRs with `gh pr create --base staging` or select `staging` explicitly on GitHub.
 2. In **Settings → Actions → General**, enable Actions and allow the pinned `actions/*` and `docker/*` actions. Keep the default token permissions read-only. The publishing job requests package write access explicitly; any organization policy must permit it. Approve first-time fork workflows when required.
 3. Protect both `staging` and `master` with PR requirements and the **Validate** status check from the CI workflow. Run CI once so the check is selectable. Require the branch to be up to date, block force pushes/deletion and apply the rules to maintainers who could otherwise bypass them. If the repository is private, check that the account plan supports the chosen protection/ruleset features.
 4. In **Settings → General → Pull Requests**, allow squash merging and merge commits. Rebase merging can be disabled. Do not require linear history on `master`, because promotions need merge commits. Choose squash for development PRs and a merge commit for promotions; rulesets can enforce branch-specific merge methods where available. Keep the protected `staging` branch after promotion. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
@@ -56,6 +76,13 @@ A successful run records the versioned tag and `image@sha256:...` reference in i
 6. Choose package visibility explicitly. Public GHCR packages allow anonymous pulls and expose the packaged source. Keeping it private requires registry authentication for local/VPS pulls. For those pulls, use a PAT classic limited to `read:packages` and an account with package access; do not store it in the app environment file. The workflow continues using `GITHUB_TOKEN`. See [package access and visibility](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 
 Branch protection is what prevents a direct push from bypassing PR validation. The publishing trigger intentionally covers every push to `master`; it does not implement a second PR approval system.
+
+### Make CI required
+
+1. Merge the workflow change through a development PR into `staging`, then promote `staging` into `master`. Confirm **Validate** passes on both PRs. No new check name or separate bootstrap run is needed.
+2. In **Settings → Rules → Rulesets**, edit **Protect staging** and **Protect master**. Keep PRs required, enable **Require status checks to pass**, add **Validate** from GitHub Actions, set enforcement to **Active** and leave each bypass list empty. If the old **Validate master PR source** check was required, remove it because the separate workflow no longer exists. For classic branch protection, require **Validate** and enable **Do not allow bypassing the above settings**. See [GitHub's branch protection settings](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+For PRs into `master`, `feature/*`, `fix/*` and a fork's `staging` branch fail the first CI step. Only `staging` from this repository passes the source check, then runs the remaining validation. A required **Validate** check blocks merging while CI is pending or failing. Local validation does not activate the GitHub rule or verify a GitHub-hosted run.
 
 ## Verify the first published image
 

@@ -1,5 +1,7 @@
 # Account authentication
 
+Completed-match sharing management requires a current enabled owner session. Public visitors authorize access through the specific share token without creating an account. Disabling an owner temporarily hides their shared pages; re-enabling restores existing unrevoked links. Permanent account deletion removes Matches and their sharing permissions. See [Completed-match sharing](match-sharing.md).
+
 Better Auth handles username/password login, PostgreSQL sessions and admin-created users. There is no separate product account/workspace provisioning flow. Initial online sign-in establishes the local dataset owner; later session expiry affects synchronization rather than offline hockey workflows.
 
 ## Identity and authorization
@@ -20,7 +22,7 @@ The username plugin requires Better Auth's core email field internally. Creation
 ## Routes and local ownership
 
 - `/sign-in` renders the login form; an existing authenticated session redirects to `/app`.
-- `/` is the server-protected home and redirects unauthenticated visitors to sign-in.
+- `/` redirects authenticated visitors to `/app` and unauthenticated visitors to `/sign-in`.
 - `/app` hockey pages are generic static shells. LocalAccountSetup first checks established local ownership. Without a local identity and with a confirmed missing session, replace the current route with `/sign-in`. With a valid session, finish initialization automatically or show the existing-data import decision. Storage, network and initialization errors remain visible with retry; they do not trigger an authentication redirect. An established local identity permits local use after session expiry or network loss. While that browser check is pending, render only a neutral loading indicator, without setup headings or actions. The sign-in page header logo links back to sign-in, avoiding a needless trip through `/app`. The server cannot inspect the IndexedDB identity; keep `/app` prerendered and cacheable rather than adding a server session requirement that would block initialized offline use.
 - `/api/auth/[...all]` delegates to Better Auth. Sync handlers authorize the current user and expected local owner.
 
@@ -32,7 +34,7 @@ Explicit sign-out requires confirmation. The dialog reads all pending and blocke
 
 ## Account creation and setup
 
-The [README](../README.md#authentication-and-migrations) documents environment, migrations and the interactive terminal commands:
+The [local development guide](local-development.md#authentication-and-migrations) documents environment, migrations and the interactive terminal commands:
 
 - `auth:bootstrap-admin` creates the first admin and refuses to promote/replace an existing user or create another admin.
 - `auth:create-user` prompts for admin credentials and the new user's details, delegates to Better Auth and revokes its temporary helper session.
@@ -45,9 +47,9 @@ Usernames are 3–30 letters, numbers, underscores or dots and normalized to low
 
 `/api/admin/users` validates strict inputs, authenticates every request and returns no-store responses containing only directory fields. Mutations check the configured origin and reject targets whose role is not user. Better Auth's native admin HTTP endpoints are disabled; server API calls remain available to the application and terminal helpers.
 
-- Create opens `/app/admin/users/new`, using the shared page form layout with name, username, password and matching password confirmation. The normal role is assigned automatically. A visible subtitle explains creation; one help popover adds credential-sharing and fixed-username details. Inputs inherit the shared theme radius and new-password length is shown with the field.
+- Create opens `/app/admin/users/new`, using the shared page form layout with name, username, password and matching password confirmation. The normal role is assigned automatically. A visible subtitle explains creation; one help popover adds credential-sharing and fixed-username details. Username requirements, including its fixed value, appear beneath the input. Inputs inherit the shared theme radius and new-password length is shown with the field.
 - Edit changes the display name only.
-- Set password stays in a responsive dialog with an action heading and account-specific subtitle, shares the Mantine password/confirmation fields with creation, replaces credentials through Better Auth and revokes existing sessions. If revocation fails after replacement, report the partial result and allow an explicit retry.
+- Set password stays in a responsive dialog with an action heading and account-specific subtitle, shares the Mantine password/confirmation fields with creation, replaces credentials through Better Auth and revokes existing sessions. Session-ending and retained-device-data consequences are visible in the dialog body. Disable/enable dialogs also show their consequences directly. If revocation fails after replacement, report the partial result and allow an explicit retry.
 - Disable uses an indefinite Better Auth ban and revokes sessions. Enable restores login access. Hockey data is retained.
 - Permanent deletion requires a disabled normal account and an exact username confirmation. A server transaction removes owned event history before Matches, Teams and Players, then removes receipts and authentication records. Restrictive references abort and roll back deletion rather than leaving partial data loss.
 

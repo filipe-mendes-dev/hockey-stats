@@ -28,6 +28,8 @@ export type MatchRuleReason =
   | "invalid-event-time"
   | "period-changed"
   | "invalid-history"
+  | "chronology-conflict"
+  | "unknown-history-time"
   | "powerplay-unavailable"
   | "lineup-full";
 export type MatchRuleDecision =
@@ -232,7 +234,7 @@ export function isValidEventForMatch(
 }
 export function validateMatchEvent(
   context: MatchRuleContext,
-  input: MatchEventRuleInput,
+  input: MatchEventRuleInput | MatchEvent,
 ): MatchRuleDecision {
   if (context.snapshot.match.status !== "live") return reject("match-not-live");
   if (input.period !== context.snapshot.match.currentPeriod)

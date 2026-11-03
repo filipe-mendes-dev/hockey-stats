@@ -11,6 +11,7 @@ export function HockeyRink({
   backgroundColor = "var(--color-surface)",
   position,
   orientation,
+  lineGradient,
   selectionSize = "normal",
   markers = [],
   viewport,
@@ -19,6 +20,8 @@ export function HockeyRink({
   const titleId = useId();
   const tintId = `${titleId}-tint`;
   const boundaryId = `${titleId}-boundary`;
+  const linesId = `${titleId}-lines`;
+  const lineColor = lineGradient ? `url(#${linesId})` : "currentColor";
   return (
     <span className={st.frame} data-cropped={Boolean(viewport)}>
       <svg
@@ -34,6 +37,23 @@ export function HockeyRink({
         aria-labelledby={titleId}
       >
         <title id={titleId}>{label}</title>
+        {lineGradient && (
+          <defs>
+            <linearGradient
+              id={linesId}
+              gradientUnits="userSpaceOnUse"
+              x1={lineGradient === "left" ? 1000 : 0}
+              x2={lineGradient === "left" ? 0 : 1000}
+              y1="0"
+              y2="0"
+            >
+              <stop offset="0%" stopColor="var(--color-action)" />
+              <stop offset="42%" stopColor="var(--color-action)" />
+              <stop offset="58%" stopColor="var(--color-text-muted)" />
+              <stop offset="100%" stopColor="var(--color-text-muted)" />
+            </linearGradient>
+          </defs>
+        )}
         {orientation && (
           <defs>
             <clipPath id={boundaryId}>
@@ -63,14 +83,14 @@ export function HockeyRink({
           <rect x="75" y="137.5" width="135" height="225" />
           <rect x="790" y="137.5" width="135" height="225" />
         </g>
-        <g fill="none" stroke="currentColor" strokeWidth="2" opacity="0.78">
+        <g fill="none" stroke={lineColor} strokeWidth="2" opacity="0.78">
           <path d="M500 0V500" />
           <circle cx="500" cy="250" r="75" />
           <rect x="75" y="137.5" width="135" height="225" />
           <rect x="790" y="137.5" width="135" height="225" />
           <path d="M75 228.75A21.25 21.25 0 0 1 75 271.25M925 228.75A21.25 21.25 0 0 0 925 271.25" />
         </g>
-        <g fill="currentColor">
+        <g fill={lineColor}>
           {[
             1 - restartSpots.penalty.y,
             1 - restartSpots["direct-free-hit"].y,
@@ -81,7 +101,7 @@ export function HockeyRink({
             <circle key={x} cx={x * 1000} cy="250" r="2.5" />
           ))}
         </g>
-        <g stroke="currentColor" strokeLinejoin="round">
+        <g stroke={lineColor} strokeLinejoin="round">
           <g fill="currentColor" fillOpacity="0.09" strokeWidth="2">
             <path d="M75 228.75H62Q43 250 62 271.25H75Z" />
             <path d="M925 228.75H938Q957 250 938 271.25H925Z" />
@@ -97,7 +117,7 @@ export function HockeyRink({
           height="500"
           rx="75"
           fill="none"
-          stroke="currentColor"
+          stroke={lineColor}
           strokeWidth="3"
         />
         <g className={st.markers}>

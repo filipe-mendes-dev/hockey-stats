@@ -9,7 +9,6 @@ import {
   userNameSchema,
 } from "../../../../contracts/admin-users.schema";
 import type { AdminUsersErrorCode } from "../../../../contracts/admin-users.schema";
-import { HelpPopover } from "../../../components/HelpPopover/HelpPopover";
 import { ResponsiveFormDialog } from "../../../components/ResponsiveFormDialog/ResponsiveFormDialog";
 import { PasswordFields } from "../PasswordFields/PasswordFields";
 import { passwordFieldsSchema } from "../userForms.schema";
@@ -110,29 +109,24 @@ export function UserDialog({
       onClose={close}
     >
       <div className={st.intro}>
-        <div className={st.headingRow}>
-          <Text component="h2" className={st.heading}>
-            {t(`dialogTitles.${action}`)}
-          </Text>
-          {(action === "password" ||
-            action === "disable" ||
-            action === "enable") && (
-            <HelpPopover label={t("actionHelp")}>
-              {t(
-                action === "password"
-                  ? "replacePassword"
-                  : action === "disable"
-                    ? "disableDescription"
-                    : "enableDescription",
-              )}
-            </HelpPopover>
-          )}
-        </div>
         <Text className={st.description}>
           {t(`dialogDescriptions.${action}`, {
             username: user.username ?? user.name,
           })}
         </Text>
+        {(action === "password" ||
+          action === "disable" ||
+          action === "enable") && (
+          <Text className={st.description}>
+            {t(
+              action === "password"
+                ? "replacePassword"
+                : action === "disable"
+                  ? "disableDescription"
+                  : "enableDescription",
+            )}
+          </Text>
+        )}
       </div>
       {action === "edit" && (
         <TextInput

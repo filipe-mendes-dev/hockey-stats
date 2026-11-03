@@ -1,6 +1,8 @@
 import type { MatchEvent } from "./matchEvent.schema";
 import type { MatchSnapshot } from "./match.schema";
-import { deriveMatchState } from "./derivedMatchState";
+import { deriveChronologicalMatchState } from "./derivedMatchState";
+import { sortMatchEvents } from "./matchEventOrder";
+import { validateChronologicalEventHistory } from "./matchChronology";
 
 export interface PeriodPlayingTime {
   period: number;
@@ -30,22 +32,17 @@ export function derivePlayingTime(
   snapshot: MatchSnapshot,
   events: readonly MatchEvent[],
 ): readonly PeriodPlayingTime[] {
-  const ordered = events
-    .filter((event) => event.deletedAt === undefined)
-    .sort((left, right) => left.order - right.order);
-  const periodsInOrder = ordered.every(
-    (event, index) =>
-      index === 0 || (ordered[index - 1]?.period ?? 0) <= event.period,
-  );
-  let active = deriveMatchState(snapshot, []).activePlayerIds;
+  const ordered = sortMatchEvents(events);
+  let active = deriveChronologicalMatchState(snapshot, []).activePlayerIds;
   const history: MatchEvent[] = [];
+  let lineupReliable = true;
 
   return snapshot.match.periods.map((period) => {
     const end = snapshot.match.closedPeriods.find(
       (entry) => entry.number === period.number,
     )?.elapsedMs;
     const totals = new Map(snapshot.players.map((player) => [player.id, 0]));
-    let reliable = periodsInOrder && end !== undefined;
+    let reliable = lineupReliable && end !== undefined;
     let cursor = 0;
     let lastKnownTime = 0;
 
@@ -59,6 +56,14 @@ export function derivePlayingTime(
       (entry) => entry.period === period.number,
     )) {
       history.push(event);
+      if (
+        event.kind === "card" &&
+        event.colour !== "yellow" &&
+        event.lineupEffect === undefined
+      ) {
+        reliable = false;
+        lineupReliable = false;
+      }
       if (event.gameTime) {
         if (
           event.gameTime.elapsedMs < lastKnownTime ||
@@ -68,21 +73,25 @@ export function derivePlayingTime(
         lastKnownTime = event.gameTime.elapsedMs;
       }
       if (!changesLineup(event)) continue;
-      const next = deriveMatchState(snapshot, history);
+      const next = deriveChronologicalMatchState(snapshot, history);
       if (!next.valid) reliable = false;
       if (samePlayers(active, next.activePlayerIds)) continue;
       const elapsed = event.gameTime?.elapsedMs;
       if (
         elapsed === undefined ||
         elapsed < cursor ||
-        end === undefined ||
-        elapsed > end
+        (end !== undefined && elapsed > end)
       ) {
         reliable = false;
+        lineupReliable = false;
       } else {
         addInterval(elapsed);
       }
       active = next.activePlayerIds;
+    }
+    if (!validateChronologicalEventHistory(snapshot, history).allowed) {
+      reliable = false;
+      lineupReliable = false;
     }
     if (end !== undefined && end >= cursor) addInterval(end);
     else reliable = false;

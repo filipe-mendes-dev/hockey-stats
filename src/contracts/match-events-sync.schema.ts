@@ -17,6 +17,8 @@ const commandFields = {
     z.literal(5),
     z.literal(6),
     z.literal(7),
+    z.literal(8),
+    z.literal(9),
   ]),
   operationId: z.uuidv4(),
   expectedRevision: z.int().positive(),
@@ -28,8 +30,9 @@ export const createMatchEventCommandSchema = z
     (command) =>
       command.event.revision === 1 &&
       command.event.deletedAt === undefined &&
+      (command.version >= 9 || !usesReceptionLossProtocol(command.event)) &&
       (command.version >= 6 || !usesExpandedEventProtocol(command.event)) &&
-      (command.version === 7
+      (command.version >= 7
         ? isCurrentEvent(command.event, command.operationId, true)
         : command.version === 6
           ? isVersionSixEvent(command.event, command.operationId)
@@ -52,6 +55,7 @@ export const undoMatchEventCommandSchema = z
     (command) =>
       command.event.revision === 2 &&
       command.event.deletedAt !== undefined &&
+      (command.version >= 9 || !usesReceptionLossProtocol(command.event)) &&
       (command.version >= 6 || !usesExpandedEventProtocol(command.event)) &&
       (command.version >= 5 || !usesTimedPowerplayProtocol(command.event)) &&
       (command.version >= 3 ||
@@ -64,6 +68,10 @@ export const matchEventCommandSchema = z.discriminatedUnion("kind", [
   undoMatchEventCommandSchema,
 ]);
 export type MatchEventCommand = z.infer<typeof matchEventCommandSchema>;
+
+function usesReceptionLossProtocol(event: MatchEvent): boolean {
+  return event.kind === "ball-loss" && event.reason === "poor-reception";
+}
 export const matchEventAcknowledgementSchema = z
   .object({
     version: z.literal(1),

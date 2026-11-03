@@ -1,0 +1,17 @@
+.logo {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  max-width: 100%;
+}
+
+.image {
+  display: block;
+  width: calc(2.125rem * 322 / 97);
+  max-width: 100%;
+  height: auto;
+}
+
+.logo[data-prominent] .image {
+  width: calc(3.625rem * 322 / 97);
+}
