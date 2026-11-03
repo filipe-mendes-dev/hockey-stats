@@ -37,6 +37,8 @@ Benchline Stats is a web app for recording rink-hockey matches and analysing tea
 
 Local records and queued changes are saved together in IndexedDB. Authenticated APIs synchronize accepted changes to PostgreSQL, while the service worker caches application files for offline access. The [architecture guide](docs/architecture.md) explains the data flow and transaction boundaries.
 
+See the [changelog](CHANGELOG.md) for release history and changes being prepared for the first beta.
+
 ## Run locally
 
 Requires Node.js 24, npm 11 and Docker with Compose.

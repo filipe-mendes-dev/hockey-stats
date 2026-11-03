@@ -16,6 +16,8 @@ CI filters on the PR's target branch. Its first step rejects PRs into `master` u
 
 The agreed first version is `0.1.0`, with Git tag `v0.1.0`. Keep the product's Beta label and select GitHub's pre-release flag. Version zero communicates initial development; the pre-release flag identifies the distribution status. No `-beta.1` suffix is required for this agreed naming policy.
 
+The current preparation branch already has package and lockfile metadata set to 0.1.0 and an [Unreleased changelog](../CHANGELOG.md). Review that version diff instead of rerunning the same npm version command. The user has explicitly deferred tag and GitHub Release creation; steps 5–6 below remain a later procedure, not authorization to publish.
+
 1. Complete the chosen launch scope in [Release readiness](release-readiness.md). On 2026-11-02 the user deferred the previously proposed P0 work, including residual tooling findings, to the [Backlog](backlog.md). Prepare release notes with capabilities, known limits, migration/update guidance and the exact image digest. Do not publish deferred acceptance as completed.
 2. In the reviewed preparation branch, run `npm version 0.1.0 --no-git-tag-version` to update package.json and the lockfile without creating a tag or commit. Verify the UI version and commit that change with a Conventional Commit, such as `chore(release): prepare 0.1.0 beta`.
 3. Squash the preparation PR into `staging`, then promote `staging` to `master` using a merge commit after required CI passes.
